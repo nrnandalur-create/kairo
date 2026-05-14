@@ -1,39 +1,52 @@
-const SIGNAL_COLORS = {
-  bullish: { badge: 'bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/30', dot: 'bg-[#1D9E75]' },
-  bearish: { badge: 'bg-[#e55353]/15 text-[#e55353] border-[#e55353]/30', dot: 'bg-[#e55353]' },
-  neutral: { badge: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30', dot: 'bg-yellow-400' },
+const SIGNAL = {
+  bullish: { dot: 'bg-[#1D9E75]', badge: 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25' },
+  bearish: { dot: 'bg-[#e55353]', badge: 'bg-[#e55353]/10 text-[#e55353] border-[#e55353]/25' },
+  neutral: { dot: 'bg-yellow-400', badge: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/25' },
 }
 
 function PatternCard({ pattern }) {
-  const colors = SIGNAL_COLORS[pattern.signal] ?? SIGNAL_COLORS.neutral
-
+  const s = SIGNAL[pattern.signal] ?? SIGNAL.neutral
   return (
-    <div className="bg-[#242736] rounded-xl p-4 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
+    <div className="bg-[#111a17] border border-[#1e2d28] rounded-xl p-4 flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
+          <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
           <span className="text-sm font-semibold text-gray-100">{pattern.name}</span>
         </div>
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${colors.badge}`}>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${s.badge}`}>
           {pattern.signal}
         </span>
       </div>
       <p className="text-xs text-gray-400 leading-relaxed">{pattern.explanation}</p>
-      <span className="text-xs text-gray-500">{pattern.timeframe}</span>
+      <span className="text-[10px] text-gray-600">{pattern.timeframe}</span>
     </div>
   )
 }
 
-export default function CandlePatterns({ data }) {
+export default function CandlePatterns({ data, loading }) {
+  if (loading) {
+    return (
+      <div className="w-full bg-[#0d1210] border border-[#1e2d28] rounded-2xl p-6 flex flex-col gap-4">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Candle Patterns</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[1, 2].map(i => (
+            <div key={i} className="bg-[#111a17] border border-[#1e2d28] rounded-xl p-4 space-y-2">
+              <div className="h-3 bg-[#1a2820] rounded animate-pulse w-2/3" />
+              <div className="h-3 bg-[#1a2820] rounded animate-pulse w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (!data?.length) return null
 
   return (
-    <div className="w-full bg-[#1a1d27] border border-[#2e3347] rounded-2xl p-6 flex flex-col gap-4">
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Candle Patterns</h2>
+    <div className="w-full bg-[#0d1210] border border-[#1e2d28] rounded-2xl p-6 flex flex-col gap-4">
+      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Candle Patterns · AI Detected</span>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {data.map((p, i) => (
-          <PatternCard key={i} pattern={p} />
-        ))}
+        {data.map((p, i) => <PatternCard key={i} pattern={p} />)}
       </div>
     </div>
   )
