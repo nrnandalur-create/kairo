@@ -4,6 +4,7 @@ import KairoLogo from './components/KairoLogo'
 import TickerSearch from './components/TickerSearch'
 import MetricsBar from './components/MetricsBar'
 import CandleChart from './components/CandleChart'
+import Recommendation from './components/Recommendation'
 import AIAnalysis from './components/AIAnalysis'
 import CandlePatterns from './components/CandlePatterns'
 import OptionsScanner from './components/OptionsScanner'
@@ -137,6 +138,7 @@ export default function App() {
         {hasData && !loading.market && (
           <ErrorBoundary>
             <MetricsBar quote={marketData.quote} profile={marketData.profile} metrics={marketData.metrics} />
+            <Recommendation data={aiData} loading={loading.ai} />
             <ErrorBoundary>
               <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
             </ErrorBoundary>
@@ -144,7 +146,7 @@ export default function App() {
               <AIAnalysis data={aiData} loading={loading.ai} />
               <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
             </div>
-            <OptionsScanner data={getMockOptions(ticker)} />
+            <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
             <NewsFeed data={getMockNews(ticker)} />
           </ErrorBoundary>
         )}
@@ -153,7 +155,7 @@ export default function App() {
       {/* ── Footer ── */}
       <footer className="border-t border-[#1e2d28] mt-auto">
         <div className="max-w-5xl mx-auto px-6 py-4 text-[10px] text-gray-700 text-center">
-          Kairo is for informational purposes only and does not constitute financial advice. Market data via Finnhub. AI analysis via Anthropic Claude.
+          Kairo is for informational purposes only and does not constitute financial advice. Market data via Finnhub · Alpha Vantage. AI analysis via Google Gemini.
         </div>
       </footer>
     </div>

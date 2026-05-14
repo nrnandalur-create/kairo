@@ -48,10 +48,23 @@ Return exactly this JSON structure with no markdown fences:
   "summary": "<3-4 sentence plain-English analysis of price action, momentum, and fundamentals>",
   "bullCase": "<1-2 sentences on the strongest bull argument>",
   "bearCase": "<1-2 sentences on the strongest bear risk>",
+  "tradeIdea": "<one specific, actionable idea — entry trigger, target, and stop context>",
   "patterns": [
-    { "name": "<pattern name>", "signal": "bullish" | "bearish" | "neutral", "explanation": "<1 sentence what it means for this stock>", "timeframe": "<e.g. Daily · Last 3 candles>" }
+    {
+      "name": "<pattern name, e.g. Bullish Engulfing, Doji, Hammer, Shooting Star, Morning Star>",
+      "signal": "bullish" | "bearish" | "neutral",
+      "explanation": "<1-2 sentences: what this pattern means in the context of this stock's recent price action>",
+      "traderAction": "<1 sentence: what traders typically do when they spot this pattern>",
+      "timeframe": "<e.g. Daily · Last 2 candles>",
+      "reliability": "<percentage string e.g. '63%' — typical win rate for this pattern>"
+    }
   ],
-  "tradeIdea": "<one specific, actionable idea — entry trigger, target, and stop context>"
+  "recommendation": "BUY" | "SELL" | "HOLD",
+  "confidence": <integer 0-100>,
+  "reasons": ["<reason 1>", "<reason 2>", "<reason 3>"],
+  "riskLevel": "Low" | "Medium" | "High",
+  "entryPrice": <number — suggested entry price near current price>,
+  "stopLoss": <number — suggested stop loss price>
 }`
 
   const model = genAI.getGenerativeModel({
