@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ErrorBoundary from './components/ErrorBoundary'
 import KairoLogo from './components/KairoLogo'
 import TickerSearch from './components/TickerSearch'
 import MetricsBar from './components/MetricsBar'
@@ -33,7 +34,7 @@ export default function App() {
     try {
       const { quote, profile, metrics, candles, synthetic } = await fetchMarket(sym)
 
-      if (!quote || quote.c === 0) {
+      if (!quote || quote.c == null) {
         setError(`No data found for "${sym}". Check the ticker symbol and try again.`)
         setLoading(LOADING_NONE)
         return
@@ -134,16 +135,18 @@ export default function App() {
 
         {/* Results */}
         {hasData && !loading.market && (
-          <>
+          <ErrorBoundary>
             <MetricsBar quote={marketData.quote} profile={marketData.profile} metrics={marketData.metrics} />
-            <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
+            <ErrorBoundary>
+              <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
+            </ErrorBoundary>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <AIAnalysis data={aiData} loading={loading.ai} />
               <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
             </div>
             <OptionsScanner data={getMockOptions(ticker)} />
             <NewsFeed data={getMockNews(ticker)} />
-          </>
+          </ErrorBoundary>
         )}
       </main>
 

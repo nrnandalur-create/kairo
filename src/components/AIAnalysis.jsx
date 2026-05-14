@@ -1,6 +1,7 @@
 function ScoreBar({ score }) {
-  const pct = (score / 10) * 100
-  const color = score >= 6.5 ? '#1D9E75' : score >= 4.5 ? '#f59e0b' : '#e55353'
+  const s = typeof score === 'number' && !isNaN(score) ? score : 0
+  const pct = (s / 10) * 100
+  const color = s >= 6.5 ? '#1D9E75' : s >= 4.5 ? '#f59e0b' : '#e55353'
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1 h-1.5 bg-[#1a2820] rounded-full overflow-hidden">
@@ -9,7 +10,7 @@ function ScoreBar({ score }) {
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
-      <span className="text-xs font-bold tabular-nums" style={{ color }}>{score}/10</span>
+      <span className="text-xs font-bold tabular-nums" style={{ color }}>{s}/10</span>
     </div>
   )
 }

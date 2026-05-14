@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { createChart, ColorType, CrosshairMode } from 'lightweight-charts'
+import {
+  createChart,
+  CandlestickSeries,
+  HistogramSeries,
+  ColorType,
+  CrosshairMode,
+} from 'lightweight-charts'
 
 export default function CandleChart({ candles, synthetic }) {
   const containerRef = useRef(null)
@@ -37,7 +43,8 @@ export default function CandleChart({ candles, synthetic }) {
     })
     chartRef.current = chart
 
-    const candleSeries = chart.addCandlestickSeries({
+    // v5 API: chart.addSeries(SeriesType, options)
+    const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#1D9E75',
       downColor: '#e55353',
       borderVisible: false,
@@ -45,7 +52,7 @@ export default function CandleChart({ candles, synthetic }) {
       wickDownColor: '#e55353',
     })
 
-    const volumeSeries = chart.addHistogramSeries({
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
     })
@@ -56,7 +63,7 @@ export default function CandleChart({ candles, synthetic }) {
     const candleData = candles.map(({ time, open, high, low, close }) => ({ time, open, high, low, close }))
     const volumeData = candles.map(({ time, open, close, volume }) => ({
       time,
-      value: volume,
+      value: volume ?? 0,
       color: close >= open ? '#1D9E7540' : '#e5535340',
     }))
 
