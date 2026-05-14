@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY)
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -41,7 +41,7 @@ ${recentCandles.map(c =>
   `  Date ${new Date(c.time * 1000).toISOString().slice(0, 10)}: O=${c.open.toFixed(2)} H=${c.high.toFixed(2)} L=${c.low.toFixed(2)} C=${c.close.toFixed(2)} V=${(c.volume / 1e6).toFixed(1)}M`
 ).join('\n')}
 
-Return exactly this JSON structure:
+Return exactly this JSON structure with no markdown fences:
 {
   "verdict": "bullish" | "bearish" | "neutral",
   "score": <number 1-10, where 10 = strongest buy>,
@@ -54,14 +54,14 @@ Return exactly this JSON structure:
   "tradeIdea": "<one specific, actionable idea — entry trigger, target, and stop context>"
 }`
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    system: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text.',
-    messages: [{ role: 'user', content: prompt }],
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    systemInstruction: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text.',
+    generationConfig: { responseMimeType: 'application/json' },
   })
 
-  const text = message.content[0].text.trim()
+  const result = await model.generateContent(prompt)
+  const text = result.response.text().trim()
   const analysis = JSON.parse(text)
   res.json(analysis)
 }
