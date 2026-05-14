@@ -1,4 +1,7 @@
-const BASE = 'https://finnhub.io/api/v1'
+const FINNHUB_BASE = 'https://finnhub.io/api/v1'
+const AV_BASE      = 'https://www.alphavantage.co/query'
+
+// ── Finnhub helper ──────────────────────────────────────────────────────────
 
 async function fget(label, url) {
   console.log(`[market] fetching ${label}: ${url.replace(/token=[^&]+/, 'token=***')}`)
@@ -11,66 +14,100 @@ async function fget(label, url) {
   return res.json()
 }
 
-// Deterministic xorshift32 seeded from the previous close so the chart
-// looks stable across refreshes for the same price snapshot.
-function makeRng(seed) {
-  let s = (Math.abs(Math.round(seed * 137)) || 0x9e3779b9) >>> 0
-  return () => {
-    s ^= s << 13; s ^= s >> 17; s ^= s << 5
-    return (s >>> 0) / 0x100000000
-  }
+// ── Alpha Vantage candles ───────────────────────────────────────────────────
+
+async function fetchAVCandles(sym) {
+  const avKey = process.env.ALPHA_VANTAGE_KEY
+  const avKeyStatus = avKey ? `set (${avKey.slice(0, 4)}…${avKey.slice(-4)})` : 'MISSING'
+  console.log(`[market] ALPHA_VANTAGE_KEY=${avKeyStatus}`)
+
+  if (!avKey) throw new Error('ALPHA_VANTAGE_KEY environment variable is not set')
+
+  const url = `${AV_BASE}?function=TIME_SERIES_DAILY&symbol=${sym}&outputsize=compact&apikey=${avKey}`
+  console.log(`[market] fetching AV candles: ${url.replace(/apikey=[^&]+/, 'apikey=***')}`)
+
+  const res = await fetch(url)
+  console.log(`[market] AV candles → HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status}`)
+
+  const data = await res.json()
+
+  // Alpha Vantage signals all errors via JSON on HTTP 200
+  if (data['Error Message']) throw new Error(`Alpha Vantage symbol error: ${data['Error Message']}`)
+  if (data['Note'])         throw new Error(`Alpha Vantage rate limit: ${data['Note'].slice(0, 120)}`)
+  if (data['Information'])  throw new Error(`Alpha Vantage key error: ${data['Information'].slice(0, 120)}`)
+
+  const series = data['Time Series (Daily)']
+  if (!series) throw new Error('Alpha Vantage: missing "Time Series (Daily)" in response')
+
+  // Entries are newest-first; take 30, reverse to oldest-first for the chart
+  const candles = Object.entries(series)
+    .slice(0, 30)
+    .reverse()
+    .map(([date, bar]) => {
+      const [y, m, d] = date.split('-').map(Number)
+      return {
+        time:   Date.UTC(y, m - 1, d) / 1000,
+        open:   +bar['1. open'],
+        high:   +bar['2. high'],
+        low:    +bar['3. low'],
+        close:  +bar['4. close'],
+        volume: +bar['5. volume'],
+      }
+    })
+
+  console.log(`[market] AV returned ${candles.length} candles for ${sym}`)
+  return candles
 }
 
-// Build 30 synthetic daily candles anchored to the live quote.
-// The last candle uses real intraday OHLC; the preceding 29 are a
-// seeded random walk backwards from pc so the series is internally
-// consistent without requiring a paid candle endpoint.
+// ── Synthetic fallback (seeded random walk from live quote) ─────────────────
+// Used when Alpha Vantage is unavailable (rate limit, missing key, etc.)
+
+function makeRng(seed) {
+  let s = (Math.abs(Math.round(seed * 137)) || 0x9e3779b9) >>> 0
+  return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0x100000000 }
+}
+
 function syntheticCandles(quote) {
   const DAYS = 30
   const DAY  = 86400
   const todayMidnight = Math.floor(Date.now() / 1000)
   const rand = makeRng(quote.pc)
+  const vol  = Math.min(Math.max(Math.abs(quote.dp ?? 1.5) / 100, 0.005), 0.04)
+  const fix  = (n) => +Math.max(n, 0.01).toFixed(2)
 
-  // Clamp daily vol between 0.5 % and 4 %
-  const vol = Math.min(Math.max(Math.abs(quote.dp ?? 1.5) / 100, 0.005), 0.04)
-
-  // Generate (DAYS - 1) synthetic closes, walking backwards from pc
   const closes = new Array(DAYS - 1)
   closes[DAYS - 2] = quote.pc
   for (let i = DAYS - 3; i >= 0; i--) {
-    const drift = (rand() - 0.48) * 2 * vol * closes[i + 1]
-    closes[i] = Math.max(closes[i + 1] + drift, 0.01)
+    closes[i] = Math.max(closes[i + 1] + (rand() - 0.48) * 2 * vol * closes[i + 1], 0.01)
   }
-
-  const fix = (n) => +Math.max(n, 0.01).toFixed(2)
 
   const candles = closes.map((close, i) => {
     const open     = i === 0 ? fix(close * (1 + (rand() - 0.5) * vol)) : closes[i - 1]
     const bodySpan = Math.abs(close - open) + close * vol * 0.4 * rand()
-    const high     = fix(Math.max(open, close) + bodySpan * (0.3 + rand() * 0.5))
-    const low      = fix(Math.min(open, close) - bodySpan * (0.3 + rand() * 0.5))
     return {
       time:   todayMidnight - (DAYS - 1 - i) * DAY,
       open:   fix(open),
-      high,
-      low,
+      high:   fix(Math.max(open, close) + bodySpan * (0.3 + rand() * 0.5)),
+      low:    fix(Math.min(open, close) - bodySpan * (0.3 + rand() * 0.5)),
       close:  fix(close),
       volume: Math.round(3e6 + rand() * 20e6),
     }
   })
 
-  // Append real intraday candle for today
   candles.push({
     time:   todayMidnight,
-    open:   fix(quote.o  ?? quote.pc),
-    high:   fix(quote.h  ?? quote.c),
-    low:    fix(quote.l  ?? quote.c),
+    open:   fix(quote.o ?? quote.pc),
+    high:   fix(quote.h ?? quote.c),
+    low:    fix(quote.l ?? quote.c),
     close:  fix(quote.c),
     volume: Math.round(5e6 + rand() * 15e6),
   })
 
   return candles
 }
+
+// ── Handler ─────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -82,28 +119,35 @@ export default async function handler(req, res) {
   const { ticker } = req.query
   if (!ticker) return res.status(400).json({ error: 'Missing ticker query param' })
 
-  const key = process.env.FINNHUB_API_KEY
-  const keyStatus = key ? `set (${key.slice(0, 4)}…${key.slice(-4)})` : 'MISSING'
-  console.log(`[market] ticker=${ticker.toUpperCase()} FINNHUB_API_KEY=${keyStatus}`)
-
-  if (!key) {
-    return res.status(500).json({ error: 'FINNHUB_API_KEY environment variable is not set' })
-  }
+  const finnhubKey = process.env.FINNHUB_API_KEY
+  console.log(`[market] ticker=${ticker.toUpperCase()} FINNHUB_API_KEY=${finnhubKey ? `set (${finnhubKey.slice(0, 4)}…${finnhubKey.slice(-4)})` : 'MISSING'}`)
+  if (!finnhubKey) return res.status(500).json({ error: 'FINNHUB_API_KEY environment variable is not set' })
 
   try {
     const sym = ticker.toUpperCase()
-    const t   = `token=${key}`
+    const t   = `token=${finnhubKey}`
 
-    const [quote, profile, metrics] = await Promise.all([
-      fget('quote',   `${BASE}/quote?symbol=${sym}&${t}`),
-      fget('profile', `${BASE}/stock/profile2?symbol=${sym}&${t}`),
-      fget('metrics', `${BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
+    // Finnhub (quote/profile/metrics) and Alpha Vantage (candles) in parallel
+    const [
+      [quote, profile, metrics],
+      avResult,
+    ] = await Promise.all([
+      Promise.all([
+        fget('quote',   `${FINNHUB_BASE}/quote?symbol=${sym}&${t}`),
+        fget('profile', `${FINNHUB_BASE}/stock/profile2?symbol=${sym}&${t}`),
+        fget('metrics', `${FINNHUB_BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
+      ]),
+      fetchAVCandles(sym).catch(err => {
+        console.warn(`[market] Alpha Vantage failed, using synthetic fallback: ${err.message}`)
+        return null
+      }),
     ])
 
-    const candles = syntheticCandles(quote)
-    console.log(`[market] success for ${sym} — ${candles.length} synthetic candles`)
+    const synthetic = avResult === null
+    const candles   = synthetic ? syntheticCandles(quote) : avResult
 
-    res.json({ quote, profile, metrics, candles, synthetic: true })
+    console.log(`[market] success for ${sym} — ${candles.length} candles (${synthetic ? 'synthetic' : 'Alpha Vantage'})`)
+    res.json({ quote, profile, metrics, candles, synthetic })
   } catch (err) {
     console.error('[market] error:', err.message)
     const status = err.message.includes('401') ? 401 : err.message.includes('403') ? 403 : 500
