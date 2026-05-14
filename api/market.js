@@ -11,16 +11,65 @@ async function fget(label, url) {
   return res.json()
 }
 
-function formatCandles(raw) {
-  if (!raw || raw.s !== 'ok') return []
-  return raw.t.map((ts, i) => ({
-    time: ts,
-    open: raw.o[i],
-    high: raw.h[i],
-    low: raw.l[i],
-    close: raw.c[i],
-    volume: raw.v[i],
-  }))
+// Deterministic xorshift32 seeded from the previous close so the chart
+// looks stable across refreshes for the same price snapshot.
+function makeRng(seed) {
+  let s = (Math.abs(Math.round(seed * 137)) || 0x9e3779b9) >>> 0
+  return () => {
+    s ^= s << 13; s ^= s >> 17; s ^= s << 5
+    return (s >>> 0) / 0x100000000
+  }
+}
+
+// Build 30 synthetic daily candles anchored to the live quote.
+// The last candle uses real intraday OHLC; the preceding 29 are a
+// seeded random walk backwards from pc so the series is internally
+// consistent without requiring a paid candle endpoint.
+function syntheticCandles(quote) {
+  const DAYS = 30
+  const DAY  = 86400
+  const todayMidnight = Math.floor(Date.now() / 1000)
+  const rand = makeRng(quote.pc)
+
+  // Clamp daily vol between 0.5 % and 4 %
+  const vol = Math.min(Math.max(Math.abs(quote.dp ?? 1.5) / 100, 0.005), 0.04)
+
+  // Generate (DAYS - 1) synthetic closes, walking backwards from pc
+  const closes = new Array(DAYS - 1)
+  closes[DAYS - 2] = quote.pc
+  for (let i = DAYS - 3; i >= 0; i--) {
+    const drift = (rand() - 0.48) * 2 * vol * closes[i + 1]
+    closes[i] = Math.max(closes[i + 1] + drift, 0.01)
+  }
+
+  const fix = (n) => +Math.max(n, 0.01).toFixed(2)
+
+  const candles = closes.map((close, i) => {
+    const open     = i === 0 ? fix(close * (1 + (rand() - 0.5) * vol)) : closes[i - 1]
+    const bodySpan = Math.abs(close - open) + close * vol * 0.4 * rand()
+    const high     = fix(Math.max(open, close) + bodySpan * (0.3 + rand() * 0.5))
+    const low      = fix(Math.min(open, close) - bodySpan * (0.3 + rand() * 0.5))
+    return {
+      time:   todayMidnight - (DAYS - 1 - i) * DAY,
+      open:   fix(open),
+      high,
+      low,
+      close:  fix(close),
+      volume: Math.round(3e6 + rand() * 20e6),
+    }
+  })
+
+  // Append real intraday candle for today
+  candles.push({
+    time:   todayMidnight,
+    open:   fix(quote.o  ?? quote.pc),
+    high:   fix(quote.h  ?? quote.c),
+    low:    fix(quote.l  ?? quote.c),
+    close:  fix(quote.c),
+    volume: Math.round(5e6 + rand() * 15e6),
+  })
+
+  return candles
 }
 
 export default async function handler(req, res) {
@@ -43,19 +92,18 @@ export default async function handler(req, res) {
 
   try {
     const sym = ticker.toUpperCase()
-    const to = Math.floor(Date.now() / 1000)
-    const from = to - 45 * 24 * 60 * 60
-    const t = `token=${key}`
+    const t   = `token=${key}`
 
-    const [quote, profile, metrics, rawCandles] = await Promise.all([
+    const [quote, profile, metrics] = await Promise.all([
       fget('quote',   `${BASE}/quote?symbol=${sym}&${t}`),
       fget('profile', `${BASE}/stock/profile2?symbol=${sym}&${t}`),
       fget('metrics', `${BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
-      fget('candles', `${BASE}/stock/candle?symbol=${sym}&resolution=D&from=${from}&to=${to}&${t}`),
     ])
 
-    console.log(`[market] all requests succeeded for ${sym}`)
-    res.json({ quote, profile, metrics, candles: formatCandles(rawCandles) })
+    const candles = syntheticCandles(quote)
+    console.log(`[market] success for ${sym} — ${candles.length} synthetic candles`)
+
+    res.json({ quote, profile, metrics, candles, synthetic: true })
   } catch (err) {
     console.error('[market] error:', err.message)
     const status = err.message.includes('401') ? 401 : err.message.includes('403') ? 403 : 500

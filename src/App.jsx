@@ -31,7 +31,7 @@ export default function App() {
     setLoading(LOADING_MARKET)
 
     try {
-      const { quote, profile, metrics, candles } = await fetchMarket(sym)
+      const { quote, profile, metrics, candles, synthetic } = await fetchMarket(sym)
 
       if (!quote || quote.c === 0) {
         setError(`No data found for "${sym}". Check the ticker symbol and try again.`)
@@ -39,7 +39,7 @@ export default function App() {
         return
       }
 
-      setMarketData({ quote, profile, metrics, candles })
+      setMarketData({ quote, profile, metrics, candles, synthetic })
       setLoading(LOADING_AI)
 
       try {
@@ -136,7 +136,7 @@ export default function App() {
         {hasData && !loading.market && (
           <>
             <MetricsBar quote={marketData.quote} profile={marketData.profile} metrics={marketData.metrics} />
-            <CandleChart candles={marketData.candles} />
+            <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <AIAnalysis data={aiData} loading={loading.ai} />
               <CandlePatterns data={aiData?.patterns} loading={loading.ai} />

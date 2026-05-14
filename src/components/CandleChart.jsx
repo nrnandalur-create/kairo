@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createChart, ColorType, CrosshairMode } from 'lightweight-charts'
 
-export default function CandleChart({ candles }) {
+export default function CandleChart({ candles, synthetic }) {
   const containerRef = useRef(null)
   const chartRef = useRef(null)
 
@@ -80,9 +80,16 @@ export default function CandleChart({ candles }) {
 
   return (
     <div className="w-full bg-[#0d1210] border border-[#1e2d28] rounded-2xl overflow-hidden">
-      <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+      <div className="px-5 pt-4 pb-2 flex items-center justify-between flex-wrap gap-2">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Price · 30D · Daily</span>
-        <span className="text-xs text-gray-600">Powered by TradingView</span>
+        <div className="flex items-center gap-2">
+          {synthetic && (
+            <span className="text-[10px] text-yellow-600 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded">
+              Simulated history · upgrade API for real candles
+            </span>
+          )}
+          <span className="text-xs text-gray-600">Powered by TradingView</span>
+        </div>
       </div>
       <div ref={containerRef} className="w-full" />
     </div>
