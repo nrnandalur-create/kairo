@@ -7,7 +7,7 @@ import AIAnalysis from './components/AIAnalysis'
 import CandlePatterns from './components/CandlePatterns'
 import OptionsScanner from './components/OptionsScanner'
 import NewsFeed from './components/NewsFeed'
-import { getQuote, getProfile, getMetrics, getCandles, formatCandles } from './services/finnhub'
+import { fetchMarket } from './services/finnhub'
 import { getMockOptions, getMockNews } from './mockData'
 
 const LOADING_NONE = { market: false, ai: false }
@@ -31,12 +31,7 @@ export default function App() {
     setLoading(LOADING_MARKET)
 
     try {
-      const [quote, profile, metrics, rawCandles] = await Promise.all([
-        getQuote(sym),
-        getProfile(sym),
-        getMetrics(sym),
-        getCandles(sym),
-      ])
+      const { quote, profile, metrics, candles } = await fetchMarket(sym)
 
       if (!quote || quote.c === 0) {
         setError(`No data found for "${sym}". Check the ticker symbol and try again.`)
@@ -44,7 +39,6 @@ export default function App() {
         return
       }
 
-      const candles = formatCandles(rawCandles)
       setMarketData({ quote, profile, metrics, candles })
       setLoading(LOADING_AI)
 
@@ -66,8 +60,8 @@ export default function App() {
       setLoading(LOADING_NONE)
     } catch (err) {
       setError(
-        err.message.includes('401')
-          ? 'Invalid Finnhub API key. Check your VITE_FINNHUB_API_KEY in .env.local.'
+        err.message.includes('401') || err.message.includes('403')
+          ? 'Invalid Finnhub API key. Check your FINNHUB_API_KEY in Vercel environment variables.'
           : 'Failed to fetch market data. Check your API key or try again.'
       )
       setLoading(LOADING_NONE)
