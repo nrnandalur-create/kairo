@@ -1,7 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -9,9 +5,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const apiKey = process.env.GEMINI_API_KEY
-  console.log(`[analyze] GEMINI_API_KEY=${apiKey ? `set (${apiKey.slice(0, 4)}…)` : 'MISSING'}`)
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY is not set' })
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  console.log(`[analyze] ANTHROPIC_API_KEY=${apiKey ? `set (${apiKey.slice(0, 4)}…)` : 'MISSING'}`)
+  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set' })
 
   const { ticker, quote, profile, metrics, candles } = req.body
   if (!ticker || !quote) return res.status(400).json({ error: 'Missing ticker or quote in request body' })
@@ -73,18 +69,32 @@ Return exactly this JSON structure with no markdown fences:
 }`
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
-      systemInstruction: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text.',
-      generationConfig: { responseMimeType: 'application/json' },
+    console.log(`[analyze] calling Claude for ${ticker}…`)
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
 
-    console.log(`[analyze] calling Gemini for ${ticker}…`)
-    const result = await model.generateContent(prompt)
-    const raw = result.response.text()
-    console.log(`[analyze] Gemini raw response (first 300 chars): ${raw.slice(0, 300)}`)
+    if (!response.ok) {
+      const errBody = await response.text()
+      console.error(`[analyze] Anthropic HTTP ${response.status}: ${errBody.slice(0, 200)}`)
+      return res.status(500).json({ error: `Anthropic API error ${response.status}: ${errBody.slice(0, 120)}` })
+    }
 
-    // Strip accidental markdown fences in case they appear despite the setting
+    const data = await response.json()
+    const raw = data.content?.[0]?.text ?? ''
+    console.log(`[analyze] Claude raw response (first 300 chars): ${raw.slice(0, 300)}`)
+
+    // Strip accidental markdown fences
     const text = raw.trim().replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
 
     let analysis
@@ -93,7 +103,7 @@ Return exactly this JSON structure with no markdown fences:
     } catch (parseErr) {
       console.error(`[analyze] JSON parse failed: ${parseErr.message}`)
       console.error(`[analyze] raw text was: ${text.slice(0, 500)}`)
-      return res.status(500).json({ error: `Gemini returned invalid JSON: ${parseErr.message}` })
+      return res.status(500).json({ error: `Claude returned invalid JSON: ${parseErr.message}` })
     }
 
     // Normalise fields that might come back with wrong casing or types
@@ -110,7 +120,7 @@ Return exactly this JSON structure with no markdown fences:
     console.log(`[analyze] success: verdict=${analysis.verdict} rec=${analysis.recommendation} score=${analysis.score}`)
     res.json(analysis)
   } catch (err) {
-    console.error(`[analyze] Gemini error: ${err.message}`)
-    res.status(500).json({ error: `Gemini API error: ${err.message}` })
+    console.error(`[analyze] error: ${err.message}`)
+    res.status(500).json({ error: `Analysis error: ${err.message}` })
   }
 }

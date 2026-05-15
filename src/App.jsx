@@ -197,7 +197,7 @@ export default function App() {
       <footer className="border-t border-[#1a2e1f] mt-auto">
         <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[#263d2c] text-center">
           Kairo is for informational purposes only and does not constitute financial advice.
-          Market data via Finnhub · Alpha Vantage. AI analysis via Google Gemini.
+          Market data via Finnhub · Alpha Vantage. AI analysis via Claude.
         </div>
       </footer>
     </div>
