@@ -12,6 +12,7 @@ import SupportResistance from './components/SupportResistance'
 import OptionsScanner from './components/OptionsScanner'
 import NewsFeed from './components/NewsFeed'
 import { fetchMarket } from './services/finnhub'
+import { fetchAnalysis } from './services/analyze'
 import { getMockOptions, getMockNews } from './mockData'
 
 const LOADING_NONE   = { market: false, ai: false }
@@ -47,18 +48,8 @@ export default function App() {
       setLoading(LOADING_AI)
 
       try {
-        const res = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ticker: sym, quote, profile, metrics, candles }),
-        })
-        if (res.ok) {
-          const analysis = await res.json()
-          setAiData(analysis)
-        } else {
-          const errBody = await res.json().catch(() => ({}))
-          console.warn(`[app] AI analysis returned ${res.status}:`, errBody?.error)
-        }
+        const analysis = await fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
+        setAiData(analysis)
       } catch (aiErr) {
         console.warn('[app] AI analysis unavailable:', aiErr.message)
       }
