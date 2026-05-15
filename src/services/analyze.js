@@ -40,7 +40,7 @@ function buildPrompt({ ticker, quote, profile, metrics, candles }) {
     ? `$${lo52.toFixed(2)} – $${hi52.toFixed(2)} (price is ${pctFrom52H}% from 52W high, +${pctFrom52L}% from 52W low)`
     : 'N/A'
 
-  return `You are a sharp, confident financial analyst who explains things in plain English that a complete beginner can understand. Analyze the stock data below and return ONLY a valid JSON object — no markdown fences, no explanation, no extra text.
+  return `You are an institutional equity analyst. Analyze the data below with precision and return ONLY a valid JSON object — no markdown fences, no explanation, no extra text.
 
 TICKER: ${ticker}
 COMPANY: ${profile?.name ?? ticker}
@@ -73,16 +73,16 @@ ${recentCandles.map(c =>
 Return ONLY this JSON structure with no markdown fences:
 {
   "verdict": "BUY" | "SELL" | "HOLD",
-  "confidence": <integer 0-100>,
-  "entryPrice": <number — logical entry price based on current price action>,
-  "stopLoss": <number — key level where the trade thesis is invalidated>,
+  "confidence": <integer 0-100 — weight by indicator confluence; never default to 60>,
+  "entryPrice": <number — technically justified entry relative to current price and structure>,
+  "stopLoss": <number — level that structurally invalidates the thesis>,
   "riskLevel": "LOW" | "MEDIUM" | "HIGH",
-  "summary": "<2-3 sentences in plain English a beginner can understand — cover what the price is doing, whether momentum looks strong or weak, and the overall vibe of this stock right now>",
-  "bullCase": "<1-2 sentences — the strongest reason to be optimistic about this stock>",
-  "bearCase": "<1-2 sentences — the most important risk or red flag to watch>",
-  "bollingerExplanation": "<plain English explanation of where the price sits relative to the Bollinger Bands and what that means for the trade — upper band means overbought warning, lower band means potential bounce zone, middle means neutral>",
-  "candlePatternMeaning": "<name the most notable candle pattern visible in the last 10 days and explain in 1-2 sentences what it means for the trade decision>",
-  "tradeIdea": "<one specific, actionable sentence — what a trader should watch for or do right now, with a specific price level>"
+  "summary": "<2-3 sentences citing specific values: RSI level, MACD cross direction, BB position, and price action context. No generic statements.>",
+  "bullCase": "<1-2 sentences grounded in specific indicator readings or price structure — cite the actual RSI, MACD, or BB values that support the long thesis>",
+  "bearCase": "<1-2 sentences identifying the specific technical or fundamental risk — cite the metric or level that threatens the trade>",
+  "bollingerExplanation": "<1-2 sentences on BB position using exact band values and the % rank — state the directional implication clearly>",
+  "candlePatternMeaning": "<identify the most significant candle formation in the last 10 sessions by name, state its signal direction, and its implication for near-term price action>",
+  "tradeIdea": "<one sentence with a specific entry condition, target price level, and stop level>"
 }`
 }
 
@@ -103,7 +103,7 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
       messages: [
         {
           role: 'system',
-          content: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text. You MUST return a decisive verdict. Do NOT default to HOLD unless the data is truly mixed. If RSI is above 65 return SELL. If RSI is below 40 return BUY. If MACD is above signal return BUY. If price is near upper Bollinger Band return SELL. Confidence must reflect the strength of the signal — if multiple indicators agree, confidence should be 70-90. Never return exactly 60 for confidence.',
+          content: 'You are an institutional equity analyst. Return only valid JSON, no markdown fences, no extra text. Deliver a decisive, quantitatively grounded verdict. Do NOT default to HOLD unless indicators are genuinely conflicted. If RSI is above 65 lean SELL. If RSI is below 40 lean BUY. If MACD is above signal lean BUY. If price is at the upper Bollinger Band lean SELL. Weight confidence by indicator confluence — agreement across RSI, MACD, and BB warrants 70-90. Never return exactly 60 for confidence. All text fields must cite specific numbers, not generic observations.',
         },
         { role: 'user', content: prompt },
       ],
