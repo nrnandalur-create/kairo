@@ -88,7 +88,7 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
       'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
