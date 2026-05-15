@@ -114,15 +114,26 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
     throw new Error(`Failed to parse Groq JSON: ${e.message} — raw: ${text.slice(0, 200)}`)
   }
 
-  // Normalise fields
+  console.log('[analyze] parsed analysis:', analysis)
+
+  // Normalise verdict — map old-style bullish/bearish/neutral in case model ignores the schema
   if (typeof analysis.verdict === 'string') {
-    analysis.verdict = analysis.verdict.toUpperCase()
+    const v = analysis.verdict.toLowerCase()
+    if (v === 'bullish' || v === 'buy')  analysis.verdict = 'BUY'
+    else if (v === 'bearish' || v === 'sell') analysis.verdict = 'SELL'
+    else if (v === 'neutral' || v === 'hold') analysis.verdict = 'HOLD'
+    else analysis.verdict = analysis.verdict.toUpperCase()
   }
   if (!['BUY', 'SELL', 'HOLD'].includes(analysis.verdict)) {
     analysis.verdict = 'HOLD'
   }
+
   if (typeof analysis.riskLevel === 'string') {
-    analysis.riskLevel = analysis.riskLevel.toUpperCase()
+    const r = analysis.riskLevel.toLowerCase()
+    if (r === 'low')    analysis.riskLevel = 'LOW'
+    else if (r === 'medium') analysis.riskLevel = 'MEDIUM'
+    else if (r === 'high')   analysis.riskLevel = 'HIGH'
+    else analysis.riskLevel = analysis.riskLevel.toUpperCase()
   }
   if (!['LOW', 'MEDIUM', 'HIGH'].includes(analysis.riskLevel)) {
     analysis.riskLevel = 'MEDIUM'
