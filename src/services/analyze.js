@@ -99,11 +99,20 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
 
   const json = await response.json()
   const raw = json.choices[0].message.content
-  console.log('[analyze] Groq raw response (first 300 chars):', raw.slice(0, 300))
+  console.log('[analyze] Groq raw response:', raw)
 
-  // Strip accidental markdown fences
-  const text = raw.trim().replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
-  const analysis = JSON.parse(text)
+  // Extract JSON robustly — find the outermost { } regardless of markdown wrapping
+  const start = raw.indexOf('{')
+  const end = raw.lastIndexOf('}')
+  if (start === -1 || end === -1) throw new Error(`Groq response contains no JSON object: ${raw.slice(0, 200)}`)
+  const text = raw.slice(start, end + 1)
+
+  let analysis
+  try {
+    analysis = JSON.parse(text)
+  } catch (e) {
+    throw new Error(`Failed to parse Groq JSON: ${e.message} — raw: ${text.slice(0, 200)}`)
+  }
 
   // Normalise fields
   if (typeof analysis.verdict === 'string') {
