@@ -74,7 +74,7 @@ Return exactly this JSON structure with no markdown fences:
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash-exp',
       systemInstruction: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text.',
       generationConfig: { responseMimeType: 'application/json' },
     })
