@@ -1,7 +1,6 @@
-function ScoreRing({ score }) {
-  const s = typeof score === 'number' && !isNaN(score) ? score : 0
-  const color = s >= 6.5 ? '#1D9E75' : s >= 4.5 ? '#d4922a' : '#e24b4a'
-  const pct = (s / 10) * 100
+function ConfidenceRing({ confidence }) {
+  const s = typeof confidence === 'number' && !isNaN(confidence) ? Math.min(100, Math.max(0, confidence)) : 0
+  const color = s >= 65 ? '#1D9E75' : s >= 45 ? '#d4922a' : '#e24b4a'
   return (
     <div className="flex items-center gap-4">
       <div className="relative w-14 h-14 shrink-0">
@@ -12,17 +11,17 @@ function ScoreRing({ score }) {
             stroke={color} strokeWidth="5"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 22}`}
-            strokeDashoffset={`${2 * Math.PI * 22 * (1 - pct / 100)}`}
+            strokeDashoffset={`${2 * Math.PI * 22 * (1 - s / 100)}`}
             style={{ transition: 'stroke-dashoffset 1s ease' }}
           />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-sm font-black tabular-nums" style={{ color }}>
-          {s.toFixed(1)}
+          {s}
         </span>
       </div>
       <div className="flex flex-col gap-0.5">
-        <span className="text-[11px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">AI Score</span>
-        <span className="text-xs text-[#d1d9d5]">out of 10</span>
+        <span className="text-[11px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">Confidence</span>
+        <span className="text-xs text-[#d1d9d5]">out of 100</span>
       </div>
     </div>
   )
@@ -33,7 +32,7 @@ function Skeleton() {
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-[#1D9E75] animate-pulse" />
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Gemini is analyzing…</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Analyzing…</span>
       </div>
       <div className="flex gap-4 items-center">
         <div className="w-14 h-14 rounded-full bg-[#1a2e1f] animate-pulse shrink-0" />
@@ -60,31 +59,31 @@ export default function AIAnalysis({ data, loading }) {
     </div>
   )
 
-  const isBull    = data.verdict === 'bullish'
-  const isNeutral = data.verdict === 'neutral'
-  const verdictColor  = isBull ? '#1D9E75' : isNeutral ? '#d4922a' : '#e24b4a'
-  const verdictLabel  = isBull ? '▲ Bullish' : isNeutral ? '◆ Neutral' : '▼ Bearish'
-  const verdictBorder = isBull ? 'border-[#1D9E75]/25 text-[#1D9E75] bg-[#1D9E75]/10'
-                      : isNeutral ? 'border-[#d4922a]/25 text-[#d4922a] bg-[#d4922a]/10'
+  const isBuy  = data.verdict === 'BUY'
+  const isHold = data.verdict === 'HOLD'
+  const verdictColor  = isBuy ? '#1D9E75' : isHold ? '#d4922a' : '#e24b4a'
+  const verdictLabel  = isBuy ? '▲ BUY' : isHold ? '◆ HOLD' : '▼ SELL'
+  const verdictBorder = isBuy  ? 'border-[#1D9E75]/25 text-[#1D9E75] bg-[#1D9E75]/10'
+                      : isHold ? 'border-[#d4922a]/25 text-[#d4922a] bg-[#d4922a]/10'
                       : 'border-[#e24b4a]/25 text-[#e24b4a] bg-[#e24b4a]/10'
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Analysis · Gemini</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Analysis · Groq</span>
         <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${verdictBorder}`}>
           {verdictLabel}
         </span>
       </div>
 
-      {/* Score ring + summary */}
+      {/* Confidence ring + summary */}
       <div className="flex items-start gap-4">
-        <ScoreRing score={data.score} />
+        <ConfidenceRing confidence={data.confidence} />
         <p className="text-sm text-[#d1d9d5] leading-relaxed flex-1">{data.summary}</p>
       </div>
 
-      {/* Bull / Bear split bar */}
+      {/* Bull / Bear split */}
       {(data.bullCase || data.bearCase) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-[#1D9E75]/8 border border-[#1D9E75]/20 rounded-xl p-3.5">
@@ -95,6 +94,22 @@ export default function AIAnalysis({ data, loading }) {
             <p className="text-[10px] text-[#e24b4a] font-bold uppercase tracking-widest mb-2">Bear Case</p>
             <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.bearCase}</p>
           </div>
+        </div>
+      )}
+
+      {/* Bollinger explanation */}
+      {data.bollingerExplanation && (
+        <div className="bg-[#1a2e1f]/50 border border-[#1a2e1f] rounded-xl p-3.5">
+          <p className="text-[10px] text-[#4b6358] font-bold uppercase tracking-widest mb-2">Bollinger Bands</p>
+          <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.bollingerExplanation}</p>
+        </div>
+      )}
+
+      {/* Candle pattern meaning */}
+      {data.candlePatternMeaning && (
+        <div className="bg-[#1a2e1f]/50 border border-[#1a2e1f] rounded-xl p-3.5">
+          <p className="text-[10px] text-[#4b6358] font-bold uppercase tracking-widest mb-2">Candle Pattern</p>
+          <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.candlePatternMeaning}</p>
         </div>
       )}
 

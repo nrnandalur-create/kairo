@@ -5,9 +5,9 @@ const CONFIG = {
 }
 
 const RISK = {
-  Low:    'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
-  Medium: 'bg-[#d4922a]/10 text-[#d4922a] border-[#d4922a]/25',
-  High:   'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
+  LOW:    'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
+  MEDIUM: 'bg-[#d4922a]/10 text-[#d4922a] border-[#d4922a]/25',
+  HIGH:   'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
 }
 
 function Skeleton() {
@@ -38,21 +38,20 @@ function Unavailable() {
 
 export default function Recommendation({ data, loading }) {
   if (loading) return <Skeleton />
-  if (!data?.recommendation) return <Unavailable />
+  if (!data?.verdict) return <Unavailable />
 
-  const rec = data.recommendation.toUpperCase()
+  const rec = data.verdict
   const cfg = CONFIG[rec] ?? CONFIG.HOLD
   const confidence = typeof data.confidence === 'number' ? Math.min(100, Math.max(0, data.confidence)) : 0
-  const reasons = Array.isArray(data.reasons) ? data.reasons.slice(0, 3) : []
-  const riskClass = RISK[data.riskLevel] ?? RISK.Medium
+  const riskClass = RISK[data.riskLevel] ?? RISK.MEDIUM
 
   return (
     <div className={`w-full bg-[#0f1611] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter`}>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Recommendation · Gemini</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Recommendation · Groq</span>
         <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
-          {data.riskLevel ?? 'Medium'} Risk
+          {data.riskLevel ?? 'MEDIUM'} Risk
         </span>
       </div>
 
@@ -78,16 +77,9 @@ export default function Recommendation({ data, loading }) {
       {/* Divider */}
       <div className="h-px bg-[#1a2e1f]" />
 
-      {/* Reasons */}
-      {reasons.length > 0 && (
-        <ul className="flex flex-col gap-2.5">
-          {reasons.map((r, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-sm text-[#d1d9d5]">
-              <span className="shrink-0 mt-0.5 font-bold text-xs" style={{ color: cfg.color }}>›</span>
-              <span className="leading-relaxed">{r}</span>
-            </li>
-          ))}
-        </ul>
+      {/* Summary */}
+      {data.summary && (
+        <p className="text-sm text-[#d1d9d5] leading-relaxed">{data.summary}</p>
       )}
 
       {/* Entry / Stop grid */}
