@@ -1,42 +1,74 @@
-function OptionRow({ opt }) {
-  const isCall = opt.type === 'call'
+const COLS = ['Type', 'Strike', 'Expiry', 'Open Int.', 'Premium', 'Note']
+
+function TypeBadge({ type }) {
+  const isCall = type === 'call'
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-[#1e2d28] last:border-0">
-      <span className={`text-[10px] font-bold px-2 py-0.5 rounded shrink-0 uppercase tracking-wider ${
-        isCall ? 'bg-[#1D9E75]/10 text-[#1D9E75]' : 'bg-[#e55353]/10 text-[#e55353]'
-      }`}>
-        {opt.type}
-      </span>
-      <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <div><p className="text-gray-600 text-[10px]">Strike</p><p className="text-gray-200 font-semibold">${opt.strike}</p></div>
-        <div><p className="text-gray-600 text-[10px]">Expiry</p><p className="text-gray-200 font-semibold">{opt.expiry}</p></div>
-        <div><p className="text-gray-600 text-[10px]">Open Int.</p><p className="text-gray-200 font-semibold">{opt.oi}</p></div>
-        <div><p className="text-gray-600 text-[10px]">Premium</p><p className="text-gray-200 font-semibold">{opt.premium}</p></div>
-      </div>
-      <span className={`text-[10px] italic shrink-0 hidden sm:block ${opt.unusual ? 'text-yellow-500' : 'text-gray-600'}`}>
-        {opt.note}
-      </span>
-    </div>
+    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-widest ${
+      isCall
+        ? 'bg-[#1D9E75]/10 text-[#1D9E75]'
+        : 'bg-[#e24b4a]/10 text-[#e24b4a]'
+    }`}>
+      {type}
+    </span>
   )
 }
 
 export default function OptionsScanner({ data }) {
   if (!data?.length) return null
   const unusual = data.filter(o => o.unusual)
+
   return (
-    <div className="w-full bg-[#0d1210] border border-[#1e2d28] rounded-2xl p-6 flex flex-col gap-4">
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Options Scanner</span>
+          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Options Flow</span>
           {unusual.length > 0 && (
-            <span className="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 border border-yellow-500/25 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-[#d4922a] bg-[#d4922a]/10 border border-[#d4922a]/25 px-2 py-0.5 rounded-full">
               {unusual.length} unusual
             </span>
           )}
         </div>
-        <span className="text-[10px] text-gray-700 bg-[#111a17] px-2 py-1 rounded">Demo · live feed requires options API</span>
+        <span className="text-[10px] text-[#4b6358] bg-[#0a0f0d] border border-[#1a2e1f] px-2.5 py-1 rounded-lg">
+          Demo · live feed requires options API
+        </span>
       </div>
-      <div>{data.map((opt, i) => <OptionRow key={i} opt={opt} />)}</div>
+
+      {/* Table */}
+      <div className="overflow-x-auto -mx-1">
+        <table className="w-full text-xs min-w-[520px]">
+          <thead>
+            <tr className="border-b border-[#1a2e1f]">
+              {COLS.map(col => (
+                <th key={col} className="text-left pb-2.5 text-[10px] font-semibold text-[#4b6358] uppercase tracking-[0.1em] px-2 first:pl-1 last:pr-1">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((opt, i) => (
+              <tr
+                key={i}
+                className={`border-b border-[#1a2e1f]/60 last:border-0 ${opt.unusual ? 'bg-[#d4922a]/5' : ''}`}
+              >
+                <td className="py-3 px-2 first:pl-1">
+                  <TypeBadge type={opt.type} />
+                </td>
+                <td className="py-3 px-2 font-semibold text-[#d1d9d5] tabular-nums">${opt.strike}</td>
+                <td className="py-3 px-2 text-[#d1d9d5]">{opt.expiry}</td>
+                <td className="py-3 px-2 tabular-nums text-[#d1d9d5]">{opt.oi}</td>
+                <td className="py-3 px-2 font-semibold tabular-nums text-[#d1d9d5]">{opt.premium}</td>
+                <td className="py-3 px-2 last:pr-1">
+                  <span className={`italic ${opt.unusual ? 'text-[#d4922a]' : 'text-[#4b6358]'}`}>
+                    {opt.note}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

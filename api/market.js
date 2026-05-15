@@ -40,9 +40,9 @@ async function fetchAVCandles(sym) {
   const series = data['Time Series (Daily)']
   if (!series) throw new Error('Alpha Vantage: missing "Time Series (Daily)" in response')
 
-  // Entries are newest-first; take 30, reverse to oldest-first for the chart
+  // Entries are newest-first; take 100, reverse to oldest-first for the chart
   const candles = Object.entries(series)
-    .slice(0, 30)
+    .slice(0, 100)
     .reverse()
     .map(([date, bar]) => {
       const [y, m, d] = date.split('-').map(Number)

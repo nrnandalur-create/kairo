@@ -15,41 +15,51 @@ function calcBollingerBands(candles, period = 20) {
     const mean = closes.reduce((a, b) => a + b, 0) / period
     const std = Math.sqrt(closes.reduce((s, c) => s + (c - mean) ** 2, 0) / period)
     bands.push({
-      time: candles[i].time,
-      upper: +(mean + 2 * std).toFixed(4),
+      time:   candles[i].time,
+      upper:  +(mean + 2 * std).toFixed(4),
       middle: +mean.toFixed(4),
-      lower: +(mean - 2 * std).toFixed(4),
+      lower:  +(mean - 2 * std).toFixed(4),
     })
   }
   return bands
 }
 
+const TIMEFRAMES = [
+  { label: '1W',  days: 7 },
+  { label: '1M',  days: 22 },
+  { label: '3M',  days: 65 },
+  { label: 'MAX', days: Infinity },
+]
+
 export default function CandleChart({ candles, synthetic }) {
   const containerRef = useRef(null)
-  const bandsRef = useRef(null)
-  const [showBands, setShowBands] = useState(false)
+  const bandsRef     = useRef(null)
+  const [showBands, setShowBands] = useState(true)
+  const [tf, setTf] = useState('1M')
 
-  // Recreate chart whenever candles change (new ticker)
   useEffect(() => {
     if (!containerRef.current || !candles?.length) return
+
+    const tfDays   = TIMEFRAMES.find(t => t.label === tf)?.days ?? Infinity
+    const filtered = tfDays === Infinity ? candles : candles.slice(-tfDays)
 
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#6b7280',
+        textColor: '#4b6358',
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: '#1a1d27' },
-        horzLines: { color: '#1a1d27' },
+        vertLines: { color: '#0f1611' },
+        horzLines: { color: '#131f17' },
       },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: {
-        borderColor: '#2e3347',
+        borderColor: '#1a2e1f',
         scaleMargins: { top: 0.08, bottom: 0.22 },
       },
       timeScale: {
-        borderColor: '#2e3347',
+        borderColor: '#1a2e1f',
         timeVisible: true,
         secondsVisible: false,
         fixLeftEdge: true,
@@ -58,39 +68,41 @@ export default function CandleChart({ candles, synthetic }) {
       handleScroll: true,
       handleScale: true,
       width: containerRef.current.clientWidth,
-      height: 380,
+      height: 420,
     })
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#1D9E75',
-      downColor: '#e55353',
+      upColor:      '#1D9E75',
+      downColor:    '#e24b4a',
       borderVisible: false,
-      wickUpColor: '#1D9E75',
-      wickDownColor: '#e55353',
+      wickUpColor:  '#1D9E75',
+      wickDownColor:'#e24b4a',
     })
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
+      priceFormat:  { type: 'volume' },
       priceScaleId: 'volume',
     })
-    chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } })
+    chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.84, bottom: 0 } })
 
-    // Bollinger band series — hidden until toggle
-    const lineOpts = { priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false, lineWidth: 1 }
-    const upperBand  = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(29,158,117,0.45)', visible: showBands })
-    const middleBand = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(255,255,255,0.18)', visible: showBands })
-    const lowerBand  = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(29,158,117,0.45)', visible: showBands })
+    const lineOpts = {
+      priceLineVisible:       false,
+      lastValueVisible:       false,
+      crosshairMarkerVisible: false,
+      lineWidth: 1,
+    }
+    const upperBand  = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(29,158,117,0.5)',  visible: showBands })
+    const middleBand = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(255,255,255,0.12)', visible: showBands, lineStyle: 2 })
+    const lowerBand  = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(29,158,117,0.5)',  visible: showBands })
     bandsRef.current = { upper: upperBand, middle: middleBand, lower: lowerBand }
 
-    // Set candle + volume data
-    candleSeries.setData(candles.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })))
-    volumeSeries.setData(candles.map(({ time, open, close, volume }) => ({
+    candleSeries.setData(filtered.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })))
+    volumeSeries.setData(filtered.map(({ time, open, close, volume }) => ({
       time, value: volume ?? 0,
-      color: close >= open ? '#1D9E7540' : '#e5535340',
+      color: close >= open ? 'rgba(29,158,117,0.2)' : 'rgba(226,75,74,0.2)',
     })))
 
-    // Set band data (only possible when candles >= period)
-    const bands = calcBollingerBands(candles)
+    const bands = calcBollingerBands(filtered)
     upperBand.setData(bands.map(b => ({ time: b.time, value: b.upper })))
     middleBand.setData(bands.map(b => ({ time: b.time, value: b.middle })))
     lowerBand.setData(bands.map(b => ({ time: b.time, value: b.lower })))
@@ -108,9 +120,8 @@ export default function CandleChart({ candles, synthetic }) {
       bandsRef.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles])
+  }, [candles, tf])
 
-  // Toggle band visibility without recreating the chart
   useEffect(() => {
     if (!bandsRef.current) return
     const opts = { visible: showBands }
@@ -120,26 +131,44 @@ export default function CandleChart({ candles, synthetic }) {
   }, [showBands])
 
   return (
-    <div className="w-full bg-[#0d1210] border border-[#1e2d28] rounded-2xl overflow-hidden">
-      <div className="px-5 pt-4 pb-2 flex items-center justify-between flex-wrap gap-2">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Price · 30D · Daily</span>
-        <div className="flex items-center gap-2 flex-wrap">
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl overflow-hidden animate-enter">
+      <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Price Chart</span>
           {synthetic && (
-            <span className="text-[10px] text-yellow-600 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded">
+            <span className="text-[10px] text-[#d4922a] bg-[#d4922a]/10 border border-[#d4922a]/25 px-2 py-0.5 rounded-full">
               Simulated history
             </span>
           )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Timeframe buttons */}
+          <div className="flex items-center gap-1 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg p-0.5">
+            {TIMEFRAMES.map(({ label }) => (
+              <button
+                key={label}
+                onClick={() => setTf(label)}
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  tf === label
+                    ? 'bg-[#1D9E75] text-white'
+                    : 'text-[#4b6358] hover:text-[#d1d9d5]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* BB toggle */}
           <button
             onClick={() => setShowBands(v => !v)}
-            className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
+            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
               showBands
-                ? 'bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/40'
-                : 'bg-[#1a2820] text-gray-500 border-[#2e3347] hover:text-gray-300'
+                ? 'bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/35'
+                : 'bg-[#0a0f0d] text-[#4b6358] border-[#1a2e1f] hover:text-[#d1d9d5]'
             }`}
           >
-            BB {showBands ? 'ON' : 'OFF'}
+            BB
           </button>
-          <span className="text-xs text-gray-600">TradingView</span>
         </div>
       </div>
       <div ref={containerRef} className="w-full" />

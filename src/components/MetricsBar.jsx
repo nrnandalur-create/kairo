@@ -1,24 +1,25 @@
-function fmt(n, decimals = 2) {
+function fmt(n, dec = 2) {
   if (n == null || isNaN(n)) return '—'
-  return Number(n).toFixed(decimals)
+  return Number(n).toFixed(dec)
 }
-
 function fmtCap(n) {
   if (!n) return '—'
   if (n >= 1000) return `$${(n / 1000).toFixed(2)}T`
   return `$${n.toFixed(1)}B`
 }
+function fmtVol(n) {
+  if (!n) return '—'
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`
+  return n.toFixed(0)
+}
 
-function Metric({ label, value, sub, highlight }) {
-  const color =
-    highlight === 'bull' ? 'text-[#1D9E75]' :
-    highlight === 'bear' ? 'text-[#e55353]' :
-    'text-gray-100'
+function MetricCell({ label, value, color }) {
   return (
-    <div className="flex flex-col gap-0.5 min-w-[80px]">
-      <span className="text-[10px] text-gray-500 uppercase tracking-widest">{label}</span>
-      <span className={`text-sm font-semibold tabular-nums ${color}`}>{value}</span>
-      {sub && <span className="text-[10px] text-gray-600">{sub}</span>}
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">{label}</span>
+      <span className={`text-sm font-semibold tabular-nums ${color || 'text-[#d1d9d5]'}`}>{value}</span>
     </div>
   )
 }
@@ -26,34 +27,55 @@ function Metric({ label, value, sub, highlight }) {
 export default function MetricsBar({ quote, profile, metrics }) {
   if (!quote) return null
 
-  const changeHighlight = quote.dp > 0 ? 'bull' : quote.dp < 0 ? 'bear' : null
-  const changeStr = quote.dp != null
-    ? `${quote.dp > 0 ? '+' : ''}${fmt(quote.d)} (${quote.dp > 0 ? '+' : ''}${fmt(quote.dp)}%)`
+  const up   = quote.dp > 0
+  const down = quote.dp < 0
+  const chgColor = up ? 'text-[#1D9E75]' : down ? 'text-[#e24b4a]' : 'text-[#4b6358]'
+  const arrow    = up ? '▲' : down ? '▼' : '◆'
+  const chgStr   = quote.d != null
+    ? `${up ? '+' : ''}${fmt(quote.d)} (${up ? '+' : ''}${fmt(quote.dp)}%)`
     : '—'
 
   const hi52 = metrics?.metric?.['52WeekHigh']
   const lo52 = metrics?.metric?.['52WeekLow']
-  const rangeStr = hi52 && lo52 ? `$${fmt(lo52)} – $${fmt(hi52)}` : '—'
 
   return (
-    <div className="w-full bg-[#0d1210] border border-[#1e2d28] rounded-2xl px-6 py-4 flex flex-wrap gap-6 items-center">
-      {/* Big price */}
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[10px] text-gray-500 uppercase tracking-widest">Price</span>
-        <span className="text-2xl font-bold text-gray-100 tabular-nums">${fmt(quote.c)}</span>
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
+      {/* Company + price row */}
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-6">
+        <div className="flex flex-col gap-0.5">
+          {profile?.name && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-[#d1d9d5]">{profile.name}</span>
+              {profile.exchange && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
+                  {profile.exchange}
+                </span>
+              )}
+            </div>
+          )}
+          <div className="flex items-baseline gap-3">
+            <span className="text-4xl sm:text-5xl font-black text-white tabular-nums tracking-tight">
+              ${fmt(quote.c)}
+            </span>
+            <span className={`text-base font-bold tabular-nums ${chgColor}`}>
+              {arrow} {chgStr}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="w-px bg-[#1e2d28] self-stretch" />
+      {/* Divider */}
+      <div className="h-px bg-[#1a2e1f]" />
 
-      <Metric label="Change" value={changeStr} highlight={changeHighlight} />
-      <Metric label="Market Cap" value={fmtCap(profile?.marketCapitalization)} />
-      <Metric label="P/E (TTM)" value={fmt(metrics?.metric?.peBasicExclExtraTTM, 1)} />
-      <Metric label="Beta" value={fmt(metrics?.metric?.beta)} />
-      <Metric label="52W Range" value={rangeStr} />
-      <Metric
-        label="Day Range"
-        value={`$${fmt(quote.l)} – $${fmt(quote.h)}`}
-      />
+      {/* Metrics grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <MetricCell label="Market Cap"  value={fmtCap(profile?.marketCapitalization)} />
+        <MetricCell label="P/E (TTM)"   value={fmt(metrics?.metric?.peBasicExclExtraTTM, 1)} />
+        <MetricCell label="Beta"        value={fmt(metrics?.metric?.beta)} />
+        <MetricCell label="52W Range"   value={hi52 && lo52 ? `$${fmt(lo52)} – $${fmt(hi52)}` : '—'} />
+        <MetricCell label="Day Range"   value={`$${fmt(quote.l)} – $${fmt(quote.h)}`} />
+        <MetricCell label="Prev Close"  value={`$${fmt(quote.pc)}`} />
+      </div>
     </div>
   )
 }
