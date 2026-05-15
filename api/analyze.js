@@ -5,9 +5,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const apiKey = process.env.GEMINI_API_KEY
-  console.log(`[analyze] GEMINI_API_KEY=${apiKey ? `set (${apiKey.slice(0, 4)}…)` : 'MISSING'}`)
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY is not set' })
+  const apiKey = process.env.GROQ_API_KEY
+  console.log(`[analyze] GROQ_API_KEY=${apiKey ? `set (${apiKey.slice(0, 4)}…)` : 'MISSING'}`)
+  if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY is not set' })
 
   const { ticker, quote, profile, metrics, candles } = req.body
   if (!ticker || !quote) return res.status(400).json({ error: 'Missing ticker or quote in request body' })
@@ -69,28 +69,32 @@ Return exactly this JSON structure with no markdown fences:
 }`
 
   try {
-    console.log(`[analyze] calling Gemini for ${ticker}…`)
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json' },
-        }),
-      }
-    )
+    console.log(`[analyze] calling Groq for ${ticker}…`)
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama3-8b-8192',
+        messages: [
+          { role: 'system', content: 'You are a financial analyst. Return only valid JSON, no markdown.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
+      }),
+    })
 
     if (!response.ok) {
       const errBody = await response.text()
-      console.error(`[analyze] Gemini HTTP ${response.status}: ${errBody.slice(0, 200)}`)
-      return res.status(500).json({ error: `Gemini API error ${response.status}: ${errBody.slice(0, 120)}` })
+      console.error(`[analyze] Groq HTTP ${response.status}: ${errBody.slice(0, 200)}`)
+      return res.status(500).json({ error: `Groq API error ${response.status}: ${errBody.slice(0, 120)}` })
     }
 
     const json = await response.json()
-    const raw = json.candidates[0].content.parts[0].text
-    console.log(`[analyze] Gemini raw response (first 300 chars): ${raw.slice(0, 300)}`)
+    const raw = json.choices[0].message.content
+    console.log(`[analyze] Groq raw response (first 300 chars): ${raw.slice(0, 300)}`)
 
     // Strip accidental markdown fences
     const text = raw.trim().replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
@@ -101,7 +105,7 @@ Return exactly this JSON structure with no markdown fences:
     } catch (parseErr) {
       console.error(`[analyze] JSON parse failed: ${parseErr.message}`)
       console.error(`[analyze] raw text was: ${text.slice(0, 500)}`)
-      return res.status(500).json({ error: `Gemini returned invalid JSON: ${parseErr.message}` })
+      return res.status(500).json({ error: `Groq returned invalid JSON: ${parseErr.message}` })
     }
 
     // Normalise fields that might come back with wrong casing or types
