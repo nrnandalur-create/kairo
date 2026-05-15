@@ -3,9 +3,11 @@ function fmt(n, dec = 2) {
   return Number(n).toFixed(dec)
 }
 function fmtCap(n) {
+  // Finnhub returns marketCapitalization in millions USD
   if (!n) return '—'
-  if (n >= 1000) return `$${(n / 1000).toFixed(2)}T`
-  return `$${n.toFixed(1)}B`
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}T`
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}B`
+  return `$${n.toFixed(0)}M`
 }
 function fmtVol(n) {
   if (!n) return '—'
@@ -37,6 +39,12 @@ export default function MetricsBar({ quote, profile, metrics }) {
 
   const hi52 = metrics?.metric?.['52WeekHigh']
   const lo52 = metrics?.metric?.['52WeekLow']
+
+  // Finnhub may populate any of these P/E fields depending on the ticker's earnings state
+  const pe = metrics?.metric?.peBasicExclExtraTTM
+          ?? metrics?.metric?.peTTM
+          ?? metrics?.metric?.peExclExtraTTM
+          ?? metrics?.metric?.peNormalizedAnnual
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
@@ -70,7 +78,7 @@ export default function MetricsBar({ quote, profile, metrics }) {
       {/* Metrics grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCell label="Market Cap"  value={fmtCap(profile?.marketCapitalization)} />
-        <MetricCell label="P/E (TTM)"   value={fmt(metrics?.metric?.peBasicExclExtraTTM, 1)} />
+        <MetricCell label="P/E (TTM)"   value={fmt(pe, 1)} />
         <MetricCell label="Beta"        value={fmt(metrics?.metric?.beta)} />
         <MetricCell label="52W Range"   value={hi52 && lo52 ? `$${fmt(lo52)} – $${fmt(hi52)}` : '—'} />
         <MetricCell label="Day Range"   value={`$${fmt(quote.l)} – $${fmt(quote.h)}`} />
