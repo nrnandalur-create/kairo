@@ -1,4 +1,4 @@
-import { calcBBPosition } from '../utils/indicators'
+import { calcBBPosition, calcRSI, calcMACD } from '../utils/indicators'
 
 function fmtCap(n) {
   if (!n) return 'N/A'
@@ -13,16 +13,32 @@ function buildPrompt({ ticker, quote, profile, metrics, candles }) {
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)
     : 'N/A'
 
-  const bb = calcBBPosition(candles)
-  let bbContext = 'Insufficient data for Bollinger Bands.'
-  if (bb) {
-    const zone = bb.pct >= 80
-      ? `near the UPPER band (${bb.pct.toFixed(0)}%) — overbought warning, price is stretched and may be due for a pullback`
-      : bb.pct <= 20
-      ? `near the LOWER band (${bb.pct.toFixed(0)}%) — potential bounce zone, price may be oversold and ready to recover`
-      : `near the MIDDLE band (${bb.pct.toFixed(0)}%) — neutral, no extreme signal from the bands`
-    bbContext = `Price is ${zone}. Lower band: $${bb.lower}, upper band: $${bb.upper}.`
-  }
+  const bb   = calcBBPosition(candles)
+  const rsi  = calcRSI(candles)
+  const macd = calcMACD(candles)
+
+  const bbZone = bb
+    ? bb.pct >= 80 ? `UPPER band (${bb.pct}%) — overbought warning`
+    : bb.pct <= 20 ? `LOWER band (${bb.pct}%) — oversold, potential bounce`
+    : `MIDDLE band (${bb.pct}%) — neutral`
+    : 'N/A'
+  const bbLine = bb ? `Lower $${bb.lower} | Upper $${bb.upper} | Price at ${bbZone}` : 'Insufficient data'
+
+  const rsiLine = rsi != null
+    ? `${rsi} — ${rsi >= 70 ? 'overbought (bearish signal)' : rsi <= 30 ? 'oversold (bullish signal)' : 'neutral range'}`
+    : 'N/A'
+
+  const macdLine = macd
+    ? `MACD ${macd.value} / Signal ${macd.signal} — ${macd.bullish ? 'MACD above signal (bullish momentum)' : 'MACD below signal (bearish momentum)'}`
+    : 'N/A'
+
+  const hi52 = metrics?.metric?.['52WeekHigh']
+  const lo52 = metrics?.metric?.['52WeekLow']
+  const pctFrom52H = hi52 ? (((quote.c - hi52) / hi52) * 100).toFixed(1) : null
+  const pctFrom52L = lo52 ? (((quote.c - lo52) / lo52) * 100).toFixed(1) : null
+  const rangeCtx = hi52 && lo52
+    ? `$${lo52.toFixed(2)} – $${hi52.toFixed(2)} (price is ${pctFrom52H}% from 52W high, +${pctFrom52L}% from 52W low)`
+    : 'N/A'
 
   return `You are a sharp, confident financial analyst who explains things in plain English that a complete beginner can understand. Analyze the stock data below and return ONLY a valid JSON object — no markdown fences, no explanation, no extra text.
 
@@ -37,15 +53,17 @@ PRICE DATA:
 - High today: $${quote.h} | Low today: $${quote.l}
 - Previous close: $${quote.pc}
 
+TECHNICAL INDICATORS:
+- RSI (14): ${rsiLine}
+- MACD (12/26/9): ${macdLine}
+- Bollinger Bands (20, 2σ): ${bbLine}
+- 52-week range: ${rangeCtx}
+
 FUNDAMENTALS:
 - Market cap: ${fmtCap(profile?.marketCapitalization)}
 - P/E (TTM): ${metrics?.metric?.peBasicExclExtraTTM?.toFixed(1) ?? 'N/A'}
 - EPS growth (5Y): ${metrics?.metric?.epsGrowth5Y?.toFixed(1) ?? 'N/A'}%
 - Beta: ${metrics?.metric?.beta?.toFixed(2) ?? 'N/A'}
-- 52W High: $${metrics?.metric?.['52WeekHigh']?.toFixed(2) ?? 'N/A'} | 52W Low: $${metrics?.metric?.['52WeekLow']?.toFixed(2) ?? 'N/A'}
-
-BOLLINGER BANDS (20-period, 2σ):
-${bbContext}
 
 LAST 10 DAILY CANDLES (oldest → newest):
 ${recentCandles.map(c =>
