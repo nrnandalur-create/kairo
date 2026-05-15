@@ -31,7 +31,7 @@ function Unavailable() {
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex items-center gap-3">
       <span className="text-[#4b6358] text-lg">—</span>
-      <span className="text-sm text-[#4b6358]">AI recommendation unavailable · check <code className="text-xs bg-[#1a2e1f] px-1 py-0.5 rounded">ANTHROPIC_API_KEY</code></span>
+      <span className="text-sm text-[#4b6358]">AI recommendation unavailable · check <code className="text-xs bg-[#1a2e1f] px-1 py-0.5 rounded">GEMINI_API_KEY</code></span>
     </div>
   )
 }
