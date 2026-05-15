@@ -55,9 +55,12 @@ export default function App() {
         if (res.ok) {
           const analysis = await res.json()
           setAiData(analysis)
+        } else {
+          const errBody = await res.json().catch(() => ({}))
+          console.warn(`[app] AI analysis returned ${res.status}:`, errBody?.error)
         }
-      } catch {
-        // AI analysis unavailable in this environment
+      } catch (aiErr) {
+        console.warn('[app] AI analysis unavailable:', aiErr.message)
       }
 
       setLoading(LOADING_NONE)
@@ -78,7 +81,7 @@ export default function App() {
 
       {/* ── Header ── */}
       <header className="border-b border-[#1a2e1f] bg-[#080c0a]/90 backdrop-blur-sm sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
           <div className="flex items-center gap-3 shrink-0">
             <KairoLogo size={32} />
             <div className="flex flex-col leading-none">
@@ -106,7 +109,7 @@ export default function App() {
       </header>
 
       {/* ── Main ── */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
 
         {/* Landing hero */}
         {!hasData && !isLoading && (
@@ -192,7 +195,7 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-[#1a2e1f] mt-auto">
-        <div className="max-w-5xl mx-auto px-6 py-4 text-[10px] text-[#263d2c] text-center">
+        <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[#263d2c] text-center">
           Kairo is for informational purposes only and does not constitute financial advice.
           Market data via Finnhub · Alpha Vantage. AI analysis via Google Gemini.
         </div>

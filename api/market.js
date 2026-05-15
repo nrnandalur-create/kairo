@@ -23,7 +23,7 @@ async function fetchAVCandles(sym) {
 
   if (!avKey) throw new Error('ALPHA_VANTAGE_KEY environment variable is not set')
 
-  const url = `${AV_BASE}?function=TIME_SERIES_DAILY&symbol=${sym}&outputsize=compact&apikey=${avKey}`
+  const url = `${AV_BASE}?function=TIME_SERIES_DAILY&symbol=${sym}&outputsize=full&apikey=${avKey}`
   console.log(`[market] fetching AV candles: ${url.replace(/apikey=[^&]+/, 'apikey=***')}`)
 
   const res = await fetch(url)
@@ -40,9 +40,9 @@ async function fetchAVCandles(sym) {
   const series = data['Time Series (Daily)']
   if (!series) throw new Error('Alpha Vantage: missing "Time Series (Daily)" in response')
 
-  // Entries are newest-first; take 100, reverse to oldest-first for the chart
+  // Entries are newest-first; take 250 (~1 year of trading days) for SMA 200 support
   const candles = Object.entries(series)
-    .slice(0, 100)
+    .slice(0, 250)
     .reverse()
     .map(([date, bar]) => {
       const [y, m, d] = date.split('-').map(Number)

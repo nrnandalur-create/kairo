@@ -53,7 +53,12 @@ function Skeleton() {
 
 export default function AIAnalysis({ data, loading }) {
   if (loading) return <Skeleton />
-  if (!data) return null
+  if (!data) return (
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex items-center gap-3">
+      <span className="text-[#4b6358] text-lg">—</span>
+      <span className="text-sm text-[#4b6358]">AI analysis unavailable · check Vercel logs for details</span>
+    </div>
+  )
 
   const isBull    = data.verdict === 'bullish'
   const isNeutral = data.verdict === 'neutral'

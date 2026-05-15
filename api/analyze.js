@@ -9,10 +9,15 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { ticker, quote, profile, metrics, candles } = req.body
+  const apiKey = process.env.VITE_GEMINI_API_KEY
+  console.log(`[analyze] VITE_GEMINI_API_KEY=${apiKey ? `set (${apiKey.slice(0, 4)}…)` : 'MISSING'}`)
+  if (!apiKey) return res.status(500).json({ error: 'VITE_GEMINI_API_KEY is not set' })
 
-  const recentCandles = candles.slice(-10)
-  const priceChange5d = candles.length >= 5
+  const { ticker, quote, profile, metrics, candles } = req.body
+  if (!ticker || !quote) return res.status(400).json({ error: 'Missing ticker or quote in request body' })
+
+  const recentCandles = (candles ?? []).slice(-10)
+  const priceChange5d = candles?.length >= 5
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)
     : 'N/A'
 
@@ -67,14 +72,45 @@ Return exactly this JSON structure with no markdown fences:
   "stopLoss": <number — suggested stop loss price>
 }`
 
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    systemInstruction: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text.',
-    generationConfig: { responseMimeType: 'application/json' },
-  })
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: 'You are a financial analyst AI. Return only valid JSON, no markdown fences, no extra text.',
+      generationConfig: { responseMimeType: 'application/json' },
+    })
 
-  const result = await model.generateContent(prompt)
-  const text = result.response.text().trim()
-  const analysis = JSON.parse(text)
-  res.json(analysis)
+    console.log(`[analyze] calling Gemini for ${ticker}…`)
+    const result = await model.generateContent(prompt)
+    const raw = result.response.text()
+    console.log(`[analyze] Gemini raw response (first 300 chars): ${raw.slice(0, 300)}`)
+
+    // Strip accidental markdown fences in case they appear despite the setting
+    const text = raw.trim().replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
+
+    let analysis
+    try {
+      analysis = JSON.parse(text)
+    } catch (parseErr) {
+      console.error(`[analyze] JSON parse failed: ${parseErr.message}`)
+      console.error(`[analyze] raw text was: ${text.slice(0, 500)}`)
+      return res.status(500).json({ error: `Gemini returned invalid JSON: ${parseErr.message}` })
+    }
+
+    // Normalise fields that might come back with wrong casing or types
+    if (typeof analysis.recommendation === 'string') {
+      analysis.recommendation = analysis.recommendation.toUpperCase()
+    }
+    if (!['BUY', 'SELL', 'HOLD'].includes(analysis.recommendation)) {
+      analysis.recommendation = 'HOLD'
+    }
+    if (!['bullish', 'bearish', 'neutral'].includes(analysis.verdict)) {
+      analysis.verdict = 'neutral'
+    }
+
+    console.log(`[analyze] success: verdict=${analysis.verdict} rec=${analysis.recommendation} score=${analysis.score}`)
+    res.json(analysis)
+  } catch (err) {
+    console.error(`[analyze] Gemini error: ${err.message}`)
+    res.status(500).json({ error: `Gemini API error: ${err.message}` })
+  }
 }

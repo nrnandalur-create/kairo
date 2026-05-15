@@ -161,10 +161,10 @@ export default function CandleChart({ candles, synthetic }) {
           {/* BB toggle */}
           <button
             onClick={() => setShowBands(v => !v)}
-            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+            className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
               showBands
-                ? 'bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/35'
-                : 'bg-[#0a0f0d] text-[#4b6358] border-[#1a2e1f] hover:text-[#d1d9d5]'
+                ? 'bg-[#1D9E75] text-white border-[#1D9E75]'
+                : 'bg-[#0a0f0d] text-[#d1d9d5] border-[#1a2e1f] hover:border-[#1D9E75]/50 hover:text-[#1D9E75]'
             }`}
           >
             BB
