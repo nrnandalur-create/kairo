@@ -1,26 +1,30 @@
 import { calcBBPosition } from '../utils/indicators'
 
+function fmtCap(n) {
+  if (!n) return 'N/A'
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}T`
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}B`
+  return `$${n.toFixed(0)}M`
+}
+
 function buildPrompt({ ticker, quote, profile, metrics, candles }) {
   const recentCandles = (candles ?? []).slice(-10)
   const priceChange5d = candles?.length >= 5
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)
     : 'N/A'
 
-  // Bollinger Band position for plain-English context in the prompt
   const bb = calcBBPosition(candles)
   let bbContext = 'Insufficient data for Bollinger Bands.'
   if (bb) {
-    const zone = bb.pct >= 80 ? 'near the UPPER band (overbought warning — price may be stretched and due for a pullback)'
-                : bb.pct <= 20 ? 'near the LOWER band (potential bounce zone — price may be oversold and due for a recovery)'
-                : 'near the MIDDLE band (neutral territory — no strong band signal)'
-    bbContext = `Price is at ${bb.pct}% within the Bollinger Bands (0% = lower band $${bb.lower}, 100% = upper band $${bb.upper}). Currently ${zone}. In simple terms for a beginner: ${
-      bb.pct >= 80 ? 'the stock has moved up quickly and may be running out of steam — caution is warranted.'
-    : bb.pct <= 20 ? 'the stock has dropped a lot and may be ready to bounce — but confirm with other signals before buying.'
-    : 'the stock is in a normal price range relative to recent history — no extreme signal from bands alone.'
-    } Consider whether this BB position confirms or contradicts the overall recommendation.`
+    const zone = bb.pct >= 80
+      ? `near the UPPER band (${bb.pct.toFixed(0)}%) — overbought warning, price is stretched and may be due for a pullback`
+      : bb.pct <= 20
+      ? `near the LOWER band (${bb.pct.toFixed(0)}%) — potential bounce zone, price may be oversold and ready to recover`
+      : `near the MIDDLE band (${bb.pct.toFixed(0)}%) — neutral, no extreme signal from the bands`
+    bbContext = `Price is ${zone}. Lower band: $${bb.lower}, upper band: $${bb.upper}.`
   }
 
-  return `You are a quantitative financial analyst. Analyze the following real-time stock data and return a JSON object only — no markdown, no extra text.
+  return `You are a sharp, confident financial analyst who explains things in plain English that a complete beginner can understand. Analyze the stock data below and return ONLY a valid JSON object — no markdown fences, no explanation, no extra text.
 
 TICKER: ${ticker}
 COMPANY: ${profile?.name ?? ticker}
@@ -34,7 +38,7 @@ PRICE DATA:
 - Previous close: $${quote.pc}
 
 FUNDAMENTALS:
-- Market cap: $${profile?.marketCapitalization ? (profile.marketCapitalization / 1000).toFixed(1) + 'B' : 'N/A'}
+- Market cap: ${fmtCap(profile?.marketCapitalization)}
 - P/E (TTM): ${metrics?.metric?.peBasicExclExtraTTM?.toFixed(1) ?? 'N/A'}
 - EPS growth (5Y): ${metrics?.metric?.epsGrowth5Y?.toFixed(1) ?? 'N/A'}%
 - Beta: ${metrics?.metric?.beta?.toFixed(2) ?? 'N/A'}
@@ -45,33 +49,22 @@ ${bbContext}
 
 LAST 10 DAILY CANDLES (oldest → newest):
 ${recentCandles.map(c =>
-  `  Date ${new Date(c.time * 1000).toISOString().slice(0, 10)}: O=${c.open.toFixed(2)} H=${c.high.toFixed(2)} L=${c.low.toFixed(2)} C=${c.close.toFixed(2)} V=${(c.volume / 1e6).toFixed(1)}M`
+  `  ${new Date(c.time * 1000).toISOString().slice(0, 10)}: O=${c.open.toFixed(2)} H=${c.high.toFixed(2)} L=${c.low.toFixed(2)} C=${c.close.toFixed(2)} V=${(c.volume / 1e6).toFixed(1)}M`
 ).join('\n')}
 
-Return exactly this JSON structure with no markdown fences:
+Return ONLY this JSON structure with no markdown fences:
 {
-  "verdict": "bullish" | "bearish" | "neutral",
-  "score": <number 1-10, where 10 = strongest buy>,
-  "summary": "<3-4 sentence plain-English analysis of price action, momentum, fundamentals, and what the Bollinger Band position means for this stock right now>",
-  "bullCase": "<1-2 sentences on the strongest bull argument>",
-  "bearCase": "<1-2 sentences on the strongest bear risk>",
-  "tradeIdea": "<one specific, actionable idea — entry trigger, target, and stop context>",
-  "patterns": [
-    {
-      "name": "<pattern name, e.g. Bullish Engulfing, Doji, Hammer, Shooting Star, Morning Star>",
-      "signal": "bullish" | "bearish" | "neutral",
-      "explanation": "<1-2 sentences: what this pattern means in the context of this stock's recent price action>",
-      "traderAction": "<1 sentence: what traders typically do when they spot this pattern>",
-      "timeframe": "<e.g. Daily · Last 2 candles>",
-      "reliability": "<percentage string e.g. '63%' — typical win rate for this pattern>"
-    }
-  ],
-  "recommendation": "BUY" | "SELL" | "HOLD",
+  "verdict": "BUY" | "SELL" | "HOLD",
   "confidence": <integer 0-100>,
-  "reasons": ["<reason 1>", "<reason 2>", "<reason 3>"],
-  "riskLevel": "Low" | "Medium" | "High",
-  "entryPrice": <number — suggested entry price near current price>,
-  "stopLoss": <number — suggested stop loss price>
+  "entryPrice": <number — logical entry price based on current price action>,
+  "stopLoss": <number — key level where the trade thesis is invalidated>,
+  "riskLevel": "LOW" | "MEDIUM" | "HIGH",
+  "summary": "<2-3 sentences in plain English a beginner can understand — cover what the price is doing, whether momentum looks strong or weak, and the overall vibe of this stock right now>",
+  "bullCase": "<1-2 sentences — the strongest reason to be optimistic about this stock>",
+  "bearCase": "<1-2 sentences — the most important risk or red flag to watch>",
+  "bollingerExplanation": "<plain English explanation of where the price sits relative to the Bollinger Bands and what that means for the trade — upper band means overbought warning, lower band means potential bounce zone, middle means neutral>",
+  "candlePatternMeaning": "<name the most notable candle pattern visible in the last 10 days and explain in 1-2 sentences what it means for the trade decision>",
+  "tradeIdea": "<one specific, actionable sentence — what a trader should watch for or do right now, with a specific price level>"
 }`
 }
 
@@ -113,14 +106,17 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
   const analysis = JSON.parse(text)
 
   // Normalise fields
-  if (typeof analysis.recommendation === 'string') {
-    analysis.recommendation = analysis.recommendation.toUpperCase()
+  if (typeof analysis.verdict === 'string') {
+    analysis.verdict = analysis.verdict.toUpperCase()
   }
-  if (!['BUY', 'SELL', 'HOLD'].includes(analysis.recommendation)) {
-    analysis.recommendation = 'HOLD'
+  if (!['BUY', 'SELL', 'HOLD'].includes(analysis.verdict)) {
+    analysis.verdict = 'HOLD'
   }
-  if (!['bullish', 'bearish', 'neutral'].includes(analysis.verdict)) {
-    analysis.verdict = 'neutral'
+  if (typeof analysis.riskLevel === 'string') {
+    analysis.riskLevel = analysis.riskLevel.toUpperCase()
+  }
+  if (!['LOW', 'MEDIUM', 'HIGH'].includes(analysis.riskLevel)) {
+    analysis.riskLevel = 'MEDIUM'
   }
 
   return analysis
