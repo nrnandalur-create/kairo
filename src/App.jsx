@@ -104,32 +104,39 @@ export default function App() {
 
         {/* Landing hero */}
         {!hasData && !isLoading && (
-          <div className="flex flex-col items-center text-center gap-8 py-20">
-            <KairoLogo size={72} />
+          <div className="flex flex-col items-center text-center gap-8 py-20 animate-fade">
+            {/* Ambient glow behind logo */}
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-48 h-48 rounded-full bg-[#1D9E75] opacity-[0.06] blur-3xl pointer-events-none" />
+              <KairoLogo size={76} />
+            </div>
             <div>
               <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white tracking-tight mb-3">kairo</h1>
               <p className="text-[#4b6358] tracking-[0.3em] uppercase text-xs">Know the moment.</p>
             </div>
-            <p className="text-[#4b6358] text-sm max-w-md leading-relaxed">
-              Real-time price data, interactive candlestick charts, technical indicators, and Gemini-powered AI analysis — all from a single ticker.
+            <p className="text-[#4b6358] text-sm max-w-sm leading-relaxed">
+              Real-time market data, interactive charts, technical indicators, and AI-powered analysis — all from a single ticker.
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
-            <div className="flex gap-5 text-xs text-[#263d2c] flex-wrap justify-center">
-              <span>Finnhub market data</span>
+            <div className="flex gap-5 text-[11px] text-[#263d2c] flex-wrap justify-center">
+              <span>Finnhub</span>
               <span>·</span>
-              <span>TradingView charts</span>
+              <span>Alpha Vantage</span>
               <span>·</span>
-              <span>Google Gemini AI</span>
+              <span>Groq AI</span>
             </div>
           </div>
         )}
 
         {/* Loading — market data */}
         {loading.market && (
-          <div className="flex flex-col items-center gap-4 py-32">
-            <div className="w-8 h-8 rounded-full border-2 border-[#1D9E75] border-t-transparent animate-spin" />
+          <div className="flex flex-col items-center gap-5 py-32 animate-fade">
+            <div className="relative w-10 h-10">
+              <div className="absolute inset-0 rounded-full border border-[#1a2e1f]" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#1D9E75] animate-spin" />
+            </div>
             <p className="text-sm text-[#4b6358]">
-              Fetching market data for <span className="text-[#1D9E75] font-semibold">{ticker}</span>…
+              Analyzing <span className="text-[#d1d9d5] font-semibold">{ticker}</span>
             </p>
           </div>
         )}

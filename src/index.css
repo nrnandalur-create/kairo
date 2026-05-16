@@ -11,9 +11,11 @@
   --color-muted:    #4b6358;
 }
 
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.996); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 @keyframes fadeIn {
@@ -26,19 +28,64 @@
   to   { opacity: 1; transform: scaleX(1); }
 }
 
-.animate-enter  { animation: fadeSlideIn 0.3s ease-out both; }
-.animate-fade   { animation: fadeIn 0.25s ease-out both; }
-.animate-bar    { animation: scaleIn 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes spinRing {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Animation utilities ───────────────────────────────────────────────────── */
+
+/* Spring easing — feels physical, not mechanical */
+.animate-enter  { animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade   { animation: fadeIn      0.3s ease-out both; }
+.animate-bar    { animation: scaleIn     0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Stagger delays for sequential card entrances */
+.d-1  { animation-delay:  60ms; }
+.d-2  { animation-delay: 120ms; }
+.d-3  { animation-delay: 180ms; }
+.d-4  { animation-delay: 240ms; }
+.d-5  { animation-delay: 300ms; }
+.d-6  { animation-delay: 360ms; }
+
+/* Shimmer skeleton — richer than plain pulse */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #131f17 0%,
+    #1e3324 40%,
+    #131f17 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
 
 body {
   background-color: #080c0a;
   color: #d1d9d5;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 * { box-sizing: border-box; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #080c0a; }
-::-webkit-scrollbar-thumb { background: #1a2e1f; border-radius: 3px; }
+/* Premium focus ring — brand-colored soft glow */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.35);
+  border-radius: 8px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #1e3024; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #29453a; }

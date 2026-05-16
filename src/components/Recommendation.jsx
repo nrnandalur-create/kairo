@@ -1,7 +1,7 @@
 const CONFIG = {
-  BUY:  { label: 'BUY',  color: '#1D9E75', bg: 'bg-[#1D9E75]/10', border: 'border-[#1D9E75]/25', bar: '#1D9E75' },
-  HOLD: { label: 'HOLD', color: '#d4922a', bg: 'bg-[#d4922a]/10',  border: 'border-[#d4922a]/25', bar: '#d4922a' },
-  SELL: { label: 'SELL', color: '#e24b4a', bg: 'bg-[#e24b4a]/10',  border: 'border-[#e24b4a]/25', bar: '#e24b4a' },
+  BUY:  { label: 'BUY',  color: '#1D9E75', bg: 'bg-[#1D9E75]/10', border: 'border-[#1D9E75]/30', bar: '#1D9E75', glow: 'rgba(29,158,117,0.07)' },
+  HOLD: { label: 'HOLD', color: '#d4922a', bg: 'bg-[#d4922a]/10',  border: 'border-[#d4922a]/30', bar: '#d4922a', glow: 'rgba(212,146,42,0.07)'  },
+  SELL: { label: 'SELL', color: '#e24b4a', bg: 'bg-[#e24b4a]/10',  border: 'border-[#e24b4a]/30', bar: '#e24b4a', glow: 'rgba(226,75,74,0.07)'   },
 }
 
 const RISK = {
@@ -10,18 +10,22 @@ const RISK = {
   HIGH:   'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
 }
 
+function SkeletonLine({ w = 'full' }) {
+  return <div className={`h-3 rounded-full shimmer w-${w}`} />
+}
+
 function Skeleton() {
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-[#1D9E75] animate-pulse" />
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Generating recommendation…</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+        <div className="h-2.5 w-40 rounded-full shimmer" />
       </div>
-      <div className="h-16 w-40 bg-[#1a2e1f] rounded-xl animate-pulse" />
-      <div className="space-y-2.5">
-        {[80, 65, 72].map((w, i) => (
-          <div key={i} className="h-3 bg-[#1a2e1f] rounded animate-pulse" style={{ width: `${w}%` }} />
-        ))}
+      <div className="h-16 w-36 rounded-xl shimmer" />
+      <div className="flex flex-col gap-2.5">
+        <SkeletonLine w="4/5" />
+        <SkeletonLine w="3/5" />
+        <SkeletonLine w="2/3" />
       </div>
     </div>
   )
@@ -31,7 +35,7 @@ function Unavailable() {
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex items-center gap-3">
       <span className="text-[#4b6358] text-lg">—</span>
-      <span className="text-sm text-[#4b6358]">AI recommendation unavailable · check <code className="text-xs bg-[#1a2e1f] px-1 py-0.5 rounded">VITE_GROQ_API_KEY</code></span>
+      <span className="text-sm text-[#4b6358]">AI recommendation unavailable · check <code className="text-xs bg-[#1a2e1f] px-1.5 py-0.5 rounded">VITE_GROQ_API_KEY</code></span>
     </div>
   )
 }
@@ -40,15 +44,21 @@ export default function Recommendation({ data, loading }) {
   if (loading) return <Skeleton />
   if (!data?.verdict) return <Unavailable />
 
-  const rec = data.verdict
-  const cfg = CONFIG[rec] ?? CONFIG.HOLD
+  const rec        = data.verdict
+  const cfg        = CONFIG[rec] ?? CONFIG.HOLD
   const confidence = typeof data.confidence === 'number' ? Math.min(100, Math.max(0, data.confidence)) : 0
-  const riskClass = RISK[data.riskLevel] ?? RISK.MEDIUM
+  const riskClass  = RISK[data.riskLevel] ?? RISK.MEDIUM
 
   return (
-    <div className={`w-full bg-[#0f1611] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter`}>
+    <div className={`relative w-full bg-[#0f1611] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter overflow-hidden`}>
+      {/* Ambient verdict glow */}
+      <div
+        className="absolute -top-8 -left-8 w-48 h-48 rounded-full blur-3xl pointer-events-none"
+        style={{ backgroundColor: cfg.glow }}
+      />
+
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="relative flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Recommendation</span>
         <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
           {data.riskLevel ?? 'MEDIUM'} Risk
@@ -56,7 +66,7 @@ export default function Recommendation({ data, loading }) {
       </div>
 
       {/* Verdict + confidence */}
-      <div className="flex items-end gap-6 flex-wrap">
+      <div className="relative flex items-end gap-6 flex-wrap">
         <span className="text-7xl font-black leading-none tracking-tight" style={{ color: cfg.color }}>
           {cfg.label}
         </span>
@@ -65,7 +75,7 @@ export default function Recommendation({ data, loading }) {
             <span className="text-3xl font-black tabular-nums leading-none" style={{ color: cfg.color }}>{confidence}</span>
             <span className="text-sm text-[#4b6358] font-medium">% confidence</span>
           </div>
-          <div className="w-36 h-1.5 bg-[#1a2e1f] rounded-full overflow-hidden">
+          <div className="w-36 h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full animate-bar"
               style={{ width: `${confidence}%`, backgroundColor: cfg.bar, transformOrigin: 'left' }}
@@ -79,7 +89,7 @@ export default function Recommendation({ data, loading }) {
 
       {/* Summary */}
       {data.summary && (
-        <p className="text-sm text-[#d1d9d5] leading-relaxed">{data.summary}</p>
+        <p className="text-sm text-[#d1d9d5]/80 leading-relaxed">{data.summary}</p>
       )}
 
       {/* Entry / Stop grid */}
@@ -87,7 +97,7 @@ export default function Recommendation({ data, loading }) {
         <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#1a2e1f]">
           {data.entryPrice && (
             <div className="flex flex-col gap-1">
-              <p className="text-[10px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">Suggested Entry</p>
+              <p className="text-[10px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">Entry</p>
               <p className="text-base font-bold text-[#d1d9d5] tabular-nums">${Number(data.entryPrice).toFixed(2)}</p>
             </div>
           )}

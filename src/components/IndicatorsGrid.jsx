@@ -21,7 +21,7 @@ function StatusBadge({ label, color }) {
 
 function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) {
   return (
-    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-2.5">
+    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-2.5 transition-colors duration-200 hover:border-[#263d2c] hover:bg-[#0c1410]">
       <span className="text-[10px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">{title}</span>
       <div className="flex items-end justify-between gap-2">
         <span className="text-xl font-black tabular-nums text-[#d1d9d5] leading-none">{value}</span>
@@ -31,8 +31,8 @@ function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) 
       {bar != null && (
         <div className="h-1 bg-[#1a2e1f] rounded-full overflow-hidden mt-0.5">
           <div
-            className="h-full rounded-full"
-            style={{ width: `${Math.min(100, Math.max(0, bar))}%`, backgroundColor: barColor ?? '#1D9E75' }}
+            className="h-full rounded-full animate-bar"
+            style={{ width: `${Math.min(100, Math.max(0, bar))}%`, backgroundColor: barColor ?? '#1D9E75', transformOrigin: 'left' }}
           />
         </div>
       )}
@@ -43,12 +43,12 @@ function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) 
 function Skeleton() {
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Technical Indicators</span>
+      <div className="h-2.5 w-36 rounded-full shimmer" />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 space-y-2">
-            <div className="h-2.5 bg-[#1a2e1f] rounded animate-pulse w-3/5" />
-            <div className="h-6 bg-[#1a2e1f] rounded animate-pulse w-2/5" />
+          <div key={i} className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-2.5">
+            <div className="h-2 rounded-full shimmer w-3/5" />
+            <div className="h-6 rounded-full shimmer w-2/5" />
           </div>
         ))}
       </div>
@@ -112,53 +112,18 @@ export default function IndicatorsGrid({ candles, loading }) {
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Technical Indicators</span>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <IndicatorCard
-          title="RSI (14)"
-          value={rsiLabel}
-          badge={rsiBadge}
-          badgeColor={rsiBColor}
-          bar={rsi}
-          barColor={rsi >= 70 ? '#e24b4a' : rsi <= 30 ? '#1D9E75' : '#4b6358'}
-        />
-        <IndicatorCard
-          title="MACD"
-          value={macdLabel}
-          sub={macdSub}
-          badge={macdBadge}
-          badgeColor={macdBColor}
-        />
-        <IndicatorCard
-          title="SMA 50"
-          value={sma50Label}
-          sub={sma50Sub}
-          badge={sma50Badge}
-          badgeColor={sma50BC}
-        />
-        <IndicatorCard
-          title="SMA 200"
-          value={sma200Label}
-          sub={sma200Sub}
-          badge={sma200Badge}
-          badgeColor={sma200BC}
-        />
-        <IndicatorCard
-          title="BB Position"
-          value={bbLabel}
-          sub={bbSub}
-          badge={bbBadge}
-          badgeColor={bbBColor}
-          bar={bbPct}
-          barColor={bbBarColor}
-        />
-        <IndicatorCard
-          title="Volume"
-          value={volLabel}
-          sub={volSub}
-          badge={volBadge}
-          badgeColor={volBColor}
-          bar={volBarPct}
-          barColor={volBarClr}
-        />
+        {[
+          { title: 'RSI (14)',     value: rsiLabel,   sub: null,       badge: rsiBadge,   badgeColor: rsiBColor, bar: rsi,       barColor: rsi >= 70 ? '#e24b4a' : rsi <= 30 ? '#1D9E75' : '#4b6358' },
+          { title: 'MACD',        value: macdLabel,  sub: macdSub,    badge: macdBadge,  badgeColor: macdBColor },
+          { title: 'SMA 50',      value: sma50Label, sub: sma50Sub,   badge: sma50Badge, badgeColor: sma50BC },
+          { title: 'SMA 200',     value: sma200Label,sub: sma200Sub,  badge: sma200Badge,badgeColor: sma200BC },
+          { title: 'BB Position', value: bbLabel,    sub: bbSub,      badge: bbBadge,    badgeColor: bbBColor, bar: bbPct, barColor: bbBarColor },
+          { title: 'Volume',      value: volLabel,   sub: volSub,     badge: volBadge,   badgeColor: volBColor, bar: volBarPct, barColor: volBarClr },
+        ].map((card, i) => (
+          <div key={card.title} className={`animate-enter d-${i + 1}`}>
+            <IndicatorCard {...card} />
+          </div>
+        ))}
       </div>
     </div>
   )

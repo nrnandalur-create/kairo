@@ -95,7 +95,7 @@ function ReliabilityPip({ pct }) {
 function PatternCard({ pattern }) {
   const s = SIGNAL[pattern.signal] ?? SIGNAL.neutral
   return (
-    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-3 transition-colors duration-200 hover:border-[#263d2c] hover:bg-[#0c1410]">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="shrink-0">{getPatternSvg(pattern.name)}</div>
@@ -134,9 +134,9 @@ function Skeleton() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[1, 2].map(i => (
           <div key={i} className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 space-y-3">
-            <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-2/3" />
-            <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-full" />
-            <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-4/5" />
+            <div className="h-3 rounded-full shimmer w-2/3" />
+            <div className="h-3 rounded-full shimmer w-full" />
+            <div className="h-3 rounded-full shimmer w-4/5" />
           </div>
         ))}
       </div>

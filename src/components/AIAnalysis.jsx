@@ -1,18 +1,19 @@
 function ConfidenceRing({ confidence }) {
-  const s = typeof confidence === 'number' && !isNaN(confidence) ? Math.min(100, Math.max(0, confidence)) : 0
+  const s     = typeof confidence === 'number' && !isNaN(confidence) ? Math.min(100, Math.max(0, confidence)) : 0
   const color = s >= 65 ? '#1D9E75' : s >= 45 ? '#d4922a' : '#e24b4a'
+  const circ  = 2 * Math.PI * 22
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative w-14 h-14 shrink-0">
+    <div className="flex items-center gap-4 shrink-0">
+      <div className="relative w-14 h-14">
         <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
-          <circle cx="28" cy="28" r="22" fill="none" stroke="#1a2e1f" strokeWidth="5" />
+          <circle cx="28" cy="28" r="22" fill="none" stroke="#1a2e1f" strokeWidth="4.5" />
           <circle
             cx="28" cy="28" r="22" fill="none"
-            stroke={color} strokeWidth="5"
+            stroke={color} strokeWidth="4.5"
             strokeLinecap="round"
-            strokeDasharray={`${2 * Math.PI * 22}`}
-            strokeDashoffset={`${2 * Math.PI * 22 * (1 - s / 100)}`}
-            style={{ transition: 'stroke-dashoffset 1s ease' }}
+            strokeDasharray={circ}
+            strokeDashoffset={circ * (1 - s / 100)}
+            style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)' }}
           />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-sm font-black tabular-nums" style={{ color }}>
@@ -21,7 +22,7 @@ function ConfidenceRing({ confidence }) {
       </div>
       <div className="flex flex-col gap-0.5">
         <span className="text-[11px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">Confidence</span>
-        <span className="text-xs text-[#d1d9d5]">out of 100</span>
+        <span className="text-xs text-[#4b6358]">out of 100</span>
       </div>
     </div>
   )
@@ -31,20 +32,20 @@ function Skeleton() {
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-[#1D9E75] animate-pulse" />
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Analyzing…</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+        <div className="h-2.5 w-28 rounded-full shimmer" />
       </div>
       <div className="flex gap-4 items-center">
-        <div className="w-14 h-14 rounded-full bg-[#1a2e1f] animate-pulse shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-3/4" />
-          <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-1/2" />
+        <div className="w-14 h-14 rounded-full shimmer shrink-0" />
+        <div className="flex-1 flex flex-col gap-2">
+          <div className="h-3 rounded-full shimmer w-4/5" />
+          <div className="h-3 rounded-full shimmer w-3/5" />
+          <div className="h-3 rounded-full shimmer w-2/3" />
         </div>
       </div>
-      <div className="space-y-2">
-        <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-full" />
-        <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-5/6" />
-        <div className="h-3 bg-[#1a2e1f] rounded animate-pulse w-4/6" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-16 rounded-xl shimmer" />
+        <div className="h-16 rounded-xl shimmer" />
       </div>
     </div>
   )
@@ -55,7 +56,7 @@ export default function AIAnalysis({ data, loading }) {
   if (!data) return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex items-center gap-3">
       <span className="text-[#4b6358] text-lg">—</span>
-      <span className="text-sm text-[#4b6358]">AI analysis unavailable · check Vercel logs for details</span>
+      <span className="text-sm text-[#4b6358]">AI analysis unavailable</span>
     </div>
   )
 
@@ -80,44 +81,48 @@ export default function AIAnalysis({ data, loading }) {
       {/* Confidence ring + summary */}
       <div className="flex items-start gap-4">
         <ConfidenceRing confidence={data.confidence} />
-        <p className="text-sm text-[#d1d9d5] leading-relaxed flex-1">{data.summary}</p>
+        <p className="text-sm text-[#d1d9d5]/80 leading-relaxed flex-1 pt-0.5">{data.summary}</p>
       </div>
 
       {/* Bull / Bear split */}
       {(data.bullCase || data.bearCase) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-[#1D9E75]/8 border border-[#1D9E75]/20 rounded-xl p-3.5">
-            <p className="text-[10px] text-[#1D9E75] font-bold uppercase tracking-widest mb-2">Bull Case</p>
-            <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.bullCase}</p>
-          </div>
-          <div className="bg-[#e24b4a]/8 border border-[#e24b4a]/20 rounded-xl p-3.5">
-            <p className="text-[10px] text-[#e24b4a] font-bold uppercase tracking-widest mb-2">Bear Case</p>
-            <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.bearCase}</p>
-          </div>
+          {data.bullCase && (
+            <div className="bg-[#1D9E75]/[0.05] border border-[#1D9E75]/15 rounded-xl p-3.5 transition-colors hover:border-[#1D9E75]/25 hover:bg-[#1D9E75]/[0.08]">
+              <p className="text-[10px] text-[#1D9E75] font-bold uppercase tracking-widest mb-2">Bull Case</p>
+              <p className="text-xs text-[#d1d9d5]/60 leading-relaxed">{data.bullCase}</p>
+            </div>
+          )}
+          {data.bearCase && (
+            <div className="bg-[#e24b4a]/[0.05] border border-[#e24b4a]/15 rounded-xl p-3.5 transition-colors hover:border-[#e24b4a]/25 hover:bg-[#e24b4a]/[0.08]">
+              <p className="text-[10px] text-[#e24b4a] font-bold uppercase tracking-widest mb-2">Bear Case</p>
+              <p className="text-xs text-[#d1d9d5]/60 leading-relaxed">{data.bearCase}</p>
+            </div>
+          )}
         </div>
       )}
 
       {/* Bollinger explanation */}
       {data.bollingerExplanation && (
-        <div className="bg-[#1a2e1f]/50 border border-[#1a2e1f] rounded-xl p-3.5">
-          <p className="text-[10px] text-[#4b6358] font-bold uppercase tracking-widest mb-2">Bollinger Bands</p>
-          <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.bollingerExplanation}</p>
+        <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-3.5 transition-colors hover:border-[#263d2c]">
+          <p className="text-[10px] text-[#4b6358] font-bold uppercase tracking-widest mb-1.5">Bollinger Bands</p>
+          <p className="text-xs text-[#d1d9d5]/60 leading-relaxed">{data.bollingerExplanation}</p>
         </div>
       )}
 
-      {/* Candle pattern meaning */}
+      {/* Candle pattern */}
       {data.candlePatternMeaning && (
-        <div className="bg-[#1a2e1f]/50 border border-[#1a2e1f] rounded-xl p-3.5">
-          <p className="text-[10px] text-[#4b6358] font-bold uppercase tracking-widest mb-2">Candle Pattern</p>
-          <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{data.candlePatternMeaning}</p>
+        <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-3.5 transition-colors hover:border-[#263d2c]">
+          <p className="text-[10px] text-[#4b6358] font-bold uppercase tracking-widest mb-1.5">Candle Pattern</p>
+          <p className="text-xs text-[#d1d9d5]/60 leading-relaxed">{data.candlePatternMeaning}</p>
         </div>
       )}
 
       {/* Trade idea */}
       {data.tradeIdea && (
-        <div className="border-l-2 border-[#1D9E75]/50 pl-4 py-1">
+        <div className="border-l-2 border-[#1D9E75]/40 pl-4 py-0.5">
           <p className="text-[10px] text-[#1D9E75] font-bold uppercase tracking-widest mb-1.5">Trade Idea</p>
-          <p className="text-sm text-[#d1d9d5] leading-relaxed">{data.tradeIdea}</p>
+          <p className="text-sm text-[#d1d9d5]/80 leading-relaxed">{data.tradeIdea}</p>
         </div>
       )}
     </div>

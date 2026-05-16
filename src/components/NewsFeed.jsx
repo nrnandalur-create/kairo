@@ -45,7 +45,7 @@ function NewsCard({ item }) {
   const sentiment = detectSentiment(item.headline)
   const s = SENTIMENT[sentiment]
   return (
-    <div className="flex gap-3 py-3.5 border-b border-[#1a2e1f] last:border-0">
+    <div className="flex gap-3 py-3.5 border-b border-[#1a2e1f] last:border-0 -mx-2 px-2 rounded-lg hover:bg-[#0c1410] transition-colors duration-150">
       <div className="mt-1.5 shrink-0">
         <span className={`block w-1.5 h-1.5 rounded-full ${s.dot}`} />
       </div>
@@ -56,12 +56,12 @@ function NewsCard({ item }) {
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-[#d1d9d5] leading-snug hover:text-white transition-colors"
+            className="text-sm text-[#d1d9d5]/80 leading-snug hover:text-white transition-colors duration-150"
           >
             {item.headline}
           </a>
         ) : (
-          <p className="text-sm text-[#d1d9d5] leading-snug">{item.headline}</p>
+          <p className="text-sm text-[#d1d9d5]/80 leading-snug">{item.headline}</p>
         )}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] text-[#4b6358]">{item.source}</span>

@@ -17,7 +17,7 @@ function LevelRow({ price, level, isResistance }) {
   const labelColor = isResistance ? 'text-[#e24b4a]' : 'text-[#1D9E75]'
 
   return (
-    <div className="flex items-center gap-3 py-1.5">
+    <div className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-[#0c1410] transition-colors duration-150">
       <span className={`text-xs font-semibold tabular-nums w-16 shrink-0 text-right ${labelColor}`}>
         ${fmt(level)}
       </span>
@@ -56,14 +56,14 @@ export default function SupportResistance({ candles, currentPrice }) {
         ))}
 
         {/* Current price marker */}
-        <div className="flex items-center gap-3 py-2">
+        <div className="flex items-center gap-3 py-2 px-2 -mx-2">
           <span className="text-xs font-black tabular-nums w-16 shrink-0 text-right text-[#d1d9d5]">
             ${fmt(currentPrice)}
           </span>
-          <div className="flex-1 flex items-center gap-1">
-            <div className="flex-1 h-px bg-[#1a2e1f]" />
-            <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest px-1.5">Now</span>
-            <div className="flex-1 h-px bg-[#1a2e1f]" />
+          <div className="flex-1 flex items-center gap-1.5">
+            <div className="flex-1 h-px bg-[#263d2c]" />
+            <span className="text-[9px] font-bold text-[#1D9E75]/70 uppercase tracking-widest px-2 py-0.5 border border-[#1D9E75]/20 rounded-full bg-[#1D9E75]/5">Now</span>
+            <div className="flex-1 h-px bg-[#263d2c]" />
           </div>
           <span className="text-[11px] text-[#4b6358] w-12 shrink-0" />
         </div>
