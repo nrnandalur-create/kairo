@@ -1,0 +1,180 @@
+import { useState, useEffect } from 'react'
+import { fetchMarketPulse } from '../services/marketPulse'
+
+function fmtPrice(n) {
+  if (n == null || isNaN(n)) return '—'
+  return Number(n).toFixed(2)
+}
+
+function fmtPct(n) {
+  if (n == null || isNaN(n)) return '—'
+  return `${n >= 0 ? '+' : ''}${Number(n).toFixed(2)}%`
+}
+
+const INDEX_NAMES = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones' }
+
+function IndexTile({ symbol, price, changePct }) {
+  const valid = changePct != null && !isNaN(changePct)
+  const up    = valid && changePct >= 0
+  const color = !valid ? '#4b6358' : up ? '#1D9E75' : '#e24b4a'
+  const bgBar = !valid ? '#1a2e1f' : up ? 'rgba(29,158,117,0.08)' : 'rgba(226,75,74,0.08)'
+
+  return (
+    <div className="flex-1 flex flex-col gap-1.5 px-6 py-5 transition-colors duration-150 hover:bg-[#0c1410]" style={{ background: bgBar }}>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-bold text-[#d1d9d5] uppercase tracking-[0.1em]">{symbol}</span>
+        <span className="text-[9px] text-[#4b6358] hidden sm:inline">{INDEX_NAMES[symbol]}</span>
+      </div>
+      <div className="flex items-baseline gap-2.5 flex-wrap">
+        <span className="text-xl font-black tabular-nums text-[#d1d9d5] leading-none">${fmtPrice(price)}</span>
+        <span className="text-xs font-bold tabular-nums leading-none" style={{ color }}>{fmtPct(changePct)}</span>
+      </div>
+    </div>
+  )
+}
+
+function MoverRow({ symbol, price, changePct, rank }) {
+  const up       = changePct != null && changePct >= 0
+  const badge    = up
+    ? 'bg-[#1D9E75]/10 border-[#1D9E75]/25 text-[#1D9E75]'
+    : 'bg-[#e24b4a]/10 border-[#e24b4a]/25 text-[#e24b4a]'
+
+  return (
+    <div className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0 -mx-1 px-1 rounded-md hover:bg-[#0c1410] transition-colors duration-150">
+      <span className="text-[10px] text-[#263d2c] tabular-nums w-4 shrink-0 text-right">{rank}</span>
+      <span className="text-sm font-bold text-[#d1d9d5] w-14 shrink-0">{symbol}</span>
+      <span className="text-sm tabular-nums text-[#4b6358] flex-1">${fmtPrice(price)}</span>
+      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest shrink-0 ${badge}`}>
+        {fmtPct(changePct)}
+      </span>
+    </div>
+  )
+}
+
+function Skeleton() {
+  return (
+    <div className="w-full flex flex-col gap-4">
+      {/* Indices bar skeleton */}
+      <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl overflow-hidden flex divide-x divide-[#1a2e1f]">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="flex-1 px-6 py-5 flex flex-col gap-2.5">
+            <div className="h-2.5 w-10 rounded-full shimmer" />
+            <div className="h-6 w-28 rounded-full shimmer" />
+          </div>
+        ))}
+      </div>
+      {/* Movers + sentiment skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        <div className="lg:col-span-2 bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4">
+          <div className="h-2.5 w-24 rounded-full shimmer" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+            {[0, 1].map(col => (
+              <div key={col} className="flex flex-col gap-1">
+                <div className="h-2 w-14 rounded-full shimmer mb-2" />
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0">
+                    <div className="h-3 w-4 rounded-full shimmer shrink-0" />
+                    <div className="h-3 w-14 rounded-full shimmer shrink-0" />
+                    <div className="h-3 flex-1 rounded-full shimmer" />
+                    <div className="h-5 w-14 rounded-full shimmer shrink-0" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4">
+          <div className="h-2.5 w-32 rounded-full shimmer" />
+          <div className="h-10 w-32 rounded-full shimmer" />
+          <div className="h-3 w-full rounded-full shimmer" />
+          <div className="h-1 w-full rounded-full shimmer" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function MarketPulse() {
+  const [data, setData]     = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchMarketPulse()
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <Skeleton />
+  if (!data) return null
+
+  const movers  = (data.movers ?? []).filter(m => m.price != null)
+  const gainers = [...movers].sort((a, b) => b.changePct - a.changePct).slice(0, 3)
+  const losers  = [...movers].sort((a, b) => a.changePct - b.changePct).slice(0, 3)
+
+  const upCount   = movers.filter(m => (m.changePct ?? 0) >= 0).length
+  const total     = movers.length || 1
+  const bullRatio = upCount / total
+  const mood      = bullRatio >= 0.6 ? 'Bullish' : bullRatio <= 0.4 ? 'Bearish' : 'Neutral'
+  const moodColor = mood === 'Bullish' ? '#1D9E75' : mood === 'Bearish' ? '#e24b4a' : '#d4922a'
+  const moodBorder = mood === 'Bullish'
+    ? 'border-[#1D9E75]/20'
+    : mood === 'Bearish'
+    ? 'border-[#e24b4a]/20'
+    : 'border-[#d4922a]/20'
+  const upPct   = Math.round(bullRatio * 100)
+  const downPct = 100 - upPct
+
+  return (
+    <div className="w-full flex flex-col gap-4 animate-enter">
+
+      {/* ── Indices bar ── */}
+      <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl overflow-hidden">
+        <div className="flex divide-x divide-[#1a2e1f]">
+          {(data.indices ?? []).map(idx => (
+            <IndexTile key={idx.symbol} {...idx} />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Movers + Sentiment ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+
+        {/* Top Movers */}
+        <div className="lg:col-span-2 bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4">
+          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Top Movers</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0">
+            <div>
+              <p className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest mb-2">Gainers</p>
+              {gainers.map((m, i) => <MoverRow key={m.symbol} {...m} rank={i + 1} />)}
+            </div>
+            <div className="mt-4 sm:mt-0">
+              <p className="text-[9px] font-bold text-[#e24b4a] uppercase tracking-widest mb-2">Losers</p>
+              {losers.map((m, i) => <MoverRow key={m.symbol} {...m} rank={i + 1} />)}
+            </div>
+          </div>
+        </div>
+
+        {/* Market Sentiment */}
+        <div className={`bg-[#0f1611] border ${moodBorder} rounded-2xl p-5 flex flex-col gap-4`}>
+          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Market Sentiment</span>
+          <span className="text-5xl font-black leading-none" style={{ color: moodColor }}>{mood}</span>
+          <p className="text-xs text-[#4b6358] leading-relaxed">
+            {upCount} of {total} tracked stocks are up today
+          </p>
+          <div className="flex h-1.5 rounded-full overflow-hidden">
+            <div className="bg-[#1D9E75] transition-all duration-700" style={{ width: `${upPct}%` }} />
+            <div className="bg-[#e24b4a] transition-all duration-700" style={{ width: `${downPct}%` }} />
+          </div>
+          <div className="flex justify-between text-[10px] text-[#4b6358]">
+            <span className="text-[#1D9E75]">{upPct}% up</span>
+            <span className="text-[#e24b4a]">{downPct}% down</span>
+          </div>
+        </div>
+
+      </div>
+
+      <p className="text-[10px] text-[#263d2c] text-center">Market data via Finnhub · Prices delayed</p>
+    </div>
+  )
+}

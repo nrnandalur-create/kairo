@@ -11,6 +11,7 @@ import IndicatorsGrid from './components/IndicatorsGrid'
 import SupportResistance from './components/SupportResistance'
 import OptionsScanner from './components/OptionsScanner'
 import NewsFeed from './components/NewsFeed'
+import MarketPulse from './components/MarketPulse'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
 import { getMockOptions, getMockNews } from './mockData'
@@ -104,29 +105,25 @@ export default function App() {
 
         {/* Landing hero */}
         {!hasData && !isLoading && (
-          <div className="flex flex-col items-center text-center gap-8 py-20 animate-fade">
+          <div className="flex flex-col items-center text-center gap-6 pt-10 pb-6 animate-fade">
             {/* Ambient glow behind logo */}
             <div className="relative flex items-center justify-center">
               <div className="absolute w-48 h-48 rounded-full bg-[#1D9E75] opacity-[0.06] blur-3xl pointer-events-none" />
-              <KairoLogo size={76} />
+              <KairoLogo size={60} />
             </div>
             <div>
-              <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white tracking-tight mb-3">kairo</h1>
+              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">kairo</h1>
               <p className="text-[#4b6358] tracking-[0.3em] uppercase text-xs">Know the moment.</p>
             </div>
             <p className="text-[#4b6358] text-sm max-w-sm leading-relaxed">
               Real-time market data, interactive charts, technical indicators, and AI-powered analysis — all from a single ticker.
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
-            <div className="flex gap-5 text-[11px] text-[#263d2c] flex-wrap justify-center">
-              <span>Finnhub</span>
-              <span>·</span>
-              <span>Alpha Vantage</span>
-              <span>·</span>
-              <span>Groq AI</span>
-            </div>
           </div>
         )}
+
+        {/* Market Pulse dashboard — visible on landing only */}
+        {!hasData && !isLoading && <MarketPulse />}
 
         {/* Loading — market data */}
         {loading.market && (
