@@ -1,3 +1,28 @@
+const POS_WORDS = ['beat', 'beats', 'surge', 'surges', 'gain', 'gains', 'growth', 'record',
+  'profit', 'profits', 'strong', 'bullish', 'upgrade', 'upgraded', 'outperform', 'rally',
+  'soar', 'soars', 'jump', 'jumps', 'rise', 'rises', 'exceed', 'exceeds', 'positive', 'top']
+const NEG_WORDS = ['miss', 'misses', 'fall', 'falls', 'drop', 'drops', 'decline', 'declines',
+  'loss', 'losses', 'weak', 'bearish', 'downgrade', 'downgraded', 'underperform', 'crash',
+  'plunge', 'plunges', 'slump', 'slumps', 'warning', 'risk', 'cut', 'cuts', 'disappoint',
+  'disappoints', 'concern', 'concerns', 'below', 'layoff', 'layoffs']
+
+function detectSentiment(headline) {
+  const h = headline.toLowerCase()
+  const pos = POS_WORDS.filter(w => h.includes(w)).length
+  const neg = NEG_WORDS.filter(w => h.includes(w)).length
+  if (pos > neg) return 'positive'
+  if (neg > pos) return 'negative'
+  return 'neutral'
+}
+
+function fmtTime(ts) {
+  const diff = Math.floor((Date.now() - ts * 1000) / 1000 / 60)
+  if (diff < 60) return `${diff}m ago`
+  if (diff < 60 * 24) return `${Math.floor(diff / 60)}h ago`
+  const d = new Date(ts * 1000)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 const SENTIMENT = {
   positive: {
     dot:   'bg-[#1D9E75]',
@@ -17,25 +42,34 @@ const SENTIMENT = {
 }
 
 function NewsCard({ item }) {
-  const s = SENTIMENT[item.sentiment] ?? SENTIMENT.neutral
+  const sentiment = detectSentiment(item.headline)
+  const s = SENTIMENT[sentiment]
   return (
     <div className="flex gap-3 py-3.5 border-b border-[#1a2e1f] last:border-0">
-      {/* Sentiment dot */}
       <div className="mt-1.5 shrink-0">
         <span className={`block w-1.5 h-1.5 rounded-full ${s.dot}`} />
       </div>
 
-      {/* Content */}
       <div className="flex-1 flex flex-col gap-1.5 min-w-0">
-        <p className="text-sm text-[#d1d9d5] leading-snug">{item.headline}</p>
+        {item.url ? (
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[#d1d9d5] leading-snug hover:text-white transition-colors"
+          >
+            {item.headline}
+          </a>
+        ) : (
+          <p className="text-sm text-[#d1d9d5] leading-snug">{item.headline}</p>
+        )}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] text-[#4b6358]">{item.source}</span>
           <span className="text-[10px] text-[#1a2e1f]">·</span>
-          <span className="text-[10px] text-[#4b6358]">{item.time}</span>
+          <span className="text-[10px] text-[#4b6358]">{fmtTime(item.datetime)}</span>
         </div>
       </div>
 
-      {/* Sentiment badge */}
       <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest self-start shrink-0 ${s.badge}`}>
         {s.label}
       </span>
@@ -46,29 +80,28 @@ function NewsCard({ item }) {
 export default function NewsFeed({ data }) {
   if (!data?.length) return null
 
-  const counts = data.reduce(
-    (acc, item) => {
-      acc[item.sentiment] = (acc[item.sentiment] ?? 0) + 1
-      return acc
-    },
-    {}
-  )
-  const total    = data.length
-  const bullPct  = Math.round((counts.positive ?? 0) / total * 100)
-  const bearPct  = Math.round((counts.negative ?? 0) / total * 100)
+  const counts  = data.reduce((acc, item) => {
+    const s = detectSentiment(item.headline)
+    acc[s] = (acc[s] ?? 0) + 1
+    return acc
+  }, {})
+  const total   = data.length
+  const bullPct = Math.round((counts.positive ?? 0) / total * 100)
+  const bearPct = Math.round((counts.negative ?? 0) / total * 100)
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">News Feed</span>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] inline-block" /><span className="text-[#4b6358]">{bullPct}% bull</span></span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#e24b4a] inline-block" /><span className="text-[#4b6358]">{bearPct}% bear</span></span>
-          </div>
-          <span className="text-[10px] text-[#4b6358] bg-[#0a0f0d] border border-[#1a2e1f] px-2.5 py-1 rounded-lg">
-            Demo · live feed requires news API
+        <div className="flex items-center gap-2 text-[10px]">
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] inline-block" />
+            <span className="text-[#4b6358]">{bullPct}% bull</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#e24b4a] inline-block" />
+            <span className="text-[#4b6358]">{bearPct}% bear</span>
           </span>
         </div>
       </div>
@@ -81,7 +114,7 @@ export default function NewsFeed({ data }) {
       </div>
 
       {/* News items */}
-      <div>{data.map((item, i) => <NewsCard key={i} item={item} />)}</div>
+      <div>{data.map((item, i) => <NewsCard key={item.id ?? i} item={item} />)}</div>
     </div>
   )
 }

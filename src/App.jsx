@@ -36,7 +36,7 @@ export default function App() {
     setLoading(LOADING_MARKET)
 
     try {
-      const { quote, profile, metrics, candles, synthetic } = await fetchMarket(sym)
+      const { quote, profile, metrics, candles, synthetic, news } = await fetchMarket(sym)
 
       if (!quote || quote.c == null) {
         setError(`No data found for "${sym}". Check the ticker symbol and try again.`)
@@ -44,7 +44,7 @@ export default function App() {
         return
       }
 
-      setMarketData({ quote, profile, metrics, candles, synthetic })
+      setMarketData({ quote, profile, metrics, candles, synthetic, news })
       setLoading(LOADING_AI)
 
       try {
@@ -179,7 +179,7 @@ export default function App() {
             <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
 
             {/* 8 — News feed */}
-            <NewsFeed data={getMockNews(ticker)} />
+            <NewsFeed data={marketData.news} />
           </ErrorBoundary>
         )}
       </main>

@@ -127,15 +127,21 @@ export default async function handler(req, res) {
     const sym = ticker.toUpperCase()
     const t   = `token=${finnhubKey}`
 
-    // Finnhub (quote/profile/metrics) and Alpha Vantage (candles) in parallel
+    const now  = new Date()
+    const from = new Date(now - 7 * 24 * 60 * 60 * 1000)
+    const fmt  = d => d.toISOString().slice(0, 10)
+
+    // Finnhub (quote/profile/metrics/news) and Alpha Vantage (candles) in parallel
     const [
-      [quote, profile, metrics],
+      [quote, profile, metrics, newsRaw],
       avResult,
     ] = await Promise.all([
       Promise.all([
         fget('quote',   `${FINNHUB_BASE}/quote?symbol=${sym}&${t}`),
         fget('profile', `${FINNHUB_BASE}/stock/profile2?symbol=${sym}&${t}`),
         fget('metrics', `${FINNHUB_BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
+        fget('news',    `${FINNHUB_BASE}/company-news?symbol=${sym}&from=${fmt(from)}&to=${fmt(now)}&${t}`)
+          .catch(err => { console.warn(`[market] news fetch failed: ${err.message}`); return [] }),
       ]),
       fetchAVCandles(sym).catch(err => {
         console.warn(`[market] Alpha Vantage failed, using synthetic fallback: ${err.message}`)
@@ -145,9 +151,10 @@ export default async function handler(req, res) {
 
     const synthetic = avResult === null
     const candles   = synthetic ? syntheticCandles(quote) : avResult
+    const news      = Array.isArray(newsRaw) ? newsRaw.slice(0, 10) : []
 
-    console.log(`[market] success for ${sym} — ${candles.length} candles (${synthetic ? 'synthetic' : 'Alpha Vantage'})`)
-    res.json({ quote, profile, metrics, candles, synthetic })
+    console.log(`[market] success for ${sym} — ${candles.length} candles (${synthetic ? 'synthetic' : 'Alpha Vantage'}), ${news.length} news items`)
+    res.json({ quote, profile, metrics, candles, synthetic, news })
   } catch (err) {
     console.error('[market] error:', err.message)
     const status = err.message.includes('401') ? 401 : err.message.includes('403') ? 403 : 500
