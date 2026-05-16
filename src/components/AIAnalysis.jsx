@@ -71,7 +71,7 @@ export default function AIAnalysis({ data, loading }) {
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Analysis · Groq</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Analysis</span>
         <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${verdictBorder}`}>
           {verdictLabel}
         </span>
