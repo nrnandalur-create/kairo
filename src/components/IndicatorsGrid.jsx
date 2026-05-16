@@ -84,9 +84,9 @@ export default function IndicatorsGrid({ candles, loading }) {
 
   // SMA 200
   const sma200  = calcSMA(candles, 200)
-  const sma200Label = sma200 ? `$${fmtNum(sma200)}` : candles.length < 200 ? 'Need 200d' : '—'
+  const sma200Label = sma200 ? `$${fmtNum(sma200)}` : '—'
   const sma200Diff  = sma200 && price ? ((price - sma200) / sma200 * 100) : null
-  const sma200Sub   = sma200Diff != null ? `Price ${sma200Diff >= 0 ? '+' : ''}${fmtNum(sma200Diff, 1)}% vs SMA` : candles.length < 200 ? `${candles.length}/200 days` : null
+  const sma200Sub   = sma200Diff != null ? `Price ${sma200Diff >= 0 ? '+' : ''}${fmtNum(sma200Diff, 1)}% vs SMA` : null
   const sma200Badge = sma200Diff == null ? null : sma200Diff >= 0 ? 'Above' : 'Below'
   const sma200BC    = sma200Diff == null ? 'muted' : sma200Diff >= 0 ? 'green' : 'red'
 

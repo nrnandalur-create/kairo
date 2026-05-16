@@ -85,9 +85,10 @@ export default function NewsFeed({ data }) {
     acc[s] = (acc[s] ?? 0) + 1
     return acc
   }, {})
-  const total   = data.length
-  const bullPct = Math.round((counts.positive ?? 0) / total * 100)
-  const bearPct = Math.round((counts.negative ?? 0) / total * 100)
+  const total      = data.length
+  const bullPct    = Math.round((counts.positive ?? 0) / total * 100)
+  const bearPct    = Math.round((counts.negative ?? 0) / total * 100)
+  const neutralPct = 100 - bullPct - bearPct
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
@@ -103,14 +104,18 @@ export default function NewsFeed({ data }) {
             <span className="w-1.5 h-1.5 rounded-full bg-[#e24b4a] inline-block" />
             <span className="text-[#4b6358]">{bearPct}% bear</span>
           </span>
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4b6358] inline-block" />
+            <span className="text-[#4b6358]">{neutralPct}% neutral</span>
+          </span>
         </div>
       </div>
 
       {/* Sentiment bar */}
       <div className="flex h-1 rounded-full overflow-hidden gap-px">
-        <div className="bg-[#1D9E75] rounded-l-full" style={{ width: `${bullPct}%` }} />
-        <div className="bg-[#e24b4a] rounded-r-full" style={{ width: `${bearPct}%` }} />
-        <div className="bg-[#1a2e1f] flex-1" />
+        <div className="bg-[#1D9E75]" style={{ width: `${bullPct}%` }} />
+        <div className="bg-[#e24b4a]" style={{ width: `${bearPct}%` }} />
+        <div className="bg-[#1a2e1f]" style={{ width: `${neutralPct}%` }} />
       </div>
 
       {/* News items */}

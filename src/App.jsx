@@ -145,40 +145,40 @@ export default function App() {
         {/* Results */}
         {hasData && !loading.market && (
           <ErrorBoundary>
-            {/* 1 — Price + Metrics */}
+            {/* Full width — Price + Metrics */}
             <MetricsBar
               quote={marketData.quote}
               profile={marketData.profile}
               metrics={marketData.metrics}
             />
 
-            {/* 2 — AI Recommendation */}
-            <Recommendation data={aiData} loading={loading.ai} />
+            {/* Two-column on desktop: left = chart/indicators, right = AI */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
-            {/* 3 — Candlestick chart */}
-            <ErrorBoundary>
-              <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
-            </ErrorBoundary>
+              {/* Left column — chart & technical */}
+              <div className="flex flex-col gap-5">
+                <ErrorBoundary>
+                  <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
+                </ErrorBoundary>
+                <IndicatorsGrid candles={marketData.candles} loading={false} />
+                <SupportResistance
+                  candles={marketData.candles}
+                  currentPrice={marketData.quote?.c}
+                />
+              </div>
 
-            {/* 4 — Technical Indicators */}
-            <IndicatorsGrid candles={marketData.candles} loading={false} />
-
-            {/* 5 — Support & Resistance */}
-            <SupportResistance
-              candles={marketData.candles}
-              currentPrice={marketData.quote?.c}
-            />
-
-            {/* 6 — AI Analysis + Patterns side by side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <AIAnalysis data={aiData} loading={loading.ai} />
-              <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
+              {/* Right column — AI recommendation & analysis */}
+              <div className="flex flex-col gap-5">
+                <Recommendation data={aiData} loading={loading.ai} />
+                <AIAnalysis data={aiData} loading={loading.ai} />
+                <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
+              </div>
             </div>
 
-            {/* 7 — Options scanner */}
+            {/* Full width — Options scanner */}
             <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
 
-            {/* 8 — News feed */}
+            {/* Full width — News feed */}
             <NewsFeed data={marketData.news} />
           </ErrorBoundary>
         )}
