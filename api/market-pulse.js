@@ -1,3 +1,5 @@
+import { rateLimit } from './_rateLimit.js'
+
 const INDICES = ['SPY', 'QQQ', 'DIA']
 const MOVERS  = ['AAPL', 'TSLA', 'NVDA', 'AMZN', 'META', 'MSFT', 'GOOGL', 'AMD', 'INTC', 'NFLX']
 
@@ -13,10 +15,11 @@ async function fetchQuote(symbol, apiKey) {
 }
 
 export default async function handler(req, res) {
+  if (!rateLimit(req, res)) return
   if (req.method !== 'GET') return res.status(405).end()
 
   const apiKey = process.env.FINNHUB_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'Missing FINNHUB_API_KEY' })
+  if (!apiKey) return res.status(500).json({ error: 'Service unavailable' })
 
   const all     = [...INDICES, ...MOVERS]
   const results = await Promise.all(all.map(s => fetchQuote(s, apiKey)))

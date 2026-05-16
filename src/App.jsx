@@ -75,8 +75,8 @@ export default function App() {
       try {
         const analysis = await fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
         setAiData(analysis)
-      } catch (aiErr) {
-        console.warn('[app] AI analysis unavailable:', aiErr.message)
+      } catch {
+        // AI analysis unavailable — page continues without it
       }
 
       setLoading(LOADING_NONE)

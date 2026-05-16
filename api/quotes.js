@@ -1,3 +1,6 @@
+import { rateLimit } from './_rateLimit.js'
+import { validateSymbolList } from './_validate.js'
+
 async function fetchQuote(symbol, apiKey) {
   try {
     const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`)
@@ -10,16 +13,16 @@ async function fetchQuote(symbol, apiKey) {
 }
 
 export default async function handler(req, res) {
+  if (!rateLimit(req, res)) return
   if (req.method !== 'GET') return res.status(405).end()
 
   const apiKey = process.env.FINNHUB_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'Missing FINNHUB_API_KEY' })
+  if (!apiKey) return res.status(500).json({ error: 'Service unavailable' })
 
-  const raw = typeof req.query.symbols === 'string' ? req.query.symbols : ''
-  if (!raw) return res.status(400).json({ error: 'symbols required' })
+  const symbols = validateSymbolList(req.query.symbols ?? '')
+  if (!symbols) return res.status(400).json({ error: 'Invalid symbols. Provide 1-20 valid ticker symbols.' })
 
-  const symbols = raw.split(',').slice(0, 25).map(s => s.trim().toUpperCase()).filter(Boolean)
-  const quotes  = await Promise.all(symbols.map(s => fetchQuote(s, apiKey)))
+  const quotes = await Promise.all(symbols.map(s => fetchQuote(s, apiKey)))
 
   res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
   res.json({ quotes })

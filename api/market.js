@@ -1,47 +1,36 @@
+import { rateLimit } from './_rateLimit.js'
+import { validateTicker } from './_validate.js'
+
 const FINNHUB_BASE = 'https://finnhub.io/api/v1'
 const AV_BASE      = 'https://www.alphavantage.co/query'
 
-// ── Finnhub helper ──────────────────────────────────────────────────────────
-
 async function fget(label, url) {
-  console.log(`[market] fetching ${label}: ${url.replace(/token=[^&]+/, 'token=***')}`)
   const res = await fetch(url)
-  console.log(`[market] ${label} → HTTP ${res.status}`)
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(`Finnhub ${res.status} on ${label}: ${body.slice(0, 200)}`)
+    throw new Error(`Finnhub ${res.status} on ${label}: ${body.slice(0, 120)}`)
   }
   return res.json()
 }
 
-// ── Alpha Vantage candles ───────────────────────────────────────────────────
-
 async function fetchAVCandles(sym) {
   const avKey = process.env.ALPHA_VANTAGE_KEY
-  const avKeyStatus = avKey ? `set (${avKey.slice(0, 4)}…${avKey.slice(-4)})` : 'MISSING'
-  console.log(`[market] ALPHA_VANTAGE_KEY=${avKeyStatus}`)
-
-  if (!avKey) throw new Error('ALPHA_VANTAGE_KEY environment variable is not set')
+  if (!avKey) throw new Error('ALPHA_VANTAGE_KEY is not set')
 
   const url = `${AV_BASE}?function=TIME_SERIES_DAILY&symbol=${sym}&outputsize=full&apikey=${avKey}`
-  console.log(`[market] fetching AV candles: ${url.replace(/apikey=[^&]+/, 'apikey=***')}`)
-
   const res = await fetch(url)
-  console.log(`[market] AV candles → HTTP ${res.status}`)
   if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status}`)
 
   const data = await res.json()
 
-  // Alpha Vantage signals all errors via JSON on HTTP 200
-  if (data['Error Message']) throw new Error(`Alpha Vantage symbol error: ${data['Error Message']}`)
-  if (data['Note'])         throw new Error(`Alpha Vantage rate limit: ${data['Note'].slice(0, 120)}`)
-  if (data['Information'])  throw new Error(`Alpha Vantage key error: ${data['Information'].slice(0, 120)}`)
+  if (data['Error Message']) throw new Error(`Alpha Vantage symbol error`)
+  if (data['Note'])          throw new Error(`Alpha Vantage rate limit`)
+  if (data['Information'])   throw new Error(`Alpha Vantage key error`)
 
   const series = data['Time Series (Daily)']
-  if (!series) throw new Error('Alpha Vantage: missing "Time Series (Daily)" in response')
+  if (!series) throw new Error('Alpha Vantage: missing time series data')
 
-  // Entries are newest-first; take 250 (~1 year of trading days) for SMA 200 support
-  const candles = Object.entries(series)
+  return Object.entries(series)
     .slice(0, 250)
     .reverse()
     .map(([date, bar]) => {
@@ -55,13 +44,7 @@ async function fetchAVCandles(sym) {
         volume: +bar['5. volume'],
       }
     })
-
-  console.log(`[market] AV returned ${candles.length} candles for ${sym}`)
-  return candles
 }
-
-// ── Synthetic fallback (seeded random walk from live quote) ─────────────────
-// Used when Alpha Vantage is unavailable (rate limit, missing key, etc.)
 
 function makeRng(seed) {
   let s = (Math.abs(Math.round(seed * 137)) || 0x9e3779b9) >>> 0
@@ -107,31 +90,28 @@ function syntheticCandles(quote) {
   return candles
 }
 
-// ── Handler ─────────────────────────────────────────────────────────────────
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (!rateLimit(req, res)) return
 
-  const { ticker } = req.query
-  if (!ticker) return res.status(400).json({ error: 'Missing ticker query param' })
+  const ticker = validateTicker(req.query.ticker)
+  if (!ticker) return res.status(400).json({ error: 'Invalid ticker. Must be 1-5 uppercase letters.' })
 
   const finnhubKey = process.env.FINNHUB_API_KEY
-  console.log(`[market] ticker=${ticker.toUpperCase()} FINNHUB_API_KEY=${finnhubKey ? `set (${finnhubKey.slice(0, 4)}…${finnhubKey.slice(-4)})` : 'MISSING'}`)
-  if (!finnhubKey) return res.status(500).json({ error: 'FINNHUB_API_KEY environment variable is not set' })
+  if (!finnhubKey) return res.status(500).json({ error: 'Market data service is unavailable' })
 
   try {
-    const sym = ticker.toUpperCase()
+    const sym = ticker
     const t   = `token=${finnhubKey}`
 
     const now  = new Date()
     const from = new Date(now - 7 * 24 * 60 * 60 * 1000)
     const fmt  = d => d.toISOString().slice(0, 10)
 
-    // Finnhub (quote/profile/metrics/news) and Alpha Vantage (candles) in parallel
     const [
       [quote, profile, metrics, newsRaw],
       avResult,
@@ -141,23 +121,22 @@ export default async function handler(req, res) {
         fget('profile', `${FINNHUB_BASE}/stock/profile2?symbol=${sym}&${t}`),
         fget('metrics', `${FINNHUB_BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
         fget('news',    `${FINNHUB_BASE}/company-news?symbol=${sym}&from=${fmt(from)}&to=${fmt(now)}&${t}`)
-          .catch(err => { console.warn(`[market] news fetch failed: ${err.message}`); return [] }),
+          .catch(() => []),
       ]),
-      fetchAVCandles(sym).catch(err => {
-        console.warn(`[market] Alpha Vantage failed, using synthetic fallback: ${err.message}`)
-        return null
-      }),
+      fetchAVCandles(sym).catch(() => null),
     ])
 
     const synthetic = avResult === null
     const candles   = synthetic ? syntheticCandles(quote) : avResult
     const news      = Array.isArray(newsRaw) ? newsRaw.slice(0, 10) : []
 
-    console.log(`[market] success for ${sym} — ${candles.length} candles (${synthetic ? 'synthetic' : 'Alpha Vantage'}), ${news.length} news items`)
     res.json({ quote, profile, metrics, candles, synthetic, news })
   } catch (err) {
-    console.error('[market] error:', err.message)
     const status = err.message.includes('401') ? 401 : err.message.includes('403') ? 403 : 500
-    res.status(status).json({ error: err.message })
+    // Return a safe message — don't leak internal details
+    const message = status === 401 || status === 403
+      ? 'Invalid API key. Check your FINNHUB_API_KEY configuration.'
+      : 'Failed to fetch market data. Please try again.'
+    res.status(status).json({ error: message })
   }
 }
