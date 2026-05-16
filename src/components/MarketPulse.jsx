@@ -103,6 +103,12 @@ export default function MarketPulse() {
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false))
+
+    const id = setInterval(() => {
+      fetchMarketPulse().then(setData).catch(() => {})
+    }, 60_000)
+
+    return () => clearInterval(id)
   }, [])
 
   if (loading) return <Skeleton />
