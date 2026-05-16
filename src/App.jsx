@@ -12,9 +12,32 @@ import SupportResistance from './components/SupportResistance'
 import OptionsScanner from './components/OptionsScanner'
 import NewsFeed from './components/NewsFeed'
 import MarketPulse from './components/MarketPulse'
+import Watchlist from './components/Watchlist'
+import { useWatchlist } from './hooks/useWatchlist'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
 import { getMockOptions, getMockNews } from './mockData'
+
+function BookmarkButton({ saved, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      title={saved ? 'Remove from watchlist' : 'Add to watchlist'}
+      className={`p-2 rounded-lg border transition-all duration-150 cursor-pointer ${
+        saved
+          ? 'bg-[#1D9E75]/10 border-[#1D9E75]/30 text-[#1D9E75] hover:bg-[#1D9E75]/20'
+          : 'bg-transparent border-[#1a2e1f] text-[#4b6358] hover:border-[#263d2c] hover:text-[#d1d9d5]'
+      }`}
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        {saved
+          ? <path d="M2.5 1.5h9a.5.5 0 01.5.5v10.5l-5-3-5 3V2a.5.5 0 01.5-.5z" fill="currentColor" />
+          : <path d="M2.5 1.5h9a.5.5 0 01.5.5v10.5l-5-3-5 3V2a.5.5 0 01.5-.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        }
+      </svg>
+    </button>
+  )
+}
 
 const LOADING_NONE   = { market: false, ai: false }
 const LOADING_MARKET = { market: true,  ai: false }
@@ -26,6 +49,7 @@ export default function App() {
   const [marketData, setMarketData] = useState(null)
   const [aiData, setAiData]     = useState(null)
   const [error, setError]       = useState(null)
+  const watchlist = useWatchlist()
 
   const isLoading = loading.market || loading.ai
 
@@ -94,6 +118,10 @@ export default function App() {
                   </span>
                 )}
               </div>
+              <BookmarkButton
+                saved={watchlist.has(ticker)}
+                onToggle={() => watchlist.has(ticker) ? watchlist.remove(ticker) : watchlist.add(ticker)}
+              />
               <TickerSearch onSearch={handleSearch} loading={isLoading} />
             </div>
           )}
@@ -120,6 +148,15 @@ export default function App() {
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
           </div>
+        )}
+
+        {/* Watchlist — visible on landing only, above market pulse */}
+        {!hasData && !isLoading && (
+          <Watchlist
+            tickers={watchlist.tickers}
+            onSelect={handleSearch}
+            onRemove={watchlist.remove}
+          />
         )}
 
         {/* Market Pulse dashboard — visible on landing only */}
