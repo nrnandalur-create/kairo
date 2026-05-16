@@ -30,7 +30,7 @@ export default function OptionsScanner({ data }) {
           )}
         </div>
         <span className="text-[10px] text-[#4b6358] bg-[#0a0f0d] border border-[#1a2e1f] px-2.5 py-1 rounded-lg">
-          Demo · live feed requires options API
+          Live options data unavailable
         </span>
       </div>
 

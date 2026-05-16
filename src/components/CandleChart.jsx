@@ -135,11 +135,6 @@ export default function CandleChart({ candles, synthetic }) {
       <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Price Chart</span>
-          {synthetic && (
-            <span className="text-[10px] text-[#d4922a] bg-[#d4922a]/10 border border-[#d4922a]/25 px-2 py-0.5 rounded-full">
-              Simulated history
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Timeframe buttons */}

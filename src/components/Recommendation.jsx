@@ -49,7 +49,7 @@ export default function Recommendation({ data, loading }) {
     <div className={`w-full bg-[#0f1611] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter`}>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Recommendation · Groq</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Recommendation</span>
         <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
           {data.riskLevel ?? 'MEDIUM'} Risk
         </span>
