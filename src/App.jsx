@@ -19,6 +19,8 @@ import Portfolio from './components/Portfolio'
 import PriceAlertForm from './components/PriceAlertForm'
 import { useWatchlist } from './hooks/useWatchlist'
 import { useAlerts } from './hooks/useAlerts'
+import { useAuth } from './hooks/useAuth'
+import { UserMenu } from './components/auth/UserMenu'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
 import { fetchFundamentals } from './services/fundamentals'
@@ -60,7 +62,8 @@ export default function App() {
   const [aiData, setAiData]     = useState(null)
   const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
-  const watchlist      = useWatchlist()
+  const { user }       = useAuth()
+  const { watchlist: watchlistRows, addTicker, removeTicker } = useWatchlist(user?.id)
   const alerts         = useAlerts()
   const [screenerOpen,  setScreenerOpen]  = useState(false)
   const [portfolioOpen, setPortfolioOpen] = useState(false)
@@ -171,25 +174,28 @@ export default function App() {
             </div>
           </button>
 
-          {hasData && (
-            <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
-              <div className="flex items-center gap-2 hidden sm:flex">
-                {marketData.profile?.name && (
-                  <span className="text-sm text-[#d1d9d5] font-semibold">{marketData.profile.name}</span>
-                )}
-                {marketData.profile?.exchange && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
-                    {marketData.profile.exchange}
-                  </span>
-                )}
-              </div>
-              <BookmarkButton
-                saved={watchlist.has(ticker)}
-                onToggle={() => watchlist.has(ticker) ? watchlist.remove(ticker) : watchlist.add(ticker)}
-              />
-              <TickerSearch onSearch={handleSearch} loading={isLoading} />
-            </div>
-          )}
+          <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
+            {hasData && (
+              <>
+                <div className="flex items-center gap-2 hidden sm:flex">
+                  {marketData.profile?.name && (
+                    <span className="text-sm text-[#d1d9d5] font-semibold">{marketData.profile.name}</span>
+                  )}
+                  {marketData.profile?.exchange && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
+                      {marketData.profile.exchange}
+                    </span>
+                  )}
+                </div>
+                <BookmarkButton
+                  saved={watchlistRows.some(w => w.ticker === ticker)}
+                  onToggle={() => watchlistRows.some(w => w.ticker === ticker) ? removeTicker(ticker) : addTicker(ticker)}
+                />
+                <TickerSearch onSearch={handleSearch} loading={isLoading} />
+              </>
+            )}
+            <UserMenu />
+          </div>
         </div>
       </header>
 
@@ -218,9 +224,9 @@ export default function App() {
         {/* Watchlist — visible on landing only, above market pulse */}
         {!hasData && !isLoading && (
           <Watchlist
-            tickers={watchlist.tickers}
+            tickers={watchlistRows.map(w => w.ticker)}
             onSelect={handleSearch}
-            onRemove={watchlist.remove}
+            onRemove={removeTicker}
             getAlert={alerts.getAlert}
           />
         )}
@@ -324,6 +330,7 @@ export default function App() {
         open={portfolioOpen}
         onClose={() => setPortfolioOpen(false)}
         onAnalyze={handleSearch}
+        userId={user?.id}
       />
 
       {/* ── Footer ── */}

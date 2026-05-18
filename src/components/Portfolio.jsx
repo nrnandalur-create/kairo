@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { usePortfolio } from '../hooks/usePortfolio'
 
 function fmtMoney(n) {
   if (n == null || isNaN(n)) return '—'
@@ -66,12 +67,21 @@ function HoldingRow({ h }) {
   )
 }
 
-export default function Portfolio({ open, onClose, onAnalyze }) {
+export default function Portfolio({ open, onClose, onAnalyze, userId }) {
   const [holdings, setHoldings] = useState([{ ticker: '', shares: '' }])
   const [quotes,   setQuotes]   = useState([])
   const [loading,  setLoading]  = useState(false)
   const [result,   setResult]   = useState(null)
   const [error,    setError]    = useState('')
+
+  const { holdings: savedHoldings, loading: portfolioLoading, upsertHolding } = usePortfolio(userId)
+
+  // Pre-populate form from Supabase when modal opens (only when not viewing results)
+  useEffect(() => {
+    if (!open || result || portfolioLoading || savedHoldings.length === 0) return
+    setHoldings(savedHoldings.map(h => ({ ticker: h.ticker, shares: String(h.shares) })))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, result, savedHoldings, portfolioLoading])
 
   const update = (i, field, val) =>
     setHoldings(h => h.map((x, idx) => idx === i ? { ...x, [field]: val } : x))
@@ -91,6 +101,9 @@ export default function Portfolio({ open, onClose, onAnalyze }) {
       const q    = d.quotes ?? []
       setQuotes(q)
       setResult(calcPortfolio(valid, q))
+      if (userId) {
+        await Promise.all(valid.map(h => upsertHolding(h.ticker.trim(), h.shares, 0)))
+      }
     } catch {
       setError('Failed to fetch prices. Check your tickers and try again.')
     } finally {
