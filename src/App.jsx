@@ -21,6 +21,7 @@ import { useWatchlist } from './hooks/useWatchlist'
 import { useAlerts } from './hooks/useAlerts'
 import { useAuth } from './hooks/useAuth'
 import { UserMenu } from './components/auth/UserMenu'
+import { supabase } from './lib/supabase'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
 import { fetchFundamentals } from './services/fundamentals'
@@ -90,14 +91,29 @@ export default function App() {
       setMarketData({ quote, profile, metrics, candles, synthetic, news })
       setLoading(LOADING_AI)
 
+      let analysisResult = null
       await Promise.allSettled([
         fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
-          .then(setAiData)
+          .then(data => { analysisResult = data; setAiData(data) })
           .catch(() => {}),
         fetchFundamentals(sym)
           .then(setFundamentalsData)
           .catch(() => {}),
       ])
+
+      // Log signal to Supabase and trigger email if it changed (fire-and-forget)
+      if (user && analysisResult?.verdict && watchlistRows.some(w => w.ticker === sym)) {
+        supabase.functions.invoke('signal-alert', {
+          body: {
+            ticker:     sym,
+            signal:     analysisResult.verdict,
+            confidence: analysisResult.confidence,
+            entryPrice: analysisResult.entryPrice,
+            stopLoss:   analysisResult.stopLoss,
+            riskLevel:  analysisResult.riskLevel,
+          },
+        }).catch(() => {})
+      }
 
       setLoading(LOADING_NONE)
     } catch (err) {
