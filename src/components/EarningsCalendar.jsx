@@ -42,7 +42,7 @@ export default function EarningsCalendar({ data, loading }) {
     return { next: upcoming[0] ?? null, recent: past }
   }, [data, today])
 
-  const noData = !loading && (!data || data.length === 0)
+  if (!loading && (!data || data.length === 0)) return null
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4 animate-enter">
@@ -54,10 +54,6 @@ export default function EarningsCalendar({ data, loading }) {
           <SkeletonRow />
           <SkeletonRow />
           <SkeletonRow />
-        </div>
-      ) : noData ? (
-        <div className="border border-dashed border-[#1a2e1f] rounded-xl px-4 py-6 text-center">
-          <p className="text-xs text-[#4b6358]">No earnings data available for this ticker</p>
         </div>
       ) : (
         <>

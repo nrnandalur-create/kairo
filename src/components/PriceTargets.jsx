@@ -17,6 +17,8 @@ const CONSENSUS = {
 }
 
 export default function PriceTargets({ data, currentPrice, loading }) {
+  if (!loading && !data) return null
+
   const low   = data?.targetLow  ?? 0
   const high  = data?.targetHigh ?? 0
   const mean  = data?.targetMean ?? 0
@@ -82,10 +84,6 @@ export default function PriceTargets({ data, currentPrice, loading }) {
             <div className="h-8 rounded-xl shimmer" />
             <div className="h-8 rounded-xl shimmer" />
           </div>
-        </div>
-      ) : !data ? (
-        <div className="border border-dashed border-[#1a2e1f] rounded-xl px-4 py-6 text-center">
-          <p className="text-xs text-[#4b6358]">No analyst targets on record for this ticker</p>
         </div>
       ) : (
         <>
