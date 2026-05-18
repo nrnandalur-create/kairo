@@ -43,27 +43,37 @@ function calcBBPct(closes, period = 20) {
 async function fetchOne(symbol, apiKey) {
   const to   = Math.floor(Date.now() / 1000)
   const from = to - 100 * 86400
+
+  // Quote is required — bail if it fails
+  let q
   try {
-    const [qr, cr] = await Promise.all([
-      fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`),
-      fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${apiKey}`),
-    ])
-    if (!qr.ok || !cr.ok) return null
-    const [q, c] = await Promise.all([qr.json(), cr.json()])
-    if (!q.c) return null
-    const closes = c.s === 'ok' && Array.isArray(c.c) ? c.c : []
-    return {
-      symbol,
-      name:      STATIC[symbol]?.name ?? symbol,
-      cap:       STATIC[symbol]?.cap  ?? 'large',
-      price:     q.c,
-      change:    q.d,
-      changePct: q.dp,
-      rsi:       calcRSI(closes),
-      bbPct:     calcBBPct(closes),
-    }
+    const qr = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`)
+    if (!qr.ok) return null
+    q = await qr.json()
+    if (!q?.c) return null
   } catch {
     return null
+  }
+
+  // Candles are optional (premium endpoint on free plan) — RSI/BB will be null
+  let closes = []
+  try {
+    const cr = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${apiKey}`)
+    if (cr.ok) {
+      const c = await cr.json()
+      if (c?.s === 'ok' && Array.isArray(c.c)) closes = c.c
+    }
+  } catch {}
+
+  return {
+    symbol,
+    name:      STATIC[symbol]?.name ?? symbol,
+    cap:       STATIC[symbol]?.cap  ?? 'large',
+    price:     q.c,
+    change:    q.d,
+    changePct: q.dp,
+    rsi:       calcRSI(closes),
+    bbPct:     calcBBPct(closes),
   }
 }
 

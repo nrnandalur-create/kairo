@@ -155,16 +155,22 @@ export default function Screener({ open, onClose, onAnalyze }) {
   const [stocks,  setStocks]  = useState([])
   const [loading, setLoading] = useState(true)  // start true so skeletons show immediately
   const [filters, setFilters] = useState(INIT_FILTERS)
+  const [fetchError, setFetchError] = useState(null)
+
+  const loadStocks = () => {
+    setLoading(true)
+    setFetchError(null)
+    fetch('/api/screener')
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
+      .then(d => setStocks(d.stocks ?? []))
+      .catch(() => setFetchError('Unable to load screener data. Please try again.'))
+      .finally(() => setLoading(false))
+  }
 
   useEffect(() => {
     if (!open) return
     if (stocks.length) { setLoading(false); return }  // already cached
-    setLoading(true)
-    fetch('/api/screener')
-      .then(r => r.json())
-      .then(d => setStocks(d.stocks ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    loadStocks()
   }, [open])
 
   const setFilter = (key, val) => setFilters(f => ({ ...f, [key]: val }))
@@ -211,12 +217,19 @@ export default function Screener({ open, onClose, onAnalyze }) {
         {/* Results */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <p className="text-[10px] text-[#4b6358] mb-3">
-            {loading ? 'Loading…' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''} · click any card to analyze`}
+            {loading ? 'Loading…' : fetchError ? '' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''} · click any card to analyze`}
           </p>
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[1,2,3,4,5,6].map(i => <SkeletonCard key={i} />)}
+            </div>
+          ) : fetchError ? (
+            <div className="text-center py-16 flex flex-col gap-3">
+              <p className="text-sm text-[#4b6358]">{fetchError}</p>
+              <button onClick={loadStocks} className="text-xs text-[#1D9E75] hover:underline">
+                Try again
+              </button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 flex flex-col gap-3">
