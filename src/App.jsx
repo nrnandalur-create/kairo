@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import ErrorBoundary from './components/ErrorBoundary'
 import KairoLogo from './components/KairoLogo'
 import TickerSearch from './components/TickerSearch'
@@ -111,6 +111,24 @@ export default function App() {
   const scrollTo = (id) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
+  const [toast, setToast] = useState(null)
+  const toastTimer = useRef(null)
+  const showToast = (msg) => {
+    clearTimeout(toastTimer.current)
+    setToast(msg)
+    toastTimer.current = setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleAlerts = () => {
+    if (hasData) scrollTo('section-alerts')
+    else showToast('Search a ticker to set price alerts')
+  }
+
+  const handleNews = () => {
+    if (hasData) scrollTo('section-news')
+    else showToast('Search a ticker to view news')
+  }
+
   const activeNav = screenerOpen ? 'screener'
     : portfolioOpen ? 'portfolio'
     : !hasData && !isLoading ? 'home'
@@ -124,8 +142,8 @@ export default function App() {
         onHome={handleHome}
         onScreener={() => setScreenerOpen(true)}
         onPortfolio={() => setPortfolioOpen(true)}
-        onAlerts={() => scrollTo('section-alerts')}
-        onNews={() => scrollTo('section-news')}
+        onAlerts={handleAlerts}
+        onNews={handleNews}
       />
 
       {/* ── Header ── */}
@@ -184,34 +202,6 @@ export default function App() {
               Real-time market data, interactive charts, technical indicators, and AI-powered analysis — all from a single ticker.
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
-          </div>
-        )}
-
-        {/* Screener + Portfolio buttons — visible on landing only */}
-        {!hasData && !isLoading && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => setScreenerOpen(true)}
-              className="flex items-center gap-2 bg-[#0f1611] border border-[#1a2e1f] hover:border-[#263d2c] hover:bg-[#0c1410] text-[#4b6358] hover:text-[#d1d9d5] text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
-            >
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
-                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
-                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
-                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
-              </svg>
-              Screener
-            </button>
-            <button
-              onClick={() => setPortfolioOpen(true)}
-              className="flex items-center gap-2 bg-[#0f1611] border border-[#1a2e1f] hover:border-[#263d2c] hover:bg-[#0c1410] text-[#4b6358] hover:text-[#d1d9d5] text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
-            >
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
-                <path d="M6.5 3.5v3l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-              </svg>
-              Portfolio
-            </button>
           </div>
         )}
 
@@ -321,6 +311,15 @@ export default function App() {
           Market data via Finnhub · Alpha Vantage. AI analysis via Groq.
         </div>
       </footer>
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 lg:bottom-6 lg:left-auto lg:right-6 lg:translate-x-0 pointer-events-none animate-enter">
+          <div className="bg-[#0f1611] border border-[#1a2e1f] text-[#d1d9d5] text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg whitespace-nowrap">
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
