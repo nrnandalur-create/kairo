@@ -11,7 +11,16 @@ function fmtPct(n) {
   return `${n >= 0 ? '+' : ''}${Number(n).toFixed(2)}%`
 }
 
-function WatchlistTile({ symbol, price, changePct, loading, onSelect, onRemove }) {
+function AlertBadge({ price, alert }) {
+  if (!alert || price == null) return null
+  if (alert.target && price >= alert.target)
+    return <span className="text-[9px] font-bold text-[#1D9E75] bg-[#1D9E75]/10 border border-[#1D9E75]/25 px-1.5 py-0.5 rounded-full leading-none shrink-0">▲ TARGET</span>
+  if (alert.stop && price <= alert.stop)
+    return <span className="text-[9px] font-bold text-[#e24b4a] bg-[#e24b4a]/10 border border-[#e24b4a]/25 px-1.5 py-0.5 rounded-full leading-none shrink-0">▼ STOP</span>
+  return null
+}
+
+function WatchlistTile({ symbol, price, changePct, loading, onSelect, onRemove, alert }) {
   const up    = changePct != null && !isNaN(changePct) && changePct >= 0
   const valid = changePct != null && !isNaN(changePct)
   const pctColor = valid ? (up ? '#1D9E75' : '#e24b4a') : '#4b6358'
@@ -22,7 +31,10 @@ function WatchlistTile({ symbol, price, changePct, loading, onSelect, onRemove }
       onClick={() => onSelect(symbol)}
     >
       <div className="flex flex-col gap-1 min-w-0">
-        <span className="text-xs font-bold text-[#d1d9d5] leading-none">{symbol}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-[#d1d9d5] leading-none">{symbol}</span>
+          <AlertBadge price={price} alert={alert} />
+        </div>
         {loading && price == null ? (
           <div className="h-3 w-16 rounded-full shimmer mt-0.5" />
         ) : (
@@ -49,7 +61,7 @@ function WatchlistTile({ symbol, price, changePct, loading, onSelect, onRemove }
   )
 }
 
-export default function Watchlist({ tickers, onSelect, onRemove }) {
+export default function Watchlist({ tickers, onSelect, onRemove, getAlert }) {
   const [quotes, setQuotes]   = useState([])
   const [loading, setLoading] = useState(false)
   const tickerKey = tickers.join(',')
@@ -88,6 +100,7 @@ export default function Watchlist({ tickers, onSelect, onRemove }) {
             loading={loading}
             onSelect={onSelect}
             onRemove={onRemove}
+            alert={getAlert?.(item.symbol)}
           />
         ))}
       </div>

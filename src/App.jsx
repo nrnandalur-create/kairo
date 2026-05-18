@@ -13,7 +13,11 @@ import OptionsScanner from './components/OptionsScanner'
 import NewsFeed from './components/NewsFeed'
 import MarketPulse from './components/MarketPulse'
 import Watchlist from './components/Watchlist'
+import Screener from './components/Screener'
+import Portfolio from './components/Portfolio'
+import PriceAlertForm from './components/PriceAlertForm'
 import { useWatchlist } from './hooks/useWatchlist'
+import { useAlerts } from './hooks/useAlerts'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
 import { getMockOptions, getMockNews } from './mockData'
@@ -49,7 +53,10 @@ export default function App() {
   const [marketData, setMarketData] = useState(null)
   const [aiData, setAiData]     = useState(null)
   const [error, setError]       = useState(null)
-  const watchlist = useWatchlist()
+  const watchlist      = useWatchlist()
+  const alerts         = useAlerts()
+  const [screenerOpen,  setScreenerOpen]  = useState(false)
+  const [portfolioOpen, setPortfolioOpen] = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -150,12 +157,41 @@ export default function App() {
           </div>
         )}
 
+        {/* Screener + Portfolio buttons — visible on landing only */}
+        {!hasData && !isLoading && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setScreenerOpen(true)}
+              className="flex items-center gap-2 bg-[#0f1611] border border-[#1a2e1f] hover:border-[#263d2c] hover:bg-[#0c1410] text-[#4b6358] hover:text-[#d1d9d5] text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
+            >
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+              </svg>
+              Screener
+            </button>
+            <button
+              onClick={() => setPortfolioOpen(true)}
+              className="flex items-center gap-2 bg-[#0f1611] border border-[#1a2e1f] hover:border-[#263d2c] hover:bg-[#0c1410] text-[#4b6358] hover:text-[#d1d9d5] text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
+            >
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M6.5 3.5v3l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+              Portfolio
+            </button>
+          </div>
+        )}
+
         {/* Watchlist — visible on landing only, above market pulse */}
         {!hasData && !isLoading && (
           <Watchlist
             tickers={watchlist.tickers}
             onSelect={handleSearch}
             onRemove={watchlist.remove}
+            getAlert={alerts.getAlert}
           />
         )}
 
@@ -213,6 +249,13 @@ export default function App() {
                 <Recommendation data={aiData} loading={loading.ai} />
                 <AIAnalysis data={aiData} loading={loading.ai} />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
+                <PriceAlertForm
+                  ticker={ticker}
+                  currentPrice={marketData.quote?.c}
+                  getAlert={alerts.getAlert}
+                  setAlert={alerts.setAlert}
+                  clearAlert={alerts.clearAlert}
+                />
               </div>
             </div>
 
@@ -224,6 +267,18 @@ export default function App() {
           </ErrorBoundary>
         )}
       </main>
+
+      {/* ── Modals ── */}
+      <Screener
+        open={screenerOpen}
+        onClose={() => setScreenerOpen(false)}
+        onAnalyze={handleSearch}
+      />
+      <Portfolio
+        open={portfolioOpen}
+        onClose={() => setPortfolioOpen(false)}
+        onAnalyze={handleSearch}
+      />
 
       {/* ── Footer ── */}
       <footer className="border-t border-[#1a2e1f] mt-auto">
