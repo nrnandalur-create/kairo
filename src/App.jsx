@@ -10,6 +10,7 @@ import CandlePatterns from './components/CandlePatterns'
 import IndicatorsGrid from './components/IndicatorsGrid'
 import SupportResistance from './components/SupportResistance'
 import OptionsScanner from './components/OptionsScanner'
+import CoveredCallScanner from './components/CoveredCallScanner'
 import NewsFeed from './components/NewsFeed'
 import MarketPulse from './components/MarketPulse'
 import Watchlist from './components/Watchlist'
@@ -301,6 +302,9 @@ export default function App() {
 
             {/* Full width — Options scanner */}
             <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
+
+            {/* Full width — Covered call scanner */}
+            <CoveredCallScanner currentPrice={marketData.quote?.c} ticker={ticker} />
 
             {/* Full width — News feed */}
             <div id="section-news">
