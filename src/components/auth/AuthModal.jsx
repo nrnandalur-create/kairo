@@ -146,22 +146,13 @@ export function AuthModal({ onClose }) {
 function Overlay({ onClose, children }) {
   return (
     <div
-      onClick={e => e.target === e.currentTarget && onClose?.()}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.7)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
+      onClick={onClose}
     >
-      <div style={{
-        background: '#0f1611',
-        border: '1px solid #1a2e1f',
-        borderRadius: 16,
-        padding: '32px 28px',
-        width: '100%',
-        maxWidth: 380,
-      }}>
+      <div
+        className="w-full max-w-[380px] bg-[#0f1611] border border-[#1a2e1f] rounded-2xl px-7 py-8"
+        onClick={e => e.stopPropagation()}
+      >
         {children}
       </div>
     </div>
