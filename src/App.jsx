@@ -21,6 +21,7 @@ import { useAlerts } from './hooks/useAlerts'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
 import { getMockOptions, getMockNews } from './mockData'
+import Nav from './components/Nav'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -107,8 +108,25 @@ export default function App() {
     setLoading(LOADING_NONE)
   }
 
+  const scrollTo = (id) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+  const activeNav = screenerOpen ? 'screener'
+    : portfolioOpen ? 'portfolio'
+    : !hasData && !isLoading ? 'home'
+    : null
+
   return (
-    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col">
+    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col lg:pl-[60px] pb-16 lg:pb-0">
+
+      <Nav
+        activeKey={activeNav}
+        onHome={handleHome}
+        onScreener={() => setScreenerOpen(true)}
+        onPortfolio={() => setPortfolioOpen(true)}
+        onAlerts={() => scrollTo('section-alerts')}
+        onNews={() => scrollTo('section-news')}
+      />
 
       {/* ── Header ── */}
       <header className="border-b border-[#1a2e1f] bg-[#080c0a]/90 backdrop-blur-sm sticky top-0 z-20">
@@ -261,13 +279,15 @@ export default function App() {
                 <Recommendation data={aiData} loading={loading.ai} />
                 <AIAnalysis data={aiData} loading={loading.ai} />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
-                <PriceAlertForm
-                  ticker={ticker}
-                  currentPrice={marketData.quote?.c}
-                  getAlert={alerts.getAlert}
-                  setAlert={alerts.setAlert}
-                  clearAlert={alerts.clearAlert}
-                />
+                <div id="section-alerts">
+                  <PriceAlertForm
+                    ticker={ticker}
+                    currentPrice={marketData.quote?.c}
+                    getAlert={alerts.getAlert}
+                    setAlert={alerts.setAlert}
+                    clearAlert={alerts.clearAlert}
+                  />
+                </div>
               </div>
             </div>
 
@@ -275,7 +295,9 @@ export default function App() {
             <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
 
             {/* Full width — News feed */}
-            <NewsFeed data={marketData.news} />
+            <div id="section-news">
+              <NewsFeed data={marketData.news} />
+            </div>
           </ErrorBoundary>
         )}
       </main>
