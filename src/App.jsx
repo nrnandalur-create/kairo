@@ -261,7 +261,7 @@ export default function App() {
             {/* Two-column on desktop: left = chart/indicators, right = AI */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
-              {/* Left column — chart & technical */}
+              {/* Left column — chart, technical & fundamentals */}
               <div className="flex flex-col gap-5">
                 <ErrorBoundary>
                   <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
@@ -271,16 +271,17 @@ export default function App() {
                   candles={marketData.candles}
                   currentPrice={marketData.quote?.c}
                 />
-              </div>
-
-              {/* Right column — AI recommendation & analysis */}
-              <div className="flex flex-col gap-5">
-                <Recommendation data={aiData} loading={loading.ai} />
+                <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
                 <PriceTargets
                   data={fundamentalsData?.targets}
                   currentPrice={marketData.quote?.c}
                   loading={loading.ai}
                 />
+              </div>
+
+              {/* Right column — AI recommendation & analysis */}
+              <div className="flex flex-col gap-5">
+                <Recommendation data={aiData} loading={loading.ai} />
                 <AIAnalysis data={aiData} loading={loading.ai} />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <div id="section-alerts">
@@ -295,11 +296,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Full width — Earnings + Analyst targets in 2-col grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-              <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
-              <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai} />
-            </div>
+            {/* Full width — Insider transactions */}
+            <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai} />
 
             {/* Full width — Options scanner */}
             <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
