@@ -30,6 +30,8 @@ import Nav from './components/Nav'
 import EarningsCalendar from './components/EarningsCalendar'
 import PriceTargets from './components/PriceTargets'
 import InsiderTrades from './components/InsiderTrades'
+import SectorHeatmap from './components/SectorHeatmap'
+import CompareView from './components/CompareView'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -68,6 +70,8 @@ export default function App() {
   const alerts         = useAlerts()
   const [screenerOpen,  setScreenerOpen]  = useState(false)
   const [portfolioOpen, setPortfolioOpen] = useState(false)
+  const [sectorsOpen,   setSectorsOpen]   = useState(false)
+  const [compareOpen,   setCompareOpen]   = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -158,8 +162,10 @@ export default function App() {
     else showToast('Search a ticker to view news')
   }
 
-  const activeNav = screenerOpen ? 'screener'
+  const activeNav = screenerOpen  ? 'screener'
     : portfolioOpen ? 'portfolio'
+    : sectorsOpen   ? 'sectors'
+    : compareOpen   ? 'compare'
     : !hasData && !isLoading ? 'home'
     : null
 
@@ -171,6 +177,8 @@ export default function App() {
         onHome={handleHome}
         onScreener={() => setScreenerOpen(true)}
         onPortfolio={() => setPortfolioOpen(true)}
+        onSectors={() => setSectorsOpen(true)}
+        onCompare={() => setCompareOpen(true)}
         onAlerts={handleAlerts}
         onNews={handleNews}
       />
@@ -347,6 +355,15 @@ export default function App() {
         onClose={() => setPortfolioOpen(false)}
         onAnalyze={handleSearch}
         userId={user?.id}
+      />
+      <SectorHeatmap
+        open={sectorsOpen}
+        onClose={() => setSectorsOpen(false)}
+        onAnalyze={handleSearch}
+      />
+      <CompareView
+        open={compareOpen}
+        onClose={() => setCompareOpen(false)}
       />
 
       {/* ── Footer ── */}

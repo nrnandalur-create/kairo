@@ -42,6 +42,27 @@ function NewsIcon() {
   )
 }
 
+function SectorsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      <rect x="9"   y="1.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      <rect x="1.5" y="9"   width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      <rect x="9"   y="9"   width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+    </svg>
+  )
+}
+
+function CompareIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 1.5v13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeDasharray="2 1.5"/>
+      <rect x="1.5" y="4"   width="5"   height="8" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      <rect x="9.5" y="4"   width="5"   height="8" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+    </svg>
+  )
+}
+
 function SettingsIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -51,13 +72,17 @@ function SettingsIcon() {
   )
 }
 
+// Desktop sidebar shows all items; mobile bottom bar shows only the first 5
 const NAV_ITEMS = [
   { key: 'home',      label: 'Home',      Icon: HomeIcon      },
   { key: 'screener',  label: 'Screener',  Icon: ScreenerIcon  },
   { key: 'portfolio', label: 'Portfolio', Icon: PortfolioIcon },
+  { key: 'sectors',   label: 'Sectors',   Icon: SectorsIcon   },
+  { key: 'compare',   label: 'Compare',   Icon: CompareIcon   },
   { key: 'alerts',    label: 'Alerts',    Icon: AlertsIcon    },
   { key: 'news',      label: 'News',      Icon: NewsIcon      },
 ]
+const MOBILE_NAV_ITEMS = NAV_ITEMS.slice(0, 5)
 
 const SETTINGS_ITEM = { key: 'settings', label: 'Settings', Icon: SettingsIcon }
 
@@ -99,13 +124,18 @@ function BottomItem({ item, active, onClick }) {
   )
 }
 
-export default function Nav({ activeKey, onHome, onScreener, onPortfolio, onAlerts, onNews }) {
+export default function Nav({
+  activeKey,
+  onHome, onScreener, onPortfolio, onAlerts, onNews, onSectors, onCompare,
+}) {
   const handlers = {
     home:      onHome,
     screener:  onScreener,
     portfolio: onPortfolio,
     alerts:    onAlerts,
     news:      onNews,
+    sectors:   onSectors,
+    compare:   onCompare,
     settings:  () => {},
   }
 
@@ -118,7 +148,7 @@ export default function Nav({ activeKey, onHome, onScreener, onPortfolio, onAler
         <div className="h-[57px] shrink-0 border-b border-[#1a2e1f]" />
 
         {/* Main nav items */}
-        <div className="flex-1 flex flex-col py-2">
+        <div className="flex-1 flex flex-col py-2 overflow-y-auto">
           {NAV_ITEMS.map(item => (
             <SidebarItem
               key={item.key}
@@ -135,9 +165,9 @@ export default function Nav({ activeKey, onHome, onScreener, onPortfolio, onAler
         </div>
       </nav>
 
-      {/* ── Mobile bottom tab bar ── */}
+      {/* ── Mobile bottom tab bar (first 5 items only) ── */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden bg-[#080c0a] border-t border-[#1a2e1f]">
-        {NAV_ITEMS.map(item => (
+        {MOBILE_NAV_ITEMS.map(item => (
           <BottomItem
             key={item.key}
             item={item}
