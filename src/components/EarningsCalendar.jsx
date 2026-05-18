@@ -81,7 +81,13 @@ export default function EarningsCalendar({ data, loading }) {
               </div>
               {next.epsEstimate != null && (
                 <p className="text-[11px] text-[#4b6358]">
-                  Est. EPS <span className="text-[#d1d9d5] font-bold tabular-nums">{fmtEps(next.epsEstimate)}</span>
+                  Est. EPS{' '}
+                  <span className="text-[#d1d9d5] font-bold tabular-nums">{fmtEps(next.epsEstimate)}</span>
+                  {next.epsLow != null && next.epsHigh != null && (
+                    <span className="text-[#263d2c] ml-1 tabular-nums">
+                      ({fmtEps(next.epsLow)} – {fmtEps(next.epsHigh)})
+                    </span>
+                  )}
                 </p>
               )}
             </div>

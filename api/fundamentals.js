@@ -1,8 +1,30 @@
 import { rateLimit } from './_rateLimit.js'
 import { validateTicker } from './_validate.js'
 
-function isoDate(d) {
-  return d.toISOString().split('T')[0]
+// Extract the `.raw` numeric value from a Yahoo Finance field object
+function raw(field) { return field?.raw ?? null }
+
+function tsToDate(ts) {
+  if (!ts) return null
+  return new Date(ts * 1000).toISOString().split('T')[0]
+}
+
+function tsToQuarter(ts) {
+  if (!ts) return null
+  return Math.ceil((new Date(ts * 1000).getMonth() + 1) / 3)
+}
+
+function tsToYear(ts) {
+  if (!ts) return null
+  return new Date(ts * 1000).getFullYear()
+}
+
+const YF_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Origin': 'https://finance.yahoo.com',
+  'Referer': 'https://finance.yahoo.com/',
 }
 
 export default async function handler(req, res) {
@@ -12,39 +34,102 @@ export default async function handler(req, res) {
   const ticker = validateTicker(req.query.symbol)
   if (!ticker) return res.status(400).json({ error: 'Invalid ticker' })
 
-  const key = process.env.FINNHUB_API_KEY
-  if (!key) return res.status(500).json({ error: 'Service unavailable' })
+  const finnhubKey = process.env.FINNHUB_API_KEY
 
-  const now  = new Date()
-  const from = new Date(now); from.setMonth(from.getMonth() - 3)
-  const to   = new Date(now); to.setMonth(to.getMonth() + 9)
+  // Yahoo Finance: all needed modules in one request (no API key required)
+  const yfUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}` +
+    `?modules=financialData%2CrecommendationTrend%2CcalendarEvents%2CearningsHistory`
 
-  const [earR, tgtR, insR] = await Promise.allSettled([
-    fetch(`https://finnhub.io/api/v1/earnings-calendar?symbol=${ticker}&from=${isoDate(from)}&to=${isoDate(to)}&token=${key}`),
-    fetch(`https://finnhub.io/api/v1/stock/price-target?symbol=${ticker}&token=${key}`),
-    fetch(`https://finnhub.io/api/v1/stock/insider-transactions?symbol=${ticker}&token=${key}`),
+  const [yfRes, insRes] = await Promise.allSettled([
+    fetch(yfUrl, { headers: YF_HEADERS }),
+    finnhubKey
+      ? fetch(`https://finnhub.io/api/v1/stock/insider-transactions?symbol=${ticker}&token=${finnhubKey}`)
+      : Promise.resolve(null),
   ])
 
   let earnings = null
-  if (earR.status === 'fulfilled' && earR.value.ok) {
+  let targets  = null
+
+  if (yfRes.status === 'fulfilled' && yfRes.value?.ok) {
     try {
-      const d = await earR.value.json()
-      earnings = (d.earningsCalendar ?? []).sort((a, b) => new Date(b.date) - new Date(a.date))
+      const json   = await yfRes.value.json()
+      const result = json?.quoteSummary?.result?.[0]
+
+      if (result) {
+        // ── Price targets + analyst consensus ──────────────────────────────
+        const fd    = result.financialData ?? {}
+        const trend = result.recommendationTrend?.trend?.[0] ?? {}
+
+        if (raw(fd.targetMeanPrice) || raw(fd.targetHighPrice)) {
+          targets = {
+            targetMean:         raw(fd.targetMeanPrice),
+            targetMedian:       raw(fd.targetMedianPrice),
+            targetHigh:         raw(fd.targetHighPrice),
+            targetLow:          raw(fd.targetLowPrice),
+            numberOfAnalysts:   raw(fd.numberOfAnalystOpinions),
+            recommendationKey:  fd.recommendationKey  ?? null,
+            recommendationMean: raw(fd.recommendationMean),
+            trend: {
+              strongBuy:  trend.strongBuy  ?? 0,
+              buy:        trend.buy        ?? 0,
+              hold:       trend.hold       ?? 0,
+              sell:       trend.sell       ?? 0,
+              strongSell: trend.strongSell ?? 0,
+            },
+          }
+        }
+
+        // ── Earnings calendar ──────────────────────────────────────────────
+        const cal  = result.calendarEvents?.earnings ?? {}
+        const hist = result.earningsHistory?.history  ?? []
+
+        const list = []
+
+        // Upcoming quarter from calendarEvents
+        const nextTs = cal.earningsDate?.[0]?.raw
+        if (nextTs) {
+          list.push({
+            date:        tsToDate(nextTs),
+            epsActual:   null,
+            epsEstimate: raw(cal.earningsAverage),
+            epsLow:      raw(cal.earningsLow),
+            epsHigh:     raw(cal.earningsHigh),
+            quarter:     tsToQuarter(nextTs),
+            year:        tsToYear(nextTs),
+          })
+        }
+
+        // Historical quarters from earningsHistory (Yahoo returns oldest first)
+        for (const h of [...hist].reverse()) {
+          const ts = raw(h.quarter)
+          list.push({
+            date:        tsToDate(ts),
+            epsActual:   raw(h.epsActual),
+            epsEstimate: raw(h.epsEstimate),
+            quarter:     tsToQuarter(ts),
+            year:        tsToYear(ts),
+          })
+        }
+
+        // Sort descending (newest first), deduplicate by date
+        list.sort((a, b) => (a.date ?? '') < (b.date ?? '') ? 1 : -1)
+        const seen = new Set()
+        const deduped = list.filter(e => {
+          if (!e.date || seen.has(e.date)) return false
+          seen.add(e.date)
+          return true
+        })
+
+        if (deduped.length) earnings = deduped
+      }
     } catch {}
   }
 
-  let targets = null
-  if (tgtR.status === 'fulfilled' && tgtR.value.ok) {
-    try {
-      const d = await tgtR.value.json()
-      if (d.targetMean || d.targetMedian || d.targetHigh) targets = d
-    } catch {}
-  }
-
+  // ── Insider trades (Finnhub, optional) ────────────────────────────────────
   let insider = null
-  if (insR.status === 'fulfilled' && insR.value.ok) {
+  if (insRes.status === 'fulfilled' && insRes.value?.ok) {
     try {
-      const d = await insR.value.json()
+      const d = await insRes.value.json()
       insider = (d.data ?? [])
         .filter(t => t.transactionCode === 'P' || t.transactionCode === 'S')
         .slice(0, 10)

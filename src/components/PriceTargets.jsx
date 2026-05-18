@@ -8,11 +8,19 @@ function fmtPct(n) {
   return `${n >= 0 ? '+' : ''}${Number(n).toFixed(1)}%`
 }
 
+const CONSENSUS = {
+  strong_buy:   { label: 'Strong Buy',    color: '#1D9E75' },
+  buy:          { label: 'Buy',           color: '#1D9E75' },
+  hold:         { label: 'Hold',          color: '#d4922a' },
+  underperform: { label: 'Underperform',  color: '#e24b4a' },
+  sell:         { label: 'Sell',          color: '#e24b4a' },
+}
+
 export default function PriceTargets({ data, currentPrice, loading }) {
-  const low    = data?.targetLow    ?? 0
-  const high   = data?.targetHigh   ?? 0
-  const mean   = data?.targetMean   ?? 0
-  const range  = high - low
+  const low   = data?.targetLow  ?? 0
+  const high  = data?.targetHigh ?? 0
+  const mean  = data?.targetMean ?? 0
+  const range = high - low
 
   const pct = (val) =>
     range > 0 ? Math.max(3, Math.min(97, ((val - low) / range) * 100)) : 50
@@ -24,15 +32,41 @@ export default function PriceTargets({ data, currentPrice, loading }) {
     ? ((mean - currentPrice) / currentPrice) * 100
     : null
 
-  const isUpside = upside != null && upside >= 0
+  const isUpside  = upside != null && upside >= 0
+  const consensus = data?.recommendationKey ? (CONSENSUS[data.recommendationKey] ?? null) : null
+
+  // Analyst breakdown bar segments
+  const trend       = data?.trend
+  const totalTrend  = trend
+    ? (trend.strongBuy + trend.buy + trend.hold + trend.sell + trend.strongSell)
+    : 0
+  const bullPct     = totalTrend > 0 ? ((trend.strongBuy + trend.buy)   / totalTrend) * 100 : 0
+  const neutralPct  = totalTrend > 0 ? (trend.hold                       / totalTrend) * 100 : 0
+  const bearPct     = totalTrend > 0 ? ((trend.sell + trend.strongSell)  / totalTrend) * 100 : 0
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4 animate-enter">
-      <div className="flex items-center justify-between gap-2">
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Analyst Price Targets</span>
-        {!loading && data?.numberOfAnalysts && (
-          <span className="text-[9px] text-[#4b6358]">{data.numberOfAnalysts} analysts</span>
-        )}
+        <div className="flex items-center gap-2">
+          {!loading && consensus && (
+            <span
+              className="text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest"
+              style={{
+                color: consensus.color,
+                borderColor: `${consensus.color}40`,
+                backgroundColor: `${consensus.color}15`,
+              }}
+            >
+              {consensus.label}
+            </span>
+          )}
+          {!loading && data?.numberOfAnalysts && (
+            <span className="text-[9px] text-[#4b6358]">{data.numberOfAnalysts} analysts</span>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -55,7 +89,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
         </div>
       ) : (
         <>
-          {/* Consensus + upside */}
+          {/* Consensus price + upside */}
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-2xl font-black tabular-nums text-[#d1d9d5]">{fmtPrice(mean)}</span>
             <span className="text-xs text-[#4b6358]">consensus</span>
@@ -70,13 +104,11 @@ export default function PriceTargets({ data, currentPrice, loading }) {
           {range > 0 && (
             <div className="flex flex-col gap-1.5">
               <div className="relative h-1.5 bg-[#1a2e1f] rounded-full mx-2">
-                {/* Mean target dot */}
                 <div
                   className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#1D9E75] border-[3px] border-[#0f1611] shadow"
                   style={{ left: `${meanPct}%`, transform: 'translate(-50%, -50%)' }}
                   title={`Target: ${fmtPrice(mean)}`}
                 />
-                {/* Current price dot */}
                 {currentPct != null && (
                   <div
                     className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#d1d9d5] border-[3px] border-[#0f1611] shadow"
@@ -102,12 +134,43 @@ export default function PriceTargets({ data, currentPrice, loading }) {
             </div>
           )}
 
+          {/* Analyst sentiment breakdown */}
+          {totalTrend > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
+                {bullPct    > 0 && <div className="bg-[#1D9E75]"    style={{ width: `${bullPct}%`    }} title={`Buy: ${trend.strongBuy + trend.buy}`} />}
+                {neutralPct > 0 && <div className="bg-[#d4922a]"    style={{ width: `${neutralPct}%` }} title={`Hold: ${trend.hold}`} />}
+                {bearPct    > 0 && <div className="bg-[#e24b4a]"    style={{ width: `${bearPct}%`    }} title={`Sell: ${trend.sell + trend.strongSell}`} />}
+              </div>
+              <div className="flex items-center gap-3 text-[9px] text-[#4b6358]">
+                {bullPct > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] shrink-0" />
+                    Buy {trend.strongBuy + trend.buy}
+                  </span>
+                )}
+                {neutralPct > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4922a] shrink-0" />
+                    Hold {trend.hold}
+                  </span>
+                )}
+                {bearPct > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#e24b4a] shrink-0" />
+                    Sell {trend.sell + trend.strongSell}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Stat grid */}
           <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[#1a2e1f]">
             {[
-              { label: 'Low Target',  value: fmtPrice(data?.targetLow)  },
-              { label: 'Mean Target', value: fmtPrice(data?.targetMean) },
-              { label: 'High Target', value: fmtPrice(data?.targetHigh) },
+              { label: 'Low Target',  value: fmtPrice(data.targetLow)  },
+              { label: 'Mean Target', value: fmtPrice(data.targetMean) },
+              { label: 'High Target', value: fmtPrice(data.targetHigh) },
             ].map(({ label, value }) => (
               <div key={label}>
                 <p className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-1">{label}</p>
