@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { usePortfolio } from '../hooks/usePortfolio'
+import PortfolioChart from './PortfolioChart'
 
 function fmtMoney(n) {
   if (n == null || isNaN(n)) return '—'
@@ -74,7 +75,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
   const [result,   setResult]   = useState(null)
   const [error,    setError]    = useState('')
 
-  const { holdings: savedHoldings, loading: portfolioLoading, upsertHolding } = usePortfolio(userId)
+  const { holdings: savedHoldings, snapshots, loading: portfolioLoading, upsertHolding } = usePortfolio(userId)
 
   // Pre-populate form from Supabase when modal opens (only when not viewing results)
   useEffect(() => {
@@ -228,6 +229,13 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 <span className="text-[10px] text-[#4b6358]">·</span>
                 <span className="text-[10px] text-[#4b6358]">{result.items.length} position{result.items.length !== 1 ? 's' : ''}</span>
               </div>
+
+              {/* Performance chart — shows historical snapshots when available */}
+              {userId && (
+                <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+                  <PortfolioChart snapshots={snapshots} />
+                </div>
+              )}
 
               {/* Holdings breakdown */}
               <div>
