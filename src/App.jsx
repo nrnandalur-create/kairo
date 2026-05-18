@@ -20,8 +20,12 @@ import { useWatchlist } from './hooks/useWatchlist'
 import { useAlerts } from './hooks/useAlerts'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
+import { fetchFundamentals } from './services/fundamentals'
 import { getMockOptions, getMockNews } from './mockData'
 import Nav from './components/Nav'
+import EarningsCalendar from './components/EarningsCalendar'
+import PriceTargets from './components/PriceTargets'
+import InsiderTrades from './components/InsiderTrades'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -53,6 +57,7 @@ export default function App() {
   const [loading, setLoading]   = useState(LOADING_NONE)
   const [marketData, setMarketData] = useState(null)
   const [aiData, setAiData]     = useState(null)
+  const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
   const watchlist      = useWatchlist()
   const alerts         = useAlerts()
@@ -65,6 +70,7 @@ export default function App() {
     setTicker(sym)
     setError(null)
     setAiData(null)
+    setFundamentalsData(null)
     setMarketData(null)
     setLoading(LOADING_MARKET)
 
@@ -80,12 +86,14 @@ export default function App() {
       setMarketData({ quote, profile, metrics, candles, synthetic, news })
       setLoading(LOADING_AI)
 
-      try {
-        const analysis = await fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
-        setAiData(analysis)
-      } catch {
-        // AI analysis unavailable — page continues without it
-      }
+      await Promise.allSettled([
+        fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
+          .then(setAiData)
+          .catch(() => {}),
+        fetchFundamentals(sym)
+          .then(setFundamentalsData)
+          .catch(() => {}),
+      ])
 
       setLoading(LOADING_NONE)
     } catch (err) {
@@ -104,6 +112,7 @@ export default function App() {
     setTicker(null)
     setMarketData(null)
     setAiData(null)
+    setFundamentalsData(null)
     setError(null)
     setLoading(LOADING_NONE)
   }
@@ -267,6 +276,11 @@ export default function App() {
               {/* Right column — AI recommendation & analysis */}
               <div className="flex flex-col gap-5">
                 <Recommendation data={aiData} loading={loading.ai} />
+                <PriceTargets
+                  data={fundamentalsData?.targets}
+                  currentPrice={marketData.quote?.c}
+                  loading={loading.ai}
+                />
                 <AIAnalysis data={aiData} loading={loading.ai} />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <div id="section-alerts">
@@ -279,6 +293,12 @@ export default function App() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Full width — Earnings + Analyst targets in 2-col grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
+              <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai} />
             </div>
 
             {/* Full width — Options scanner */}
