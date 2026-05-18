@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 const BG    = '#080c0a'
@@ -144,17 +145,35 @@ export function AuthModal({ onClose }) {
 }
 
 function Overlay({ onClose, children }) {
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
       onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        background: 'rgba(0,0,0,0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+      }}
     >
       <div
-        className="w-full max-w-[380px] bg-[#0f1611] border border-[#1a2e1f] rounded-2xl px-7 py-8"
         onClick={e => e.stopPropagation()}
+        style={{
+          background: '#0f1611',
+          border: '1px solid #1a2e1f',
+          borderRadius: 16,
+          padding: '32px 28px',
+          width: '100%',
+          maxWidth: 380,
+          boxSizing: 'border-box',
+        }}
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
