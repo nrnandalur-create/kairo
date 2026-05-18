@@ -153,11 +153,12 @@ function SkeletonCard() {
 
 export default function Screener({ open, onClose, onAnalyze }) {
   const [stocks,  setStocks]  = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)  // start true so skeletons show immediately
   const [filters, setFilters] = useState(INIT_FILTERS)
 
   useEffect(() => {
-    if (!open || stocks.length) return
+    if (!open) return
+    if (stocks.length) { setLoading(false); return }  // already cached
     setLoading(true)
     fetch('/api/screener')
       .then(r => r.json())

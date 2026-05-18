@@ -97,7 +97,15 @@ export default function App() {
     }
   }
 
-  const hasData = !!marketData
+  const hasData  = !!marketData
+
+  const handleHome = () => {
+    setTicker(null)
+    setMarketData(null)
+    setAiData(null)
+    setError(null)
+    setLoading(LOADING_NONE)
+  }
 
   return (
     <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col">
@@ -105,13 +113,17 @@ export default function App() {
       {/* ── Header ── */}
       <header className="border-b border-[#1a2e1f] bg-[#080c0a]/90 backdrop-blur-sm sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
-          <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={handleHome}
+            className="flex items-center gap-3 shrink-0 cursor-pointer group"
+            aria-label="Return to homepage"
+          >
             <KairoLogo size={32} />
             <div className="flex flex-col leading-none">
-              <span className="font-serif font-bold text-white text-lg tracking-tight">kairo</span>
+              <span className="font-serif font-bold text-white text-lg tracking-tight group-hover:text-[#d1d9d5] transition-colors">kairo</span>
               <span className="text-[8px] text-[#4b6358] uppercase tracking-[0.25em] mt-0.5">Know the moment.</span>
             </div>
-          </div>
+          </button>
 
           {hasData && (
             <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
