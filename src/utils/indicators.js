@@ -65,6 +65,25 @@ export function calcVolumeSignal(candles, period = 20) {
   return { ratio: +(lastV / avgVol).toFixed(2), above: lastV > avgVol, lastV, avgVol }
 }
 
+// ── VWAP (volume-weighted average price) ─────────────────────────────────────
+// Classic intraday formula approximated on the daily series:
+//   VWAP = Σ (typical_price * volume) / Σ volume
+// where typical_price = (high + low + close) / 3.
+// We compute over the trailing N candles for a recent, comparable benchmark.
+export function calcVWAP(candles, period = 20) {
+  if (!candles?.length) return null
+  const slice = candles.slice(-Math.min(period, candles.length))
+  let num = 0, den = 0
+  for (const c of slice) {
+    if (c.volume == null) continue
+    const tp = (c.high + c.low + c.close) / 3
+    num += tp * c.volume
+    den += c.volume
+  }
+  if (den === 0) return null
+  return +(num / den).toFixed(2)
+}
+
 // ── Support & Resistance ──────────────────────────────────────────────────────
 export function calcSR(candles, currentPrice) {
   const resistance = [], support = []

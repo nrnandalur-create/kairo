@@ -1,34 +1,36 @@
 import DataTimestamp from './DataTimestamp'
+import { fmtCap, fmtPrice, fmtPct, fmtRatio } from '../utils/format'
+import { calcRSI, calcMACD, calcVWAP } from '../utils/indicators'
 
-function fmt(n, dec = 2) {
-  if (n == null || isNaN(n)) return '—'
-  return Number(n).toFixed(dec)
-}
-function fmtCap(n) {
-  // Finnhub returns marketCapitalization in millions USD
-  if (!n) return '—'
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}T`
-  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}B`
-  return `$${n.toFixed(0)}M`
-}
-function fmtVol(n) {
-  if (!n) return '—'
-  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`
-  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`
-  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`
-  return n.toFixed(0)
-}
-
-function MetricCell({ label, value, color }) {
+function MetricCell({ label, value, color, badge, badgeColor }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 min-w-0">
       <span className="text-[10px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">{label}</span>
-      <span className={`text-sm font-semibold tabular-nums ${color || 'text-[#d1d9d5]'}`}>{value}</span>
+      <div className="flex items-baseline gap-1.5 flex-wrap">
+        <span className={`text-sm font-semibold tabular-nums ${color || 'text-[#d1d9d5]'} truncate`}>{value}</span>
+        {badge && (
+          <span
+            className="text-[8.5px] font-bold uppercase tracking-[0.12em] px-1.5 py-px rounded border whitespace-nowrap"
+            style={{ color: badgeColor, borderColor: `${badgeColor}40`, background: `${badgeColor}15` }}
+          >
+            {badge}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
 
-export default function MetricsBar({ quote, profile, metrics, asOf }) {
+// Fall back through all the P/E variants Finnhub may populate depending on the
+// ticker's earnings reporting state.
+function pickPE(m) {
+  return m?.peBasicExclExtraTTM
+      ?? m?.peTTM
+      ?? m?.peExclExtraTTM
+      ?? m?.peNormalizedAnnual
+}
+
+export default function MetricsBar({ quote, profile, metrics, candles, asOf }) {
   if (!quote) return null
 
   const up   = quote.dp > 0
@@ -36,17 +38,21 @@ export default function MetricsBar({ quote, profile, metrics, asOf }) {
   const chgColor = up ? 'text-[#1D9E75]' : down ? 'text-[#e24b4a]' : 'text-[#4b6358]'
   const arrow    = up ? '▲' : down ? '▼' : '◆'
   const chgStr   = quote.d != null
-    ? `${up ? '+' : ''}${fmt(quote.d)} (${up ? '+' : ''}${fmt(quote.dp)}%)`
+    ? `${up ? '+' : ''}${fmtRatio(quote.d)} (${up ? '+' : ''}${fmtRatio(quote.dp)}%)`
     : '—'
 
-  const hi52 = metrics?.metric?.['52WeekHigh']
-  const lo52 = metrics?.metric?.['52WeekLow']
+  const m    = metrics?.metric
+  const hi52 = m?.['52WeekHigh']
+  const lo52 = m?.['52WeekLow']
 
-  // Finnhub may populate any of these P/E fields depending on the ticker's earnings state
-  const pe = metrics?.metric?.peBasicExclExtraTTM
-          ?? metrics?.metric?.peTTM
-          ?? metrics?.metric?.peExclExtraTTM
-          ?? metrics?.metric?.peNormalizedAnnual
+  // ── Row 2: technicals computed from candles + fundamentals from Finnhub
+  const rsi  = candles?.length ? calcRSI(candles)   : null
+  const macd = candles?.length ? calcMACD(candles)  : null
+  const vwap = candles?.length ? calcVWAP(candles)  : null
+  const rsiBadge = rsi == null ? null : rsi >= 70 ? 'Overbought' : rsi <= 30 ? 'Oversold' : 'Neutral'
+  const rsiBadgeColor = rsi == null ? '#4b6358' : rsi >= 70 ? '#e24b4a' : rsi <= 30 ? '#1D9E75' : '#4b6358'
+  const macdBadge      = macd ? (macd.bullish ? 'Bullish' : 'Bearish') : null
+  const macdBadgeColor = macd ? (macd.bullish ? '#1D9E75' : '#e24b4a') : '#4b6358'
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
@@ -65,7 +71,7 @@ export default function MetricsBar({ quote, profile, metrics, asOf }) {
           )}
           <div className="flex items-baseline gap-3">
             <span className="text-4xl sm:text-5xl font-black text-white tabular-nums tracking-tight">
-              ${fmt(quote.c)}
+              {fmtPrice(quote.c)}
             </span>
             <span className={`text-base font-bold tabular-nums ${chgColor}`}>
               {arrow} {chgStr}
@@ -77,14 +83,37 @@ export default function MetricsBar({ quote, profile, metrics, asOf }) {
       {/* Divider */}
       <div className="h-px bg-[#1a2e1f]" />
 
-      {/* Metrics grid */}
+      {/* Row 1 — market overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCell label="Market Cap"  value={fmtCap(profile?.marketCapitalization)} />
-        <MetricCell label="P/E (TTM)"   value={fmt(pe, 1)} />
-        <MetricCell label="Beta"        value={fmt(metrics?.metric?.beta)} />
-        <MetricCell label="52W Range"   value={hi52 && lo52 ? `$${fmt(lo52)} – $${fmt(hi52)}` : '—'} />
-        <MetricCell label="Day Range"   value={`$${fmt(quote.l)} – $${fmt(quote.h)}`} />
-        <MetricCell label="Prev Close"  value={`$${fmt(quote.pc)}`} />
+        <MetricCell label="P/E (TTM)"   value={fmtRatio(pickPE(m), 1)} />
+        <MetricCell label="Beta"        value={fmtRatio(m?.beta)} />
+        <MetricCell label="52W Range"   value={hi52 && lo52 ? `${fmtPrice(lo52)} – ${fmtPrice(hi52)}` : '—'} />
+        <MetricCell label="Day Range"   value={`${fmtPrice(quote.l)} – ${fmtPrice(quote.h)}`} />
+        <MetricCell label="Prev Close"  value={fmtPrice(quote.pc)} />
+      </div>
+
+      {/* Subtle separator between overview and fundamentals + technicals */}
+      <div className="h-px bg-[#1a2e1f]/60" />
+
+      {/* Row 2 — fundamentals + technicals */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <MetricCell label="VWAP (20D)"  value={vwap != null ? fmtPrice(vwap) : '—'} />
+        <MetricCell
+          label="RSI (14)"
+          value={rsi != null ? fmtRatio(rsi, 1) : '—'}
+          badge={rsiBadge}
+          badgeColor={rsiBadgeColor}
+        />
+        <MetricCell
+          label="MACD"
+          value={macd ? fmtRatio(macd.value, 3) : '—'}
+          badge={macdBadge}
+          badgeColor={macdBadgeColor}
+        />
+        <MetricCell label="Div Yield"   value={m?.dividendYieldIndicatedAnnual != null ? fmtPct(m.dividendYieldIndicatedAnnual) : '—'} />
+        <MetricCell label="EPS Gr. 5Y"  value={m?.epsGrowth5Y != null ? fmtPct(m.epsGrowth5Y) : '—'} />
+        <MetricCell label="P/S (TTM)"   value={fmtRatio(m?.psTTM, 2)} />
       </div>
 
       {/* Footer — data freshness */}

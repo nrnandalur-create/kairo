@@ -349,6 +349,7 @@ export default function App() {
               quote={marketData.quote}
               profile={marketData.profile}
               metrics={marketData.metrics}
+              candles={marketData.candles}
               asOf={marketData.fetchedAt}
             />
 
