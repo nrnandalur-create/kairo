@@ -1,15 +1,14 @@
 // Decorative ambient backdrop for the landing hero.
 // Pure CSS/SVG — no canvas, no rerenders, no extra deps.
-// Radial mask keeps the center clear so the logo and search stay crisp.
+// Layered composition: dominant mountain chart, two watchlist tiles in
+// opposite corners, a candle-sequence "snapshot," a top ticker tape,
+// faint static grid, and a glowing horizon. Tight radial mask keeps the
+// center clear so the logo and search stay crisp.
 
-// ─── Sparkline data ──────────────────────────────────────────────────────────
-// Two 41-point y-sequences over a 0–800 period (step 20 → denser, more
-// realistic micro-movement). Endpoints loop, parent w-[200%] translates -50%
-// for a seamless drift. Each tells a different market story so the top and
-// bottom lines feel like different instruments, not one motif twice.
+// ─── Mountain chart data ────────────────────────────────────────────────────
 const STEP = 20
 
-// Climb → pullback → blow-off top → drop → recovery → fade back to base.
+// Climb → pullback → blow-off top → drop → V-recovery.
 const Y_TOP = [
   80, 78, 75, 73, 70, 68, 65, 62, 60, 58, 55,
   53, 56, 54, 58, 55, 60, 63, 67, 72, 76,
@@ -17,7 +16,7 @@ const Y_TOP = [
   62, 55, 48, 42, 38, 42, 50, 60, 68, 80,
 ]
 
-// Steady decline → capitulation → bounce → breakdown → V-recovery.
+// Steady decline → capitulation → bounce → breakdown → recovery.
 const Y_BOT = [
   62, 60, 58, 56, 54, 50, 48, 45, 42, 40, 38,
   35, 33, 30, 32, 35, 38, 42, 45, 48, 50,
@@ -29,8 +28,7 @@ function doublePeriod(values) {
   return [...values, ...values.slice(1)]
 }
 
-// Catmull-Rom to cubic Bezier — produces a smooth curve that passes through
-// every point. tension=1 matches the default Robinhood/Yahoo mountain shape.
+// Catmull-Rom to cubic Bezier — smooth curve passing through every point.
 function smoothLinePath(values, step) {
   if (values.length < 2) return ''
   const pts = values.map((y, i) => [i * step, y])
@@ -62,32 +60,37 @@ const LINE_BOT = smoothLinePath(Y_BOT_2, STEP)
 const AREA_TOP = smoothAreaPath(Y_TOP_2, STEP, 120)
 const AREA_BOT = smoothAreaPath(Y_BOT_2, STEP, 100)
 
-// ─── Candles ────────────────────────────────────────────────────────────────
-// Six distinct shapes — marubozu / hammer / shooting star / doji / standards.
-// Proportions match real OHLC candles: thin 1px wicks, narrower 10px bodies.
-const CANDLES = [
-  { left: '2%',  top: '12%', h: 100, type: 'marubozu',     bull: true,  amp: 14, dur: 6800,  delay: '0s'   },
-  { left: '8%',  top: '54%', h: 86,  type: 'hammer',       bull: false, amp: 16, dur: 8400,  delay: '1.4s' },
-  { left: '14%', top: '22%', h: 70,  type: 'doji',         bull: true,  amp:  9, dur: 5200,  delay: '2.6s' },
-  { left: '85%', top: '14%', h: 108, type: 'marubozu',     bull: true,  amp: 18, dur: 7400,  delay: '0.8s' },
-  { left: '92%', top: '46%', h: 92,  type: 'shootingStar', bull: false, amp: 12, dur: 9200,  delay: '2.0s' },
-  { left: '95%', top: '74%', h: 78,  type: 'standard',     bull: true,  amp: 10, dur: 6300,  delay: '3.2s' },
+// ─── Watchlist tile chart data ──────────────────────────────────────────────
+// 15-point sequences for the in-tile mini mountain charts (viewBox y: 0–50).
+const TILE_UP = [40, 38, 36, 35, 33, 30, 32, 30, 27, 25, 22, 20, 18, 15, 12]
+const TILE_DN = [10, 12, 13, 16, 14, 18, 21, 19, 24, 27, 26, 30, 33, 35, 38]
+const TILE_STEP = 10
+const TILE_W = (TILE_UP.length - 1) * TILE_STEP
+
+// ─── Candle cluster ─────────────────────────────────────────────────────────
+// 6 candles in a row reading as a recognizable bullish reversal pattern:
+// pause → strong bull → doji → bear pullback → hammer rejection → continuation.
+const CLUSTER = [
+  { type: 'standard',     bull: true,  h: 60 },
+  { type: 'marubozu',     bull: true,  h: 76 },
+  { type: 'doji',         bull: true,  h: 54 },
+  { type: 'standard',     bull: false, h: 50 },
+  { type: 'hammer',       bull: true,  h: 64 },
+  { type: 'marubozu',     bull: true,  h: 78 },
 ]
 
 function candleGeometry(type, h) {
   switch (type) {
-    case 'marubozu':     return { wickTop:  4, wickBot: h -  4, bodyTop:  6, bodyH: h - 12 }
-    case 'hammer':       return { wickTop:  0, wickBot: h,      bodyTop:  6, bodyH: 16     }
-    case 'shootingStar': return { wickTop:  0, wickBot: h,      bodyTop: h - 22, bodyH: 16 }
-    case 'doji':         return { wickTop:  0, wickBot: h,      bodyTop: h/2 - 3, bodyH: 6 }
-    default:             return { wickTop:  6, wickBot: h -  6, bodyTop: h * 0.27, bodyH: h * 0.46 }
+    case 'marubozu':     return { wickTop:  4, wickBot: h -  4, bodyTop:  6,        bodyH: h - 12 }
+    case 'hammer':       return { wickTop:  0, wickBot: h,      bodyTop:  6,        bodyH: 16     }
+    case 'shootingStar': return { wickTop:  0, wickBot: h,      bodyTop: h - 22,    bodyH: 16     }
+    case 'doji':         return { wickTop:  0, wickBot: h,      bodyTop: h/2 - 3,   bodyH: 6      }
+    default:             return { wickTop:  6, wickBot: h -  6, bodyTop: h * 0.27,  bodyH: h * 0.46 }
   }
 }
 
 // ─── Tickers ─────────────────────────────────────────────────────────────────
-// Mega tech, semis, space + defense, ETFs, finance, fintech, consumer.
-// SpaceX itself isn't public — included its real public peers (RKLB, LUNR,
-// ASTS, SPCE) so the space theme reads correctly.
+// SpaceX isn't public — using its real public peers (RKLB, LUNR, ASTS, SPCE).
 const TICKER = [
   { sym: 'AAPL',  px: '224.18', d: '+0.84%', up: true  },
   { sym: 'MSFT',  px: '418.95', d: '+0.32%', up: true  },
@@ -128,27 +131,71 @@ function Glow({ id, blur = 4 }) {
   )
 }
 
-function Candle({ left, top, h, type, bull, amp, dur, delay }) {
+function ClusterCandle({ type, bull, h, idx }) {
   const color = bull ? '#1D9E75' : '#e24b4a'
   const { wickTop, wickBot, bodyTop, bodyH } = candleGeometry(type, h)
-  const filterId = `cg-${type}-${bull ? 'b' : 'r'}-${h}`
   return (
     <div
-      className="absolute animate-hero-float"
+      className="animate-hero-float shrink-0"
       style={{
-        left, top,
-        animationDelay: delay,
-        animationDuration: `${dur}ms`,
-        ['--float-amp']: `${amp}px`,
+        animationDelay: `${idx * 0.35}s`,
+        animationDuration: `${5400 + idx * 280}ms`,
+        ['--float-amp']: '3px',
       }}
     >
       <svg width="14" height={h} viewBox={`0 0 14 ${h}`} fill="none">
-        <defs><Glow id={filterId} blur={2.5} /></defs>
-        <g filter={`url(#${filterId})`}>
-          <rect x="6.5" y={wickTop} width="1" height={wickBot - wickTop} fill={color} />
-          <rect x="2"   y={bodyTop} width="10" height={bodyH}            fill={color} rx="0.5" />
+        <defs><Glow id={`cl-${idx}`} blur={2.5} /></defs>
+        <g filter={`url(#cl-${idx})`}>
+          <rect x="6.5" y={wickTop} width="1"  height={wickBot - wickTop} fill={color} />
+          <rect x="2"   y={bodyTop} width="10" height={bodyH}             fill={color} rx="0.5" />
         </g>
       </svg>
+    </div>
+  )
+}
+
+function WatchlistTile({ sym, name, px, d, up, values, position, className = '' }) {
+  const color = up ? '#1D9E75' : '#e24b4a'
+  const linePath = smoothLinePath(values, TILE_STEP)
+  const areaPath = smoothAreaPath(values, TILE_STEP, 50)
+  const gradId   = `tile-${sym}-grad`
+  const glowId   = `tile-${sym}-glow`
+  return (
+    <div className={`absolute ${className}`} style={position}>
+      <div
+        className="rounded-xl border border-[#1a2e1f]/80 bg-[#0a100c]/85 backdrop-blur-sm px-3.5 py-3 w-[168px]"
+        style={{
+          boxShadow: `0 0 32px -4px ${up ? 'rgba(29,158,117,0.25)' : 'rgba(226,75,74,0.22)'}, inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 24px -8px rgba(0,0,0,0.5)`,
+        }}
+      >
+        <div className="flex items-baseline justify-between mb-0.5">
+          <span className="font-mono text-[11px] font-bold text-[#d1d9d5] tracking-[0.1em]">{sym}</span>
+          <span className="font-mono text-[10px] font-semibold" style={{ color }}>
+            {up ? '▲' : '▼'} {d}
+          </span>
+        </div>
+        <div className="text-[9px] uppercase tracking-[0.15em] text-[#4b6358] mb-1.5">{name}</div>
+        <div className="font-mono text-[15px] font-semibold text-white mb-2">${px}</div>
+        <svg viewBox={`0 0 ${TILE_W} 50`} preserveAspectRatio="none" className="w-full h-8">
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor={color} stopOpacity="0.5" />
+              <stop offset="100%" stopColor={color} stopOpacity="0"   />
+            </linearGradient>
+            <Glow id={glowId} blur={1.5} />
+          </defs>
+          <path d={areaPath} fill={`url(#${gradId})`} />
+          <path
+            d={linePath}
+            stroke={color}
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter={`url(#${glowId})`}
+          />
+        </svg>
+      </div>
     </div>
   )
 }
@@ -167,7 +214,7 @@ function TickerItem({ sym, px, d, up }) {
 }
 
 function ChartGrid() {
-  // Static grid that doesn't drift — feels like the chart viewport.
+  // Static grid — feels like a chart viewport behind the prices.
   return (
     <svg
       className="absolute inset-0 w-full h-full"
@@ -176,12 +223,12 @@ function ChartGrid() {
     >
       {[20, 40, 60, 80].map(y => (
         <line key={`h${y}`} x1="0" y1={y} x2="100" y2={y}
-              stroke="#1D9E75" strokeOpacity="0.08" strokeWidth="0.08"
+              stroke="#1D9E75" strokeOpacity="0.1" strokeWidth="0.08"
               strokeDasharray="0.5 1" vectorEffect="non-scaling-stroke" />
       ))}
       {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(x => (
         <line key={`v${x}`} x1={x} y1="0" x2={x} y2="100"
-              stroke="#1D9E75" strokeOpacity="0.05" strokeWidth="0.08"
+              stroke="#1D9E75" strokeOpacity="0.06" strokeWidth="0.08"
               strokeDasharray="0.5 1" vectorEffect="non-scaling-stroke" />
       ))}
     </svg>
@@ -193,16 +240,75 @@ export default function HeroMarketBackdrop() {
   return (
     <div
       aria-hidden
-      className="absolute inset-0 overflow-hidden pointer-events-none [mask-image:radial-gradient(ellipse_at_center,transparent_28%,#000_76%)]"
+      className="absolute inset-0 overflow-hidden pointer-events-none"
     >
-      {/* Static grid — feels like a chart viewport */}
-      <ChartGrid />
+      {/* Layer 1: ambient charts + grid — masked so they fade away from the center */}
+      <div
+        className="absolute inset-0 [mask-image:radial-gradient(ellipse_46%_58%_at_center,transparent_0%,#000_70%)]"
+      >
+        <ChartGrid />
 
-      {/* Ticker tape — top edge */}
+        {/* Glowing horizon */}
+        <div
+          className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent opacity-70"
+          style={{ boxShadow: '0 0 14px 1px rgba(29,158,117,0.55)' }}
+        />
+
+        {/* Dominant mountain chart — green, top */}
+        <div className="absolute top-[14%] left-0 w-[200%] animate-hero-drift">
+          <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-48">
+            <defs>
+              <linearGradient id="grad-top" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.42" />
+                <stop offset="55%"  stopColor="#1D9E75" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="#1D9E75" stopOpacity="0"    />
+              </linearGradient>
+              <Glow id="sg-top" blur={3} />
+            </defs>
+            <path d={AREA_TOP} fill="url(#grad-top)" />
+            <path
+              d={LINE_TOP}
+              stroke="#1D9E75"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#sg-top)"
+            />
+          </svg>
+        </div>
+
+        {/* Secondary mountain chart — red, bottom, slower */}
+        <div className="absolute bottom-[8%] left-0 w-[200%] animate-hero-drift-slow">
+          <svg viewBox="0 0 1600 100" preserveAspectRatio="none" className="w-full h-40">
+            <defs>
+              <linearGradient id="grad-bot" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="#e24b4a" stopOpacity="0.32" />
+                <stop offset="55%"  stopColor="#e24b4a" stopOpacity="0.09" />
+                <stop offset="100%" stopColor="#e24b4a" stopOpacity="0"    />
+              </linearGradient>
+              <Glow id="sg-bot" blur={2.5} />
+            </defs>
+            <path d={AREA_BOT} fill="url(#grad-bot)" />
+            <path
+              d={LINE_BOT}
+              stroke="#e24b4a"
+              strokeWidth="1.5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#sg-bot)"
+              opacity="0.92"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {/* Layer 2: ticker tape — fully visible, not masked */}
       <div className="absolute top-2 left-0 w-[200%] animate-hero-drift">
         <div
-          className="flex items-center whitespace-nowrap opacity-90"
-          style={{ textShadow: '0 0 8px rgba(29,158,117,0.35)' }}
+          className="flex items-center whitespace-nowrap"
+          style={{ textShadow: '0 0 8px rgba(29,158,117,0.4)' }}
         >
           {[...TICKER, ...TICKER].map((t, i) => (
             <TickerItem key={i} {...t} />
@@ -210,63 +316,26 @@ export default function HeroMarketBackdrop() {
         </div>
       </div>
 
-      {/* Glowing horizon */}
-      <div
-        className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent opacity-60"
-        style={{ boxShadow: '0 0 12px 1px rgba(29,158,117,0.5)' }}
+      {/* Layer 3: watchlist tiles (corners) and candle cluster — full visibility */}
+      <WatchlistTile
+        position={{ top: '34px', left: '24px' }}
+        sym="NVDA"  name="NVIDIA Corp"
+        px="712.30" d="+2.41%" up={true}
+        values={TILE_UP}
+        className="hidden lg:block"
+      />
+      <WatchlistTile
+        position={{ bottom: '24px', right: '24px' }}
+        sym="TSLA"  name="Tesla Inc"
+        px="248.10" d="−1.12%" up={false}
+        values={TILE_DN}
+        className="hidden lg:block"
       />
 
-      {/* Top mountain chart — bullish (green), brighter line, area fill */}
-      <div className="absolute top-[16%] left-0 w-[200%] animate-hero-drift">
-        <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-44">
-          <defs>
-            <linearGradient id="grad-top" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.35" />
-              <stop offset="55%"  stopColor="#1D9E75" stopOpacity="0.10" />
-              <stop offset="100%" stopColor="#1D9E75" stopOpacity="0"    />
-            </linearGradient>
-            <Glow id="sg-top" blur={3.5} />
-          </defs>
-          <path d={AREA_TOP} fill="url(#grad-top)" />
-          <path
-            d={LINE_TOP}
-            stroke="#1D9E75"
-            strokeWidth="1.75"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#sg-top)"
-          />
-        </svg>
+      {/* Candle cluster — bottom-left, drifts subtly with the hero scroll feel */}
+      <div className="absolute left-[28px] bottom-[36px] hidden md:flex items-end gap-[3px]">
+        {CLUSTER.map((c, i) => <ClusterCandle key={i} {...c} idx={i} />)}
       </div>
-
-      {/* Bottom mountain chart — bearish (red), thinner, slower drift */}
-      <div className="absolute bottom-[10%] left-0 w-[200%] animate-hero-drift-slow">
-        <svg viewBox="0 0 1600 100" preserveAspectRatio="none" className="w-full h-40">
-          <defs>
-            <linearGradient id="grad-bot" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#e24b4a" stopOpacity="0.28" />
-              <stop offset="55%"  stopColor="#e24b4a" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#e24b4a" stopOpacity="0"    />
-            </linearGradient>
-            <Glow id="sg-bot" blur={3} />
-          </defs>
-          <path d={AREA_BOT} fill="url(#grad-bot)" />
-          <path
-            d={LINE_BOT}
-            stroke="#e24b4a"
-            strokeWidth="1.35"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#sg-bot)"
-            opacity="0.9"
-          />
-        </svg>
-      </div>
-
-      {/* Diversified floating candles */}
-      {CANDLES.map((c, i) => <Candle key={i} {...c} />)}
     </div>
   )
 }
