@@ -96,7 +96,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
                 : 'border-[#1a2e1f] focus:border-[#1D9E75]'
             }`}
           />
-          {errors.target && <span className="text-[10px] text-[#e24b4a] max-w-[160px]">{errors.target}</span>}
+          {errors.target && <span className="text-[11px] text-[#e24b4a] max-w-[180px] leading-tight">{errors.target}</span>}
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Stop Loss</label>
@@ -114,7 +114,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
                 : 'border-[#1a2e1f] focus:border-[#e24b4a]'
             }`}
           />
-          {errors.stop && <span className="text-[10px] text-[#e24b4a] max-w-[160px]">{errors.stop}</span>}
+          {errors.stop && <span className="text-[11px] text-[#e24b4a] max-w-[180px] leading-tight">{errors.stop}</span>}
         </div>
         <button
           onClick={handleSet}
@@ -126,7 +126,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
         </button>
       </div>
 
-      <p className="text-[10px] text-[#263d2c] leading-relaxed">
+      <p className="text-[11px] text-[#4b6358] leading-relaxed">
         Alerts are stored locally. Your watchlist will show a badge when price crosses a level.
       </p>
     </div>

@@ -85,13 +85,13 @@ function ResultRow({ item, active, onSelect }) {
 
       {/* Trailing badge: exchange or hint */}
       {item.kind === 'ticker' && (
-        <span className="shrink-0 font-mono text-[9px] font-semibold tracking-[0.15em] text-[#3a4f44]">{item.ex}</span>
+        <span className="shrink-0 font-mono text-[10px] font-semibold tracking-[0.14em] text-[#5d7868]">{item.ex}</span>
       )}
       {item.kind === 'recent' && (
-        <span className="shrink-0 text-[9px] uppercase tracking-[0.15em] text-[#3a4f44]">Recent</span>
+        <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-[#5d7868]">Recent</span>
       )}
       {active && (
-        <span className="shrink-0 font-mono text-[10px] text-[#1D9E75]">↵</span>
+        <span className="shrink-0 font-mono text-[11px] text-[#1D9E75]">↵</span>
       )}
     </button>
   )
@@ -99,7 +99,7 @@ function ResultRow({ item, active, onSelect }) {
 
 function GroupHeader({ children }) {
   return (
-    <div className="px-3 pt-3 pb-1.5 text-[9.5px] uppercase tracking-[0.18em] font-semibold text-[#3a4f44]">
+    <div className="px-3 pt-3 pb-1.5 text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[#5d7868]">
       {children}
     </div>
   )
@@ -238,7 +238,7 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
             placeholder="Search ticker or jump to section…"
             className="flex-1 bg-transparent text-sm text-[#d1d9d5] placeholder:text-[#4b6358] outline-none"
           />
-          <span className="font-mono text-[9px] font-semibold tracking-[0.18em] uppercase text-[#3a4f44] border border-[#1a2e1f] rounded px-1.5 py-0.5">
+          <span className="font-mono text-[10px] font-semibold tracking-[0.14em] uppercase text-[#8a9b91] border border-[#263d2c] rounded px-1.5 py-0.5">
             Esc
           </span>
         </div>
@@ -271,13 +271,13 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
         </div>
 
         {/* Footer hints */}
-        <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-[#1a2e1f] bg-[#080c0a]/60 text-[10px] font-mono tracking-wider text-[#4b6358]">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-[#1a2e1f] bg-[#080c0a]/60 text-[11px] font-mono tracking-wide text-[#8a9b91]">
           <span className="flex items-center gap-2">
-            <span><kbd className="text-[#d1d9d5]">↑↓</kbd> navigate</span>
-            <span className="text-[#1a2e1f]">·</span>
-            <span><kbd className="text-[#d1d9d5]">↵</kbd> select</span>
+            <span><kbd className="text-[#d1d9d5] font-bold">↑↓</kbd> navigate</span>
+            <span className="text-[#263d2c]">·</span>
+            <span><kbd className="text-[#d1d9d5] font-bold">↵</kbd> select</span>
           </span>
-          <span><kbd className="text-[#d1d9d5]">⌘K</kbd> toggle</span>
+          <span><kbd className="text-[#d1d9d5] font-bold">⌘K</kbd> toggle</span>
         </div>
       </div>
     </div>,

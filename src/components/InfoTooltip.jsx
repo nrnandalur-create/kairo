@@ -24,9 +24,13 @@ export default function InfoTooltip({ children, label = 'About this data', side 
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-[#1a2e1f] text-[#4b6358] hover:text-[#1D9E75] hover:border-[#1D9E75]/40 transition-colors cursor-help text-[9px] font-bold leading-none align-middle ml-1.5"
+        className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-[#263d2c] text-[#8a9b91] hover:text-[#1D9E75] hover:border-[#1D9E75]/50 transition-colors cursor-help align-middle ml-1.5"
       >
-        ?
+        {/* Universal "info" glyph — dot + stem, more readable than "?" at this size */}
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+          <circle cx="4" cy="1.6" r="0.85" fill="currentColor" />
+          <rect x="3.3" y="3.4" width="1.4" height="3.4" rx="0.55" fill="currentColor" />
+        </svg>
       </button>
       {open && (
         <span
@@ -34,7 +38,7 @@ export default function InfoTooltip({ children, label = 'About this data', side 
           role="tooltip"
           className={`absolute z-50 ${posClass} w-64 max-w-[80vw] pointer-events-none`}
         >
-          <span className="block rounded-lg border border-[#1a2e1f] bg-[#0a100c]/95 backdrop-blur-md px-3 py-2 text-[11px] leading-relaxed text-[#d1d9d5] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.6)]">
+          <span className="block rounded-lg border border-[#263d2c] bg-[#0a100c]/95 backdrop-blur-md px-3 py-2.5 text-[12px] leading-relaxed text-[#d1d9d5] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.6)]">
             {children}
           </span>
         </span>

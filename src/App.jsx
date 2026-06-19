@@ -197,7 +197,7 @@ export default function App() {
     : null
 
   return (
-    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col lg:pl-[60px] pb-16 lg:pb-7">
+    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col lg:pl-[60px] pb-16 lg:pb-9">
 
       <Nav
         activeKey={activeNav}

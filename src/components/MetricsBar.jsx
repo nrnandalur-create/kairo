@@ -10,8 +10,8 @@ function MetricCell({ label, value, color, badge, badgeColor }) {
         <span className={`text-sm font-semibold tabular-nums ${color || 'text-[#d1d9d5]'} truncate`}>{value}</span>
         {badge && (
           <span
-            className="text-[8.5px] font-bold uppercase tracking-[0.12em] px-1.5 py-px rounded border whitespace-nowrap"
-            style={{ color: badgeColor, borderColor: `${badgeColor}40`, background: `${badgeColor}15` }}
+            className="text-[10px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5 rounded border whitespace-nowrap leading-none"
+            style={{ color: badgeColor, borderColor: `${badgeColor}55`, background: `${badgeColor}18` }}
           >
             {badge}
           </span>

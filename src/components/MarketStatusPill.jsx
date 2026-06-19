@@ -15,25 +15,28 @@ export default function MarketStatusPill({ compact = false }) {
   const now = useNow(1000)              // live wall clock — 1Hz
   const c   = COLOR[state] ?? COLOR.closed
   const showClock = state !== 'closed'
+  // Compact = drop the seconds from the clock; the label stays the full "Market Open"
+  // form so users always know what they're looking at.
+  const clockText = compact ? fmtETClock(now).replace(/:\d{2} /, ' ') : fmtETClock(now)
 
   return (
     <div
-      className="flex items-center gap-2 px-2.5 py-1 rounded-full border border-[#1a2e1f] bg-[#0a100c]/70 backdrop-blur-sm"
+      className="flex items-center gap-2 px-2.5 py-1 rounded-full border border-[#1a2e1f] bg-[#0a100c]/80 backdrop-blur-sm"
       title={`${label} · ${fmtETClock(now)}`}
     >
-      <span className="relative flex h-1.5 w-1.5">
+      <span className="relative flex h-2 w-2">
         {state === 'open' && (
           <span className="absolute inset-0 rounded-full animate-live-pulse" style={{ background: c.dot }} />
         )}
-        <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: c.dot }} />
+        <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: c.dot }} />
       </span>
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: c.text }}>
-        {compact ? label.replace('Market ', '') : label}
+      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: c.text }}>
+        {label}
       </span>
       {showClock && (
         <>
-          <span className="text-[#1a2e1f]">·</span>
-          <span className="font-mono text-[10px] tabular-nums text-[#4b6358]">{fmtETClock(now)}</span>
+          <span className="text-[#263d2c]">·</span>
+          <span className="font-mono text-[11px] tabular-nums text-[#8a9b91]">{clockText}</span>
         </>
       )}
     </div>
