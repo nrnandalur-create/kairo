@@ -104,12 +104,19 @@ body {
   80%      { transform: translate3d(0, calc(var(--float-amp, 10px) * -0.6), 0);        opacity: 1;    }
 }
 
+@keyframes livePulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    box-shadow: 0 0 0 0    rgba(29,158,117,0.7); }
+  70%      { opacity: 0.4; transform: scale(0.75); box-shadow: 0 0 0 6px  rgba(29,158,117,0);   }
+}
+
 .animate-hero-drift      { animation: heroDrift 60s linear infinite; will-change: transform; }
 .animate-hero-drift-slow { animation: heroDrift 95s linear infinite; will-change: transform; }
 .animate-hero-float      { animation: heroFloat  9s ease-in-out infinite; will-change: transform, opacity; }
+.animate-live-pulse      { animation: livePulse  1.8s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-drift,
   .animate-hero-drift-slow,
-  .animate-hero-float { animation: none; }
+  .animate-hero-float,
+  .animate-live-pulse { animation: none; }
 }

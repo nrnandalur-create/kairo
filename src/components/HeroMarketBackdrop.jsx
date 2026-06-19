@@ -1,11 +1,19 @@
 // Decorative ambient backdrop for the landing hero.
 // Pure CSS/SVG — no canvas, no rerenders, no extra deps.
-// Layered composition: dominant mountain chart, two watchlist tiles in
-// opposite corners, a candle-sequence "snapshot," a top ticker tape,
-// faint static grid, and a glowing horizon. Tight radial mask keeps the
-// center clear so the logo and search stay crisp.
+//
+// Composition reads like a real trading interface:
+//   ▸ ticker tape (with exchange tags) drifts across the top
+//   ▸ LIVE indicator (pulsing dot + NYSE clock) in the top-right
+//   ▸ three watchlist tiles in the corners (NVDA / SPY / TSLA) — each
+//     with exchange tag, company name, price, delta, mini mountain
+//     chart, and volume
+//   ▸ a dominant green mountain chart spans the middle with a price
+//     axis on the right and a volume histogram beneath
+//   ▸ static grid + glowing horizon anchor the viewport
+// A tight elliptical mask keeps the center clear so the logo, tagline,
+// search, and recent chips stay crisp.
 
-// ─── Mountain chart data ────────────────────────────────────────────────────
+// ─── Main chart data ────────────────────────────────────────────────────────
 const STEP = 20
 
 // Climb → pullback → blow-off top → drop → V-recovery.
@@ -14,14 +22,6 @@ const Y_TOP = [
   53, 56, 54, 58, 55, 60, 63, 67, 72, 76,
   78, 82, 86, 88, 90, 87, 84, 80, 76, 70,
   62, 55, 48, 42, 38, 42, 50, 60, 68, 80,
-]
-
-// Steady decline → capitulation → bounce → breakdown → recovery.
-const Y_BOT = [
-  62, 60, 58, 56, 54, 50, 48, 45, 42, 40, 38,
-  35, 33, 30, 32, 35, 38, 42, 45, 48, 50,
-  48, 50, 45, 42, 38, 34, 30, 28, 26, 24,
-  28, 35, 42, 48, 52, 56, 58, 60, 61, 62,
 ]
 
 function doublePeriod(values) {
@@ -53,70 +53,66 @@ function smoothAreaPath(values, step, baseY) {
   return `${line} L${lastX},${baseY} L0,${baseY} Z`
 }
 
-const Y_TOP_2 = doublePeriod(Y_TOP)
-const Y_BOT_2 = doublePeriod(Y_BOT)
-const LINE_TOP = smoothLinePath(Y_TOP_2, STEP)
-const LINE_BOT = smoothLinePath(Y_BOT_2, STEP)
-const AREA_TOP = smoothAreaPath(Y_TOP_2, STEP, 120)
-const AREA_BOT = smoothAreaPath(Y_BOT_2, STEP, 100)
-
-// ─── Watchlist tile chart data ──────────────────────────────────────────────
-// 15-point sequences for the in-tile mini mountain charts (viewBox y: 0–50).
-const TILE_UP = [40, 38, 36, 35, 33, 30, 32, 30, 27, 25, 22, 20, 18, 15, 12]
-const TILE_DN = [10, 12, 13, 16, 14, 18, 21, 19, 24, 27, 26, 30, 33, 35, 38]
-const TILE_STEP = 10
-const TILE_W = (TILE_UP.length - 1) * TILE_STEP
-
-// ─── Candle cluster ─────────────────────────────────────────────────────────
-// 6 candles in a row reading as a recognizable bullish reversal pattern:
-// pause → strong bull → doji → bear pullback → hammer rejection → continuation.
-const CLUSTER = [
-  { type: 'standard',     bull: true,  h: 60 },
-  { type: 'marubozu',     bull: true,  h: 76 },
-  { type: 'doji',         bull: true,  h: 54 },
-  { type: 'standard',     bull: false, h: 50 },
-  { type: 'hammer',       bull: true,  h: 64 },
-  { type: 'marubozu',     bull: true,  h: 78 },
-]
-
-function candleGeometry(type, h) {
-  switch (type) {
-    case 'marubozu':     return { wickTop:  4, wickBot: h -  4, bodyTop:  6,        bodyH: h - 12 }
-    case 'hammer':       return { wickTop:  0, wickBot: h,      bodyTop:  6,        bodyH: 16     }
-    case 'shootingStar': return { wickTop:  0, wickBot: h,      bodyTop: h - 22,    bodyH: 16     }
-    case 'doji':         return { wickTop:  0, wickBot: h,      bodyTop: h/2 - 3,   bodyH: 6      }
-    default:             return { wickTop:  6, wickBot: h -  6, bodyTop: h * 0.27,  bodyH: h * 0.46 }
+// Volume bars derived from price moves: bigger moves → taller bars,
+// up-day green, down-day red. Deterministic noise varies the heights.
+function buildVolumes(values, step) {
+  const out = []
+  for (let i = 0; i < values.length - 1; i++) {
+    const diff = values[i + 1] - values[i]
+    const noise = ((i * 13 + 7) % 11) * 0.65
+    out.push({
+      x: i * step,
+      h: Math.max(3.5, Math.abs(diff) * 0.75 + noise + 2.5),
+      up: diff < 0, // y inverted in SVG: lower y = higher price
+    })
   }
+  return out
 }
 
-// ─── Tickers ─────────────────────────────────────────────────────────────────
-// SpaceX isn't public — using its real public peers (RKLB, LUNR, ASTS, SPCE).
+const Y_TOP_2 = doublePeriod(Y_TOP)
+const LINE_TOP = smoothLinePath(Y_TOP_2, STEP)
+const AREA_TOP = smoothAreaPath(Y_TOP_2, STEP, 120)
+const VOLS = buildVolumes(Y_TOP_2, STEP)
+
+// ─── Watchlist tile chart data ──────────────────────────────────────────────
+const TILE_STEP = 10
+const TILE_NVDA = [40, 38, 36, 35, 33, 30, 32, 30, 27, 25, 22, 20, 18, 15, 12]
+const TILE_SPY  = [32, 31, 30, 29, 30, 28, 27, 28, 25, 24, 23, 22, 20, 19, 18]
+const TILE_TSLA = [10, 12, 14, 13, 16, 18, 21, 20, 24, 27, 26, 30, 33, 35, 38]
+const TILE_W    = (TILE_NVDA.length - 1) * TILE_STEP
+
+// ─── Tickers ────────────────────────────────────────────────────────────────
+// Exchange tag prepended: NDQ for Nasdaq, NYSE for NYSE listings.
+// SpaceX itself isn't public — using its real public peers.
 const TICKER = [
-  { sym: 'AAPL',  px: '224.18', d: '+0.84%', up: true  },
-  { sym: 'MSFT',  px: '418.95', d: '+0.32%', up: true  },
-  { sym: 'NVDA',  px: '712.30', d: '+2.41%', up: true  },
-  { sym: 'GOOGL', px: '173.42', d: '−0.48%', up: false },
-  { sym: 'META',  px: '512.18', d: '+1.56%', up: true  },
-  { sym: 'AMZN',  px: '195.84', d: '+0.21%', up: true  },
-  { sym: 'TSLA',  px: '248.10', d: '−1.12%', up: false },
-  { sym: 'AMD',   px: '142.66', d: '−0.91%', up: false },
-  { sym: 'AVGO',  px: '174.30', d: '+0.55%', up: true  },
-  { sym: 'TSM',   px: '186.42', d: '+1.04%', up: true  },
-  { sym: 'RKLB',  px:  '12.84', d: '+3.12%', up: true  },
-  { sym: 'LUNR',  px:   '5.40', d: '+5.23%', up: true  },
-  { sym: 'ASTS',  px:  '24.62', d: '−1.81%', up: false },
-  { sym: 'SPCE',  px:   '4.92', d: '+0.68%', up: true  },
-  { sym: 'LMT',   px: '472.18', d: '−0.22%', up: false },
-  { sym: 'BA',    px: '184.30', d: '+0.96%', up: true  },
-  { sym: 'SPY',   px: '583.21', d: '+0.42%', up: true  },
-  { sym: 'QQQ',   px: '498.07', d: '+0.67%', up: true  },
-  { sym: 'IWM',   px: '218.40', d: '−0.34%', up: false },
-  { sym: 'JPM',   px: '232.18', d: '+0.18%', up: true  },
-  { sym: 'V',     px: '298.62', d: '+0.41%', up: true  },
-  { sym: 'COIN',  px: '218.92', d: '+2.78%', up: true  },
-  { sym: 'PLTR',  px:  '68.42', d: '+1.92%', up: true  },
-  { sym: 'NFLX',  px: '742.30', d: '+1.86%', up: true  },
+  { ex: 'NDQ',  sym: 'AAPL',  px: '224.18', d: '+0.84%', up: true  },
+  { ex: 'NDQ',  sym: 'MSFT',  px: '418.95', d: '+0.32%', up: true  },
+  { ex: 'NDQ',  sym: 'NVDA',  px: '712.30', d: '+2.41%', up: true  },
+  { ex: 'NDQ',  sym: 'GOOGL', px: '173.42', d: '−0.48%', up: false },
+  { ex: 'NDQ',  sym: 'META',  px: '512.18', d: '+1.56%', up: true  },
+  { ex: 'NDQ',  sym: 'AMZN',  px: '195.84', d: '+0.21%', up: true  },
+  { ex: 'NDQ',  sym: 'TSLA',  px: '248.10', d: '−1.12%', up: false },
+  { ex: 'NDQ',  sym: 'AMD',   px: '142.66', d: '−0.91%', up: false },
+  { ex: 'NDQ',  sym: 'AVGO',  px: '174.30', d: '+0.55%', up: true  },
+  { ex: 'NYSE', sym: 'TSM',   px: '186.42', d: '+1.04%', up: true  },
+  { ex: 'NDQ',  sym: 'RKLB',  px:  '12.84', d: '+3.12%', up: true  },
+  { ex: 'NDQ',  sym: 'LUNR',  px:   '5.40', d: '+5.23%', up: true  },
+  { ex: 'NDQ',  sym: 'ASTS',  px:  '24.62', d: '−1.81%', up: false },
+  { ex: 'NYSE', sym: 'SPCE',  px:   '4.92', d: '+0.68%', up: true  },
+  { ex: 'NYSE', sym: 'LMT',   px: '472.18', d: '−0.22%', up: false },
+  { ex: 'NYSE', sym: 'BA',    px: '184.30', d: '+0.96%', up: true  },
+  { ex: 'NYSE', sym: 'SPY',   px: '583.21', d: '+0.42%', up: true  },
+  { ex: 'NDQ',  sym: 'QQQ',   px: '498.07', d: '+0.67%', up: true  },
+  { ex: 'NYSE', sym: 'IWM',   px: '218.40', d: '−0.34%', up: false },
+  { ex: 'NYSE', sym: 'JPM',   px: '232.18', d: '+0.18%', up: true  },
+  { ex: 'NYSE', sym: 'V',     px: '298.62', d: '+0.41%', up: true  },
+  { ex: 'NDQ',  sym: 'COIN',  px: '218.92', d: '+2.78%', up: true  },
+  { ex: 'NYSE', sym: 'PLTR',  px:  '68.42', d: '+1.92%', up: true  },
+  { ex: 'NDQ',  sym: 'NFLX',  px: '742.30', d: '+1.86%', up: true  },
 ]
+
+// Price levels for the right-side axis (rendered top → bottom).
+const PRICE_LEVELS = ['590.00', '585.00', '580.00', '575.00', '570.00']
 
 // ─── Building blocks ────────────────────────────────────────────────────────
 function Glow({ id, blur = 4 }) {
@@ -131,30 +127,34 @@ function Glow({ id, blur = 4 }) {
   )
 }
 
-function ClusterCandle({ type, bull, h, idx }) {
-  const color = bull ? '#1D9E75' : '#e24b4a'
-  const { wickTop, wickBot, bodyTop, bodyH } = candleGeometry(type, h)
+function LiveIndicator() {
   return (
-    <div
-      className="animate-hero-float shrink-0"
-      style={{
-        animationDelay: `${idx * 0.35}s`,
-        animationDuration: `${5400 + idx * 280}ms`,
-        ['--float-amp']: '3px',
-      }}
-    >
-      <svg width="14" height={h} viewBox={`0 0 14 ${h}`} fill="none">
-        <defs><Glow id={`cl-${idx}`} blur={2.5} /></defs>
-        <g filter={`url(#cl-${idx})`}>
-          <rect x="6.5" y={wickTop} width="1"  height={wickBot - wickTop} fill={color} />
-          <rect x="2"   y={bodyTop} width="10" height={bodyH}             fill={color} rx="0.5" />
-        </g>
-      </svg>
+    <div className="absolute top-2.5 right-4 flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] uppercase">
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="absolute inset-0 rounded-full bg-[#1D9E75] animate-live-pulse" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#1D9E75]" />
+      </span>
+      <span className="text-[#1D9E75] font-semibold">Live</span>
+      <span className="text-[#1a2e1f]">·</span>
+      <span className="text-[#4b6358]">NYSE 14:32 ET</span>
     </div>
   )
 }
 
-function WatchlistTile({ sym, name, px, d, up, values, position, className = '' }) {
+function PriceAxis() {
+  return (
+    <div className="absolute right-3 top-[20%] bottom-[36%] hidden md:flex flex-col justify-between">
+      {PRICE_LEVELS.map(p => (
+        <div key={p} className="flex items-center gap-1.5 justify-end">
+          <span className="font-mono text-[9.5px] tabular-nums tracking-tight text-[#4b6358]">${p}</span>
+          <span className="w-1.5 h-px bg-[#1a2e1f]" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, className = '' }) {
   const color = up ? '#1D9E75' : '#e24b4a'
   const linePath = smoothLinePath(values, TILE_STEP)
   const areaPath = smoothAreaPath(values, TILE_STEP, 50)
@@ -163,19 +163,25 @@ function WatchlistTile({ sym, name, px, d, up, values, position, className = '' 
   return (
     <div className={`absolute ${className}`} style={position}>
       <div
-        className="rounded-xl border border-[#1a2e1f]/80 bg-[#0a100c]/85 backdrop-blur-sm px-3.5 py-3 w-[168px]"
+        className="rounded-xl border border-[#1a2e1f]/80 bg-[#0a100c]/85 backdrop-blur-sm px-3.5 pt-2.5 pb-3 w-[180px]"
         style={{
-          boxShadow: `0 0 32px -4px ${up ? 'rgba(29,158,117,0.25)' : 'rgba(226,75,74,0.22)'}, inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 24px -8px rgba(0,0,0,0.5)`,
+          boxShadow: `0 0 32px -4px ${up ? 'rgba(29,158,117,0.22)' : 'rgba(226,75,74,0.20)'}, inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 24px -8px rgba(0,0,0,0.55)`,
         }}
       >
+        {/* Header: ticker + exchange tag · delta */}
         <div className="flex items-baseline justify-between mb-0.5">
-          <span className="font-mono text-[11px] font-bold text-[#d1d9d5] tracking-[0.1em]">{sym}</span>
-          <span className="font-mono text-[10px] font-semibold" style={{ color }}>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-mono text-[11.5px] font-bold text-[#d1d9d5] tracking-[0.08em]">{sym}</span>
+            <span className="font-mono text-[8.5px] font-semibold tracking-[0.12em] text-[#4b6358]">{ex}</span>
+          </div>
+          <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color }}>
             {up ? '▲' : '▼'} {d}
           </span>
         </div>
-        <div className="text-[9px] uppercase tracking-[0.15em] text-[#4b6358] mb-1.5">{name}</div>
-        <div className="font-mono text-[15px] font-semibold text-white mb-2">${px}</div>
+        <div className="text-[8.5px] uppercase tracking-[0.16em] text-[#3a4f44] mb-1.5">{name}</div>
+        <div className="font-mono text-[15.5px] font-semibold text-white tabular-nums mb-2">${px}</div>
+
+        {/* Mini mountain chart */}
         <svg viewBox={`0 0 ${TILE_W} 50`} preserveAspectRatio="none" className="w-full h-8">
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -195,26 +201,32 @@ function WatchlistTile({ sym, name, px, d, up, values, position, className = '' 
             filter={`url(#${glowId})`}
           />
         </svg>
+
+        {/* Footer: volume */}
+        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[#1a2e1f]/60">
+          <span className="font-mono text-[8.5px] uppercase tracking-[0.14em] text-[#3a4f44]">Vol</span>
+          <span className="font-mono text-[9.5px] tabular-nums text-[#4b6358]">{vol}</span>
+        </div>
       </div>
     </div>
   )
 }
 
-function TickerItem({ sym, px, d, up }) {
+function TickerItem({ ex, sym, px, d, up }) {
   return (
     <span className="flex items-center gap-2 font-mono text-[11px] tracking-wider">
+      <span className="text-[#3a4f44] text-[9px] font-semibold tracking-[0.15em]">{ex}</span>
       <span className="text-[#d1d9d5] font-semibold">{sym}</span>
-      <span className="text-[#4b6358]">{px}</span>
-      <span className={up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}>
+      <span className="text-[#4b6358] tabular-nums">{px}</span>
+      <span className={`tabular-nums ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
         {up ? '▲' : '▼'} {d}
       </span>
-      <span className="text-[#1a2e1f] px-3">•</span>
+      <span className="text-[#1a2e1f] px-3">·</span>
     </span>
   )
 }
 
 function ChartGrid() {
-  // Static grid — feels like a chart viewport behind the prices.
   return (
     <svg
       className="absolute inset-0 w-full h-full"
@@ -238,25 +250,20 @@ function ChartGrid() {
 // ─── Component ──────────────────────────────────────────────────────────────
 export default function HeroMarketBackdrop() {
   return (
-    <div
-      aria-hidden
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-    >
-      {/* Layer 1: ambient charts + grid — masked so they fade away from the center */}
-      <div
-        className="absolute inset-0 [mask-image:radial-gradient(ellipse_46%_58%_at_center,transparent_0%,#000_70%)]"
-      >
+    <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Layer 1: ambient chart + grid + horizon — masked so they fade away from the center */}
+      <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_46%_58%_at_center,transparent_0%,#000_70%)]">
         <ChartGrid />
 
         {/* Glowing horizon */}
         <div
-          className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent opacity-70"
+          className="absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent opacity-70"
           style={{ boxShadow: '0 0 14px 1px rgba(29,158,117,0.55)' }}
         />
 
-        {/* Dominant mountain chart — green, top */}
+        {/* Dominant green mountain chart */}
         <div className="absolute top-[14%] left-0 w-[200%] animate-hero-drift">
-          <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-48">
+          <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-44">
             <defs>
               <linearGradient id="grad-top" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.42" />
@@ -278,33 +285,26 @@ export default function HeroMarketBackdrop() {
           </svg>
         </div>
 
-        {/* Secondary mountain chart — red, bottom, slower */}
-        <div className="absolute bottom-[8%] left-0 w-[200%] animate-hero-drift-slow">
-          <svg viewBox="0 0 1600 100" preserveAspectRatio="none" className="w-full h-40">
-            <defs>
-              <linearGradient id="grad-bot" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor="#e24b4a" stopOpacity="0.32" />
-                <stop offset="55%"  stopColor="#e24b4a" stopOpacity="0.09" />
-                <stop offset="100%" stopColor="#e24b4a" stopOpacity="0"    />
-              </linearGradient>
-              <Glow id="sg-bot" blur={2.5} />
-            </defs>
-            <path d={AREA_BOT} fill="url(#grad-bot)" />
-            <path
-              d={LINE_BOT}
-              stroke="#e24b4a"
-              strokeWidth="1.5"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#sg-bot)"
-              opacity="0.92"
-            />
+        {/* Volume histogram — drifts with the chart at the same speed */}
+        <div className="absolute top-[62%] left-0 w-[200%] animate-hero-drift">
+          <svg viewBox="0 0 1600 30" preserveAspectRatio="none" className="w-full h-12">
+            {VOLS.map((v, i) => (
+              <rect
+                key={i}
+                x={v.x - 4}
+                y={30 - v.h}
+                width="8"
+                height={v.h}
+                fill={v.up ? '#1D9E75' : '#e24b4a'}
+                opacity={v.up ? 0.55 : 0.5}
+                rx="1"
+              />
+            ))}
           </svg>
         </div>
       </div>
 
-      {/* Layer 2: ticker tape — fully visible, not masked */}
+      {/* Layer 2: ticker tape — fully visible at the top edge */}
       <div className="absolute top-2 left-0 w-[200%] animate-hero-drift">
         <div
           className="flex items-center whitespace-nowrap"
@@ -316,26 +316,32 @@ export default function HeroMarketBackdrop() {
         </div>
       </div>
 
-      {/* Layer 3: watchlist tiles (corners) and candle cluster — full visibility */}
-      <WatchlistTile
-        position={{ top: '34px', left: '24px' }}
-        sym="NVDA"  name="NVIDIA Corp"
-        px="712.30" d="+2.41%" up={true}
-        values={TILE_UP}
-        className="hidden lg:block"
-      />
-      <WatchlistTile
-        position={{ bottom: '24px', right: '24px' }}
-        sym="TSLA"  name="Tesla Inc"
-        px="248.10" d="−1.12%" up={false}
-        values={TILE_DN}
-        className="hidden lg:block"
-      />
+      {/* Layer 3: pro UI chrome */}
+      <LiveIndicator />
+      <PriceAxis />
 
-      {/* Candle cluster — bottom-left, drifts subtly with the hero scroll feel */}
-      <div className="absolute left-[28px] bottom-[36px] hidden md:flex items-end gap-[3px]">
-        {CLUSTER.map((c, i) => <ClusterCandle key={i} {...c} idx={i} />)}
-      </div>
+      {/* Watchlist tiles in the corners */}
+      <WatchlistTile
+        position={{ top: '30px', left: '20px' }}
+        sym="NVDA"  name="NVIDIA Corp"   ex="NDQ"
+        px="712.30" vol="42.3M" d="+2.41%" up={true}
+        values={TILE_NVDA}
+        className="hidden lg:block"
+      />
+      <WatchlistTile
+        position={{ bottom: '20px', left: '20px' }}
+        sym="SPY"   name="SPDR S&P 500"  ex="NYSE"
+        px="583.21" vol="8.2M"  d="+0.42%" up={true}
+        values={TILE_SPY}
+        className="hidden lg:block"
+      />
+      <WatchlistTile
+        position={{ bottom: '20px', right: '20px' }}
+        sym="TSLA"  name="Tesla Inc"     ex="NDQ"
+        px="248.10" vol="89.1M" d="−1.12%" up={false}
+        values={TILE_TSLA}
+        className="hidden lg:block"
+      />
     </div>
   )
 }
