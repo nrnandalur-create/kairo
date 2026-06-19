@@ -35,6 +35,7 @@ import InsiderTrades from './components/InsiderTrades'
 import SectorHeatmap from './components/SectorHeatmap'
 import CompareView from './components/CompareView'
 import HeroMarketBackdrop from './components/HeroMarketBackdrop'
+import MarketStatusPill from './components/MarketStatusPill'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -213,6 +214,10 @@ export default function App() {
             </div>
           </button>
 
+          <div className="hidden md:flex ml-3">
+            <MarketStatusPill />
+          </div>
+
           <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
             {hasData && (
               <>
@@ -333,6 +338,7 @@ export default function App() {
               quote={marketData.quote}
               profile={marketData.profile}
               metrics={marketData.metrics}
+              asOf={marketData.fetchedAt}
             />
 
             {/* Two-column on desktop: left = chart/indicators, right = AI */}
@@ -343,10 +349,11 @@ export default function App() {
                 <ErrorBoundary>
                   <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
                 </ErrorBoundary>
-                <IndicatorsGrid candles={marketData.candles} loading={false} />
+                <IndicatorsGrid candles={marketData.candles} loading={false} asOf={marketData.fetchedAt} />
                 <SupportResistance
                   candles={marketData.candles}
                   currentPrice={marketData.quote?.c}
+                  asOf={marketData.fetchedAt}
                 />
                 <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
                 <PriceTargets
@@ -358,8 +365,8 @@ export default function App() {
 
               {/* Right column — AI recommendation & analysis */}
               <div className="flex flex-col gap-5">
-                <Recommendation data={aiData} loading={loading.ai} />
-                <AIAnalysis data={aiData} loading={loading.ai} />
+                <Recommendation data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
+                <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <div id="section-alerts">
                   <PriceAlertForm
@@ -384,7 +391,7 @@ export default function App() {
 
             {/* Full width — News feed */}
             <div id="section-news">
-              <NewsFeed data={marketData.news} loading={loading.ai} />
+              <NewsFeed data={marketData.news} loading={loading.ai} asOf={marketData.fetchedAt} />
             </div>
           </ErrorBoundary>
         )}

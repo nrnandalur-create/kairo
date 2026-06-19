@@ -4,5 +4,6 @@ export async function fetchMarket(ticker) {
     const { error } = await res.json().catch(() => ({}))
     throw new Error(error ?? `Market API ${res.status}`)
   }
-  return res.json() // { quote, profile, metrics, candles }
+  const data = await res.json() // { quote, profile, metrics, candles, synthetic?, news? }
+  return { ...data, fetchedAt: Date.now() }
 }

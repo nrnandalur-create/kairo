@@ -1,3 +1,6 @@
+import DataTimestamp from './DataTimestamp'
+import InfoTooltip from './InfoTooltip'
+
 const CONFIG = {
   BUY:  { label: 'BUY',  color: '#1D9E75', bg: 'bg-[#1D9E75]/10', border: 'border-[#1D9E75]/30', bar: '#1D9E75', glow: 'rgba(29,158,117,0.07)' },
   HOLD: { label: 'HOLD', color: '#d4922a', bg: 'bg-[#d4922a]/10',  border: 'border-[#d4922a]/30', bar: '#d4922a', glow: 'rgba(212,146,42,0.07)'  },
@@ -40,7 +43,7 @@ function Unavailable() {
   )
 }
 
-export default function Recommendation({ data, loading }) {
+export default function Recommendation({ data, loading, asOf }) {
   if (loading) return <Skeleton />
   if (!data?.verdict) return <Unavailable />
 
@@ -59,7 +62,12 @@ export default function Recommendation({ data, loading }) {
 
       {/* Header */}
       <div className="relative flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Recommendation</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em] inline-flex items-center">
+          AI Recommendation
+          <InfoTooltip>
+            Verdict, confidence, entry, and stop derived from a Groq LLaMA-3.3 model conditioned on technical indicators and recent OHLC. Educational only — not financial advice.
+          </InfoTooltip>
+        </span>
         <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
           {data.riskLevel ?? 'MEDIUM'} Risk
         </span>
@@ -107,6 +115,13 @@ export default function Recommendation({ data, loading }) {
               <p className="text-base font-bold tabular-nums" style={{ color: '#e24b4a' }}>${Number(data.stopLoss).toFixed(2)}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Footer — data freshness */}
+      {asOf && (
+        <div className="relative flex items-center justify-end pt-3 -mb-1 border-t border-[#1a2e1f]/60">
+          <DataTimestamp asOf={asOf} source="Groq" />
         </div>
       )}
     </div>

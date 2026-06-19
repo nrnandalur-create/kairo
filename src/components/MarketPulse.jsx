@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchMarketPulse } from '../services/marketPulse'
+import DataTimestamp from './DataTimestamp'
+import InfoTooltip from './InfoTooltip'
 
 function fmtPrice(n) {
   if (n == null || isNaN(n)) return '—'
@@ -95,19 +97,17 @@ function Skeleton() {
 }
 
 export default function MarketPulse() {
-  const [data, setData]     = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData]         = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [fetchedAt, setFetched] = useState(null)
 
   useEffect(() => {
-    fetchMarketPulse()
-      .then(setData)
+    const load = () => fetchMarketPulse()
+      .then(d => { setData(d); setFetched(Date.now()) })
       .catch(() => {})
-      .finally(() => setLoading(false))
 
-    const id = setInterval(() => {
-      fetchMarketPulse().then(setData).catch(() => {})
-    }, 60_000)
-
+    load().finally(() => setLoading(false))
+    const id = setInterval(load, 60_000)
     return () => clearInterval(id)
   }, [])
 
@@ -180,7 +180,16 @@ export default function MarketPulse() {
 
       </div>
 
-      <p className="text-[10px] text-[#263d2c] text-center">Market data via Finnhub · Prices delayed</p>
+      {/* Footer — data freshness */}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="text-[10px] text-[#263d2c] inline-flex items-center">
+          Prices delayed
+          <InfoTooltip side="top">
+            Indices, movers, and sentiment are aggregated from Finnhub. Quotes may be 15-min delayed depending on exchange. Auto-refreshes every 60s.
+          </InfoTooltip>
+        </span>
+        {fetchedAt && <DataTimestamp asOf={fetchedAt} source="Finnhub" />}
+      </div>
     </div>
   )
 }

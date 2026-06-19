@@ -1,4 +1,5 @@
 import { calcRSI, calcMACD, calcSMA, calcBBPosition, calcVolumeSignal } from '../utils/indicators'
+import DataTimestamp from './DataTimestamp'
 
 function fmtNum(n, dec = 2) {
   if (n == null || isNaN(n)) return '—'
@@ -56,7 +57,7 @@ function Skeleton() {
   )
 }
 
-export default function IndicatorsGrid({ candles, loading }) {
+export default function IndicatorsGrid({ candles, loading, asOf }) {
   if (loading) return <Skeleton />
   if (!candles?.length) return null
 
@@ -125,6 +126,13 @@ export default function IndicatorsGrid({ candles, loading }) {
           </div>
         ))}
       </div>
+
+      {/* Footer — data freshness */}
+      {asOf && (
+        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[#1a2e1f]/60">
+          <DataTimestamp asOf={asOf} source="Computed" />
+        </div>
+      )}
     </div>
   )
 }

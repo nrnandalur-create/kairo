@@ -49,5 +49,6 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
     throw new Error(err.error ?? `Analysis failed (${response.status})`)
   }
 
-  return response.json()
+  const data = await response.json()
+  return { ...data, fetchedAt: Date.now() }
 }

@@ -1,4 +1,5 @@
 import { calcSR } from '../utils/indicators'
+import DataTimestamp from './DataTimestamp'
 
 function fmt(n) {
   if (n == null || isNaN(n)) return '—'
@@ -38,7 +39,7 @@ function LevelRow({ price, level, isResistance }) {
   )
 }
 
-export default function SupportResistance({ candles, currentPrice }) {
+export default function SupportResistance({ candles, currentPrice, asOf }) {
   if (!candles?.length || !currentPrice) return null
 
   const { resistance, support } = calcSR(candles, currentPrice)
@@ -77,6 +78,13 @@ export default function SupportResistance({ candles, currentPrice }) {
       <p className="text-[10px] text-[#4b6358] leading-relaxed">
         Levels derived from pivot highs/lows in the chart window. Use as zones, not exact prices.
       </p>
+
+      {/* Footer — data freshness */}
+      {asOf && (
+        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[#1a2e1f]/60">
+          <DataTimestamp asOf={asOf} source="Computed" />
+        </div>
+      )}
     </div>
   )
 }

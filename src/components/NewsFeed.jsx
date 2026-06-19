@@ -1,4 +1,6 @@
 import { detectSentiment } from '../utils/sentiment'
+import DataTimestamp from './DataTimestamp'
+import InfoTooltip from './InfoTooltip'
 
 function fmtTime(ts) {
   const diff = Math.floor((Date.now() - ts * 1000) / 1000 / 60)
@@ -85,7 +87,7 @@ function NewsSkeleton() {
   )
 }
 
-export default function NewsFeed({ data, loading }) {
+export default function NewsFeed({ data, loading, asOf }) {
   if (loading) return <NewsSkeleton />
 
   if (!data?.length) return (
@@ -116,7 +118,12 @@ export default function NewsFeed({ data, loading }) {
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">News Feed</span>
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em] inline-flex items-center">
+          News Feed
+          <InfoTooltip>
+            Headlines from Finnhub. Sentiment dots derived from keyword-based scoring of each headline (positive / negative / neutral).
+          </InfoTooltip>
+        </span>
         <div className="flex items-center gap-2 text-[10px]">
           <span className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] inline-block" />
@@ -142,6 +149,13 @@ export default function NewsFeed({ data, loading }) {
 
       {/* News items */}
       <div>{data.map((item, i) => <NewsCard key={item.id ?? i} item={item} />)}</div>
+
+      {/* Footer — data freshness */}
+      {asOf && (
+        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[#1a2e1f]/60">
+          <DataTimestamp asOf={asOf} source="Finnhub" />
+        </div>
+      )}
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import DataTimestamp from './DataTimestamp'
+
 function fmt(n, dec = 2) {
   if (n == null || isNaN(n)) return '—'
   return Number(n).toFixed(dec)
@@ -26,7 +28,7 @@ function MetricCell({ label, value, color }) {
   )
 }
 
-export default function MetricsBar({ quote, profile, metrics }) {
+export default function MetricsBar({ quote, profile, metrics, asOf }) {
   if (!quote) return null
 
   const up   = quote.dp > 0
@@ -84,6 +86,13 @@ export default function MetricsBar({ quote, profile, metrics }) {
         <MetricCell label="Day Range"   value={`$${fmt(quote.l)} – $${fmt(quote.h)}`} />
         <MetricCell label="Prev Close"  value={`$${fmt(quote.pc)}`} />
       </div>
+
+      {/* Footer — data freshness */}
+      {asOf && (
+        <div className="flex items-center justify-end pt-3 -mb-1 border-t border-[#1a2e1f]/60">
+          <DataTimestamp asOf={asOf} source="Finnhub" />
+        </div>
+      )}
     </div>
   )
 }
