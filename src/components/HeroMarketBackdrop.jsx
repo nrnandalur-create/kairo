@@ -29,29 +29,38 @@ function doublePeriod(values) {
   return [...values, ...values.slice(1)]
 }
 
-function valuesToSegments(values, step) {
-  const segs = []
-  for (let i = 0; i < values.length - 1; i++) segs.push({
-    x1: i * step,       y1: values[i],
-    x2: (i + 1) * step, y2: values[i + 1],
-    up: values[i + 1] < values[i],
-  })
-  return segs
+// Catmull-Rom to cubic Bezier — produces a smooth curve that passes through
+// every point. tension=1 matches the default Robinhood/Yahoo mountain shape.
+function smoothLinePath(values, step) {
+  if (values.length < 2) return ''
+  const pts = values.map((y, i) => [i * step, y])
+  let d = `M${pts[0][0]},${pts[0][1]}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[i + 2] || pts[i + 1]
+    const cp1x = p1[0] + (p2[0] - p0[0]) / 6
+    const cp1y = p1[1] + (p2[1] - p0[1]) / 6
+    const cp2x = p2[0] - (p3[0] - p1[0]) / 6
+    const cp2y = p2[1] - (p3[1] - p1[1]) / 6
+    d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`
+  }
+  return d
 }
 
-function valuesToAreaPath(values, step, baseY) {
-  let d = `M0,${baseY}`
-  values.forEach((y, i) => { d += ` L${i * step},${y}` })
-  d += ` L${(values.length - 1) * step},${baseY} Z`
-  return d
+function smoothAreaPath(values, step, baseY) {
+  const line = smoothLinePath(values, step)
+  const lastX = (values.length - 1) * step
+  return `${line} L${lastX},${baseY} L0,${baseY} Z`
 }
 
 const Y_TOP_2 = doublePeriod(Y_TOP)
 const Y_BOT_2 = doublePeriod(Y_BOT)
-const SEGS_TOP = valuesToSegments(Y_TOP_2, STEP)
-const SEGS_BOT = valuesToSegments(Y_BOT_2, STEP)
-const AREA_TOP = valuesToAreaPath(Y_TOP_2, STEP, 120)
-const AREA_BOT = valuesToAreaPath(Y_BOT_2, STEP, 100)
+const LINE_TOP = smoothLinePath(Y_TOP_2, STEP)
+const LINE_BOT = smoothLinePath(Y_BOT_2, STEP)
+const AREA_TOP = smoothAreaPath(Y_TOP_2, STEP, 120)
+const AREA_BOT = smoothAreaPath(Y_BOT_2, STEP, 100)
 
 // ─── Candles ────────────────────────────────────────────────────────────────
 // Six distinct shapes — marubozu / hammer / shooting star / doji / standards.
@@ -179,17 +188,6 @@ function ChartGrid() {
   )
 }
 
-function SegmentLine({ x1, y1, x2, y2, up, width }) {
-  return (
-    <line
-      x1={x1} y1={y1} x2={x2} y2={y2}
-      stroke={up ? '#1D9E75' : '#e24b4a'}
-      strokeWidth={width}
-      strokeLinecap="round"
-    />
-  )
-}
-
 // ─── Component ──────────────────────────────────────────────────────────────
 export default function HeroMarketBackdrop() {
   return (
@@ -218,39 +216,52 @@ export default function HeroMarketBackdrop() {
         style={{ boxShadow: '0 0 12px 1px rgba(29,158,117,0.5)' }}
       />
 
-      {/* Top chart — area fill + multi-color segments, faster drift */}
+      {/* Top mountain chart — bullish (green), brighter line, area fill */}
       <div className="absolute top-[16%] left-0 w-[200%] animate-hero-drift">
         <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-44">
           <defs>
             <linearGradient id="grad-top" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.28" />
-              <stop offset="60%"  stopColor="#1D9E75" stopOpacity="0.08" />
+              <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.35" />
+              <stop offset="55%"  stopColor="#1D9E75" stopOpacity="0.10" />
               <stop offset="100%" stopColor="#1D9E75" stopOpacity="0"    />
             </linearGradient>
             <Glow id="sg-top" blur={3.5} />
           </defs>
           <path d={AREA_TOP} fill="url(#grad-top)" />
-          <g filter="url(#sg-top)">
-            {SEGS_TOP.map((s, i) => <SegmentLine key={i} {...s} width={1.5} />)}
-          </g>
+          <path
+            d={LINE_TOP}
+            stroke="#1D9E75"
+            strokeWidth="1.75"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#sg-top)"
+          />
         </svg>
       </div>
 
-      {/* Bottom chart — different story, slower drift, thinner stroke */}
+      {/* Bottom mountain chart — bearish (red), thinner, slower drift */}
       <div className="absolute bottom-[10%] left-0 w-[200%] animate-hero-drift-slow">
         <svg viewBox="0 0 1600 100" preserveAspectRatio="none" className="w-full h-40">
           <defs>
             <linearGradient id="grad-bot" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.22" />
-              <stop offset="60%"  stopColor="#1D9E75" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#1D9E75" stopOpacity="0"    />
+              <stop offset="0%"   stopColor="#e24b4a" stopOpacity="0.28" />
+              <stop offset="55%"  stopColor="#e24b4a" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#e24b4a" stopOpacity="0"    />
             </linearGradient>
             <Glow id="sg-bot" blur={3} />
           </defs>
           <path d={AREA_BOT} fill="url(#grad-bot)" />
-          <g filter="url(#sg-bot)" opacity="0.9">
-            {SEGS_BOT.map((s, i) => <SegmentLine key={i} {...s} width={1.25} />)}
-          </g>
+          <path
+            d={LINE_BOT}
+            stroke="#e24b4a"
+            strokeWidth="1.35"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#sg-bot)"
+            opacity="0.9"
+          />
         </svg>
       </div>
 
