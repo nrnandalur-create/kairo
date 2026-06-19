@@ -25,18 +25,18 @@ const CANDLES = [
 
 function Candle({ left, top, h, bodyTop, bodyH, bull, delay }) {
   const color = bull ? '#1D9E75' : '#e24b4a'
-  // Soft halo around each candle, color-matched to bull/bear
+  // Layered halo around each candle, color-matched to bull/bear
   const glow = bull
-    ? 'drop-shadow(0 0 10px rgba(29,158,117,0.55)) drop-shadow(0 0 4px rgba(29,158,117,0.45))'
-    : 'drop-shadow(0 0 10px rgba(226,75,74,0.50)) drop-shadow(0 0 4px rgba(226,75,74,0.45))'
+    ? 'drop-shadow(0 0 18px rgba(29,158,117,0.85)) drop-shadow(0 0 8px rgba(29,158,117,0.75)) drop-shadow(0 0 3px rgba(29,158,117,0.6))'
+    : 'drop-shadow(0 0 18px rgba(226,75,74,0.80)) drop-shadow(0 0 8px rgba(226,75,74,0.70)) drop-shadow(0 0 3px rgba(226,75,74,0.55))'
   return (
     <div
       className="absolute animate-hero-float"
       style={{ left, top, animationDelay: delay, filter: glow }}
     >
       <svg width="16" height={h} viewBox={`0 0 16 ${h}`} fill="none">
-        <rect x="7.4" y="0" width="1.2" height={h} fill={color} opacity="0.7" />
-        <rect x="0.5" y={bodyTop} width="15" height={bodyH} fill={color} opacity="0.8" rx="1" />
+        <rect x="7.4" y="0" width="1.2" height={h} fill={color} opacity="0.95" />
+        <rect x="0.5" y={bodyTop} width="15" height={bodyH} fill={color} opacity="1" rx="1" />
       </svg>
     </div>
   )
@@ -50,24 +50,24 @@ export default function HeroMarketBackdrop() {
     >
       {/* Glowing horizon line */}
       <div
-        className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#1D9E75]/40 to-transparent"
-        style={{ filter: 'drop-shadow(0 0 6px rgba(29,158,117,0.45))' }}
+        className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#1D9E75]/70 to-transparent"
+        style={{ filter: 'drop-shadow(0 0 10px rgba(29,158,117,0.75)) drop-shadow(0 0 3px rgba(29,158,117,0.6))' }}
       />
 
       {/* Top sparkline — drifts left, faster */}
       <div
         className="absolute top-[10%] left-0 w-[200%] animate-hero-drift"
-        style={{ filter: 'drop-shadow(0 0 8px rgba(29,158,117,0.55)) drop-shadow(0 0 3px rgba(29,158,117,0.5))' }}
+        style={{ filter: 'drop-shadow(0 0 16px rgba(29,158,117,0.85)) drop-shadow(0 0 6px rgba(29,158,117,0.8)) drop-shadow(0 0 2px rgba(29,158,117,0.7))' }}
       >
         <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-44">
           <path
             d={SPARK_TOP}
             stroke="#1D9E75"
-            strokeWidth="1.75"
+            strokeWidth="2.25"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.45"
+            opacity="0.85"
           />
         </svg>
       </div>
@@ -75,17 +75,17 @@ export default function HeroMarketBackdrop() {
       {/* Bottom sparkline — drifts left, slower and softer */}
       <div
         className="absolute bottom-[8%] left-0 w-[200%] animate-hero-drift-slow"
-        style={{ filter: 'drop-shadow(0 0 7px rgba(29,158,117,0.45))' }}
+        style={{ filter: 'drop-shadow(0 0 14px rgba(29,158,117,0.75)) drop-shadow(0 0 5px rgba(29,158,117,0.7))' }}
       >
         <svg viewBox="0 0 1600 100" preserveAspectRatio="none" className="w-full h-40">
           <path
             d={SPARK_BOTTOM}
             stroke="#1D9E75"
-            strokeWidth="1.5"
+            strokeWidth="1.85"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.3"
+            opacity="0.7"
           />
         </svg>
       </div>
