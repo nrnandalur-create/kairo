@@ -36,6 +36,9 @@ import SectorHeatmap from './components/SectorHeatmap'
 import CompareView from './components/CompareView'
 import HeroMarketBackdrop from './components/HeroMarketBackdrop'
 import MarketStatusPill from './components/MarketStatusPill'
+import CommandPalette from './components/CommandPalette'
+import StatusBar from './components/StatusBar'
+import { useCommandPalette } from './hooks/useCommandPalette'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -178,6 +181,20 @@ export default function App() {
     else showToast('Search a ticker to view news')
   }
 
+  // Cmd-K command palette + jump table
+  const palette = useCommandPalette()
+  const handleJumpTo = (key) => {
+    switch (key) {
+      case 'screener':  setScreenerOpen(true);  break
+      case 'portfolio': setPortfolioOpen(true); break
+      case 'sectors':   setSectorsOpen(true);   break
+      case 'compare':   setCompareOpen(true);   break
+      case 'alerts':    handleAlerts();         break
+      case 'news':      handleNews();           break
+      default:          break
+    }
+  }
+
   const activeNav = screenerOpen  ? 'screener'
     : portfolioOpen ? 'portfolio'
     : sectorsOpen   ? 'sectors'
@@ -186,7 +203,7 @@ export default function App() {
     : null
 
   return (
-    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col lg:pl-[60px] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col lg:pl-[60px] pb-16 lg:pb-7">
 
       <Nav
         activeKey={activeNav}
@@ -429,12 +446,27 @@ export default function App() {
 
       {/* ── Toast ── */}
       {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 lg:bottom-6 lg:left-auto lg:right-6 lg:translate-x-0 pointer-events-none animate-enter">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 lg:bottom-12 lg:left-auto lg:right-6 lg:translate-x-0 pointer-events-none animate-enter">
           <div className="bg-[#0f1611] border border-[#1a2e1f] text-[#d1d9d5] text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg whitespace-nowrap">
             {toast}
           </div>
         </div>
       )}
+
+      {/* ── Command palette ── */}
+      <CommandPalette
+        open={palette.open}
+        onClose={() => palette.setOpen(false)}
+        onSelectTicker={(sym) => handleSearch(sym)}
+        onJumpTo={handleJumpTo}
+      />
+
+      {/* ── Bottom status bar ── */}
+      <StatusBar
+        ticker={ticker}
+        asOf={marketData?.fetchedAt}
+        onOpenPalette={() => palette.setOpen(true)}
+      />
     </div>
   )
 }
