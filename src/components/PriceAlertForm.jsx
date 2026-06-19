@@ -1,25 +1,48 @@
 import { useState, useEffect } from 'react'
+import { toast } from '../utils/toast'
 
 export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAlert, clearAlert }) {
   const existing    = getAlert(ticker)
   const [target, setTarget] = useState(existing?.target ?? '')
   const [stop,   setStop]   = useState(existing?.stop   ?? '')
+  const [errors, setErrors] = useState({ target: null, stop: null })
 
   useEffect(() => {
     const a = getAlert(ticker)
     setTarget(a?.target ?? '')
     setStop(a?.stop ?? '')
+    setErrors({ target: null, stop: null })
   }, [ticker])
 
+  // Validate user input on the fly. Empty values are allowed (alert is optional).
+  function validate(t, s) {
+    const next = { target: null, stop: null }
+    if (t && (isNaN(Number(t)) || Number(t) <= 0)) next.target = 'Must be a positive number'
+    if (s && (isNaN(Number(s)) || Number(s) <= 0)) next.stop   = 'Must be a positive number'
+    if (currentPrice && t && Number(t) <= currentPrice) next.target = `Target should be above $${currentPrice.toFixed(2)}`
+    if (currentPrice && s && Number(s) >= currentPrice) next.stop   = `Stop should be below $${currentPrice.toFixed(2)}`
+    return next
+  }
+
+  const liveErrors = validate(target, stop)
+  const hasErrors  = liveErrors.target || liveErrors.stop
+  const canSubmit  = (target || stop) && !hasErrors
+
   const handleSet = () => {
+    const v = validate(target, stop)
+    setErrors(v)
+    if (v.target || v.stop) return
     if (!target && !stop) return
     setAlert(ticker, target, stop)
+    toast.success(`Alert set for ${ticker}`)
   }
 
   const handleClear = () => {
     clearAlert(ticker)
     setTarget('')
     setStop('')
+    setErrors({ target: null, stop: null })
+    toast.show(`Alert cleared for ${ticker}`)
   }
 
   const isSet = !!existing?.target || !!existing?.stop
@@ -56,7 +79,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
         </div>
       )}
 
-      <div className="flex items-end gap-3 flex-wrap">
+      <div className="flex items-start gap-3 flex-wrap">
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Target</label>
           <input
@@ -66,8 +89,14 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             value={target}
             onChange={e => setTarget(e.target.value)}
             placeholder={p ? `e.g. ${(p * 1.1).toFixed(2)}` : 'Price'}
-            className="w-32 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors tabular-nums"
+            aria-invalid={!!errors.target}
+            className={`w-32 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
+              errors.target
+                ? 'border-[#e24b4a] focus:border-[#e24b4a]'
+                : 'border-[#1a2e1f] focus:border-[#1D9E75]'
+            }`}
           />
+          {errors.target && <span className="text-[10px] text-[#e24b4a] max-w-[160px]">{errors.target}</span>}
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Stop Loss</label>
@@ -78,13 +107,20 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             value={stop}
             onChange={e => setStop(e.target.value)}
             placeholder={p ? `e.g. ${(p * 0.9).toFixed(2)}` : 'Price'}
-            className="w-32 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none focus:border-[#e24b4a] transition-colors tabular-nums"
+            aria-invalid={!!errors.stop}
+            className={`w-32 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
+              errors.stop
+                ? 'border-[#e24b4a] focus:border-[#e24b4a]'
+                : 'border-[#1a2e1f] focus:border-[#e24b4a]'
+            }`}
           />
+          {errors.stop && <span className="text-[10px] text-[#e24b4a] max-w-[160px]">{errors.stop}</span>}
         </div>
         <button
           onClick={handleSet}
-          disabled={!target && !stop}
-          className="bg-[#1D9E75] disabled:opacity-30 hover:bg-[#20b382] active:scale-[0.96] text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+          disabled={!canSubmit}
+          title={!canSubmit ? (hasErrors ? 'Fix the errors above first' : 'Enter a target or stop price') : undefined}
+          className="mt-[18px] bg-[#1D9E75] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#20b382] active:scale-[0.96] text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
         >
           Set Alert
         </button>

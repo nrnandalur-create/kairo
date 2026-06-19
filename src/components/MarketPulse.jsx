@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fetchMarketPulse } from '../services/marketPulse'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
+import ErrorCard from './ErrorCard'
 
 function fmtPrice(n) {
   if (n == null || isNaN(n)) return '—'
@@ -100,18 +101,24 @@ export default function MarketPulse() {
   const [data, setData]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [fetchedAt, setFetched] = useState(null)
+  const [error, setError]       = useState(null)
+
+  const load = () => {
+    setError(null)
+    return fetchMarketPulse()
+      .then(d => { setData(d); setFetched(Date.now()) })
+      .catch(() => setError('Unable to reach Finnhub. Market data may be unavailable.'))
+  }
 
   useEffect(() => {
-    const load = () => fetchMarketPulse()
-      .then(d => { setData(d); setFetched(Date.now()) })
-      .catch(() => {})
-
     load().finally(() => setLoading(false))
     const id = setInterval(load, 60_000)
     return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) return <Skeleton />
+  if (error && !data) return <ErrorCard message={error} onRetry={load} />
   if (!data) return null
 
   const movers  = (data.movers ?? []).filter(m => m.price != null)

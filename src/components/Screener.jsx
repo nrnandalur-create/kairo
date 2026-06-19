@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import EmptyState from './EmptyState'
+import ErrorCard from './ErrorCard'
 
 const FILTERS = [
   {
@@ -314,25 +316,22 @@ export default function Screener({ open, onClose, onAnalyze }) {
               {[1,2,3,4,5,6].map(i => <SkeletonCard key={i} />)}
             </div>
           ) : fetchError ? (
-            <div className="text-center py-16 flex flex-col gap-3">
-              <p className="text-sm text-[#4b6358]">{fetchError}</p>
-              <button onClick={loadStocks} className="text-xs text-[#1D9E75] hover:underline">
-                Try again
-              </button>
-            </div>
+            <ErrorCard message={fetchError} onRetry={loadStocks} />
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 flex flex-col gap-3">
-              <p className="text-sm text-[#4b6358]">
-                {techFiltered && !allLoaded
-                  ? 'Indicators still loading — results will appear as data arrives.'
-                  : 'No stocks match these filters.'}
-              </p>
-              {(!techFiltered || allLoaded) && (
-                <button onClick={reset} className="text-xs text-[#1D9E75] hover:underline">
-                  Reset filters
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M1.5 3.5h13M4 8h8M6.5 12.5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              }
+              title={techFiltered && !allLoaded ? 'Indicators still loading' : 'No matches'}
+              body={
+                techFiltered && !allLoaded
+                  ? 'Results will appear as indicator data arrives. Hang tight.'
+                  : 'No stocks match these filters. Try widening your criteria.'
+              }
+              action={(!techFiltered || allLoaded) ? { label: 'Reset filters', onClick: reset } : undefined}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filtered.map(stock => (

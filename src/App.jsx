@@ -38,7 +38,9 @@ import HeroMarketBackdrop from './components/HeroMarketBackdrop'
 import MarketStatusPill from './components/MarketStatusPill'
 import CommandPalette from './components/CommandPalette'
 import StatusBar from './components/StatusBar'
+import Toaster from './components/Toaster'
 import { useCommandPalette } from './hooks/useCommandPalette'
+import { toast } from './utils/toast'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -163,22 +165,14 @@ export default function App() {
   const scrollTo = (id) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
-  const [toast, setToast] = useState(null)
-  const toastTimer = useRef(null)
-  const showToast = (msg) => {
-    clearTimeout(toastTimer.current)
-    setToast(msg)
-    toastTimer.current = setTimeout(() => setToast(null), 3000)
-  }
-
   const handleAlerts = () => {
     if (hasData) scrollTo('section-alerts')
-    else showToast('Search a ticker to set price alerts')
+    else toast.show('Search a ticker to set price alerts')
   }
 
   const handleNews = () => {
     if (hasData) scrollTo('section-news')
-    else showToast('Search a ticker to view news')
+    else toast.show('Search a ticker to view news')
   }
 
   // Cmd-K command palette + jump table
@@ -444,14 +438,8 @@ export default function App() {
         </div>
       </footer>
 
-      {/* ── Toast ── */}
-      {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 lg:bottom-12 lg:left-auto lg:right-6 lg:translate-x-0 pointer-events-none animate-enter">
-          <div className="bg-[#0f1611] border border-[#1a2e1f] text-[#d1d9d5] text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg whitespace-nowrap">
-            {toast}
-          </div>
-        </div>
-      )}
+      {/* ── Toast queue ── */}
+      <Toaster />
 
       {/* ── Command palette ── */}
       <CommandPalette

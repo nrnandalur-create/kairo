@@ -57,9 +57,18 @@ function Skeleton() {
 export default function AIAnalysis({ data, loading, asOf }) {
   if (loading) return <Skeleton />
   if (!data) return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex items-center gap-3">
-      <span className="text-[#4b6358] text-lg">—</span>
-      <span className="text-sm text-[#4b6358]">AI analysis unavailable</span>
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-3 animate-enter">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Analysis</span>
+        <span className="text-[9px] font-bold tracking-widest uppercase text-[#4b6358] border border-[#1a2e1f] rounded-full px-2 py-0.5">Unavailable</span>
+      </div>
+      <div className="flex items-start gap-3">
+        <span className="shrink-0 w-9 h-9 rounded-full bg-[#0a100c] border border-[#1a2e1f] text-[#3a4f44] flex items-center justify-center text-base">i</span>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-[#d1d9d5]/80">AI analysis isn&apos;t available for this ticker right now.</p>
+          <p className="text-xs text-[#4b6358] leading-relaxed">Penny stocks, ADRs, and instruments with insufficient candle history are skipped. Try a major ticker (e.g. AAPL, NVDA, TSLA).</p>
+        </div>
+      </div>
     </div>
   )
 
