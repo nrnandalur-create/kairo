@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { usePortfolio } from '../hooks/usePortfolio'
 import PortfolioChart from './PortfolioChart'
+import PortfolioAIReport from './PortfolioAIReport'
 
 function fmtMoney(n) {
   if (n == null || isNaN(n)) return '—'
@@ -69,11 +70,13 @@ function HoldingRow({ h }) {
 }
 
 export default function Portfolio({ open, onClose, onAnalyze, userId }) {
-  const [holdings, setHoldings] = useState([{ ticker: '', shares: '' }])
-  const [quotes,   setQuotes]   = useState([])
-  const [loading,  setLoading]  = useState(false)
-  const [result,   setResult]   = useState(null)
-  const [error,    setError]    = useState('')
+  const [holdings,   setHoldings]   = useState([{ ticker: '', shares: '' }])
+  const [quotes,     setQuotes]     = useState([])
+  const [loading,    setLoading]    = useState(false)
+  const [result,     setResult]     = useState(null)
+  const [error,      setError]      = useState('')
+  const [aiReport,   setAiReport]   = useState(null)    // null | 'loading' | object
+  const [aiError,    setAiError]    = useState('')
 
   const { holdings: savedHoldings, snapshots, loading: portfolioLoading, upsertHolding } = usePortfolio(userId)
 
@@ -102,6 +105,8 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
       const q    = d.quotes ?? []
       setQuotes(q)
       setResult(calcPortfolio(valid, q))
+      setAiReport(null)
+      setAiError('')
       if (userId) {
         await Promise.all(valid.map(h => upsertHolding(h.ticker.trim(), h.shares, 0)))
       }
@@ -112,11 +117,64 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
     }
   }
 
+  const runAIAnalysis = async () => {
+    if (!result) return
+    setAiReport('loading')
+    setAiError('')
+
+    try {
+      // Enrich holdings with avg_cost from saved holdings for unrealized P&L context
+      const enriched = result.items.map(h => {
+        const saved        = savedHoldings.find(s => s.ticker === h.ticker)
+        const avgCost      = saved?.avg_cost ? +saved.avg_cost : null
+        const unrealizedPct = avgCost && avgCost > 0 && h.price
+          ? ((h.price - avgCost) / avgCost) * 100
+          : null
+        return {
+          ticker: h.ticker,
+          shares: +h.shares,
+          price:  h.price,
+          value:  h.value,
+          weight: h.weight,
+          changePct: h.changePct,
+          avgCost,
+          unrealizedPct,
+        }
+      })
+
+      const body = {
+        holdings:      enriched,
+        snapshots:     snapshots.slice(-30).map(s => ({
+          snapshot_date: s.snapshot_date,
+          total_value:   +s.total_value,
+          gain_loss_pct: +(s.gain_loss_pct ?? 0),
+        })),
+        total:          result.total,
+        todayChangePct: result.weightedChangePct,
+      }
+
+      const res = await fetch('/api/portfolio-analysis', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      })
+
+      if (!res.ok) throw new Error(res.status)
+      const data = await res.json()
+      setAiReport(data)
+    } catch {
+      setAiReport(null)
+      setAiError('AI analysis failed. Please try again.')
+    }
+  }
+
   const reset = () => {
     setHoldings([{ ticker: '', shares: '' }])
     setQuotes([])
     setResult(null)
     setError('')
+    setAiReport(null)
+    setAiError('')
   }
 
   if (!open) return null
@@ -141,7 +199,17 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
           {/* Holdings entry */}
           {!result && (
             <div className="px-6 py-5 flex flex-col gap-4">
-              <p className="text-xs text-[#4b6358]">Enter your holdings to get a portfolio health snapshot.</p>
+              {userId && !portfolioLoading && savedHoldings.length === 0 ? (
+                <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex items-start gap-3">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#1D9E75] shrink-0 mt-0.5">
+                    <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
+                    <path d="M7 4.5v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                  </svg>
+                  <p className="text-[11px] text-[#4b6358] leading-relaxed">No positions tracked yet. Add your holdings below and they'll be saved automatically.</p>
+                </div>
+              ) : (
+                <p className="text-xs text-[#4b6358]">Enter your holdings to get a portfolio health snapshot.</p>
+              )}
 
               <div className="flex flex-col gap-2">
                 {holdings.map((h, i) => (
@@ -177,10 +245,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
               </div>
 
               {holdings.length < 10 && (
-                <button
-                  onClick={add}
-                  className="self-start text-xs text-[#1D9E75] hover:underline"
-                >
+                <button onClick={add} className="self-start text-xs text-[#1D9E75] hover:underline">
                   + Add holding
                 </button>
               )}
@@ -230,7 +295,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 <span className="text-[10px] text-[#4b6358]">{result.items.length} position{result.items.length !== 1 ? 's' : ''}</span>
               </div>
 
-              {/* Performance chart — shows historical snapshots when available */}
+              {/* Performance chart */}
               {userId && (
                 <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
                   <PortfolioChart snapshots={snapshots} />
@@ -245,9 +310,64 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 ))}
               </div>
 
-              {/* Click to full analysis */}
+              {/* AI Health Report */}
+              <div className="border-t border-[#1a2e1f] pt-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">AI Health Report</p>
+                  {aiReport && aiReport !== 'loading' && (
+                    <button
+                      onClick={runAIAnalysis}
+                      className="text-[10px] text-[#4b6358] hover:text-[#1D9E75] transition-colors"
+                    >
+                      Refresh
+                    </button>
+                  )}
+                </div>
+
+                {!aiReport && aiReport !== 'loading' && (
+                  <button
+                    onClick={runAIAnalysis}
+                    className="flex items-center justify-center gap-2 bg-[#0a0f0d] border border-[#1a2e1f] hover:border-[#1D9E75]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#1D9E75]">
+                      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <span className="text-xs font-semibold text-[#4b6358] group-hover:text-[#d1d9d5] transition-colors">
+                      Get AI Health Report
+                    </span>
+                  </button>
+                )}
+
+                {aiReport === 'loading' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 py-1">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+                      <span className="text-xs text-[#4b6358]">Analyzing your portfolio…</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="h-16 rounded-xl shimmer" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="h-24 rounded-xl shimmer" />
+                        <div className="h-24 rounded-xl shimmer" />
+                      </div>
+                      <div className="h-28 rounded-xl shimmer" />
+                    </div>
+                  </div>
+                )}
+
+                {aiError && <p className="text-xs text-[#e24b4a]">{aiError}</p>}
+
+                {aiReport && aiReport !== 'loading' && (
+                  <PortfolioAIReport
+                    report={aiReport}
+                    onAnalyzeTicker={ticker => { onClose(); onAnalyze(ticker) }}
+                  />
+                )}
+              </div>
+
+              {/* Deep analysis shortcuts */}
               <div className="flex flex-col gap-2">
-                <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Deep Analysis</p>
+                <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Full Chart Analysis</p>
                 <div className="flex flex-wrap gap-2">
                   {result.items.map(h => (
                     <button

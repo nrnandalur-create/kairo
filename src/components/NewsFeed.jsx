@@ -1,19 +1,4 @@
-const POS_WORDS = ['beat', 'beats', 'surge', 'surges', 'gain', 'gains', 'growth', 'record',
-  'profit', 'profits', 'strong', 'bullish', 'upgrade', 'upgraded', 'outperform', 'rally',
-  'soar', 'soars', 'jump', 'jumps', 'rise', 'rises', 'exceed', 'exceeds', 'positive', 'top']
-const NEG_WORDS = ['miss', 'misses', 'fall', 'falls', 'drop', 'drops', 'decline', 'declines',
-  'loss', 'losses', 'weak', 'bearish', 'downgrade', 'downgraded', 'underperform', 'crash',
-  'plunge', 'plunges', 'slump', 'slumps', 'warning', 'risk', 'cut', 'cuts', 'disappoint',
-  'disappoints', 'concern', 'concerns', 'below', 'layoff', 'layoffs']
-
-function detectSentiment(headline) {
-  const h = headline.toLowerCase()
-  const pos = POS_WORDS.filter(w => h.includes(w)).length
-  const neg = NEG_WORDS.filter(w => h.includes(w)).length
-  if (pos > neg) return 'positive'
-  if (neg > pos) return 'negative'
-  return 'neutral'
-}
+import { detectSentiment } from '../utils/sentiment'
 
 function fmtTime(ts) {
   const diff = Math.floor((Date.now() - ts * 1000) / 1000 / 60)
@@ -77,8 +62,45 @@ function NewsCard({ item }) {
   )
 }
 
-export default function NewsFeed({ data }) {
-  if (!data?.length) return null
+function NewsSkeleton() {
+  return (
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="h-2.5 w-20 rounded-full shimmer" />
+        <div className="h-2.5 w-32 rounded-full shimmer" />
+      </div>
+      <div className="h-1 w-full rounded-full shimmer" />
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="flex gap-3 py-3 border-b border-[#1a2e1f] last:border-0">
+          <div className="w-1.5 h-1.5 rounded-full shimmer shrink-0 mt-2" />
+          <div className="flex-1 flex flex-col gap-1.5">
+            <div className="h-3 rounded-full shimmer w-full" />
+            <div className="h-3 rounded-full shimmer w-4/5" />
+            <div className="h-2.5 rounded-full shimmer w-24 mt-0.5" />
+          </div>
+          <div className="h-5 w-14 rounded-full shimmer shrink-0 self-start" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function NewsFeed({ data, loading }) {
+  if (loading) return <NewsSkeleton />
+
+  if (!data?.length) return (
+    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
+      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">News Feed</span>
+      <div className="py-8 flex flex-col items-center gap-2 text-center">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-[#263d2c] mb-1">
+          <rect x="2" y="3" width="14" height="3" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+          <rect x="2" y="8" width="9" height="2" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+          <rect x="2" y="12" width="11" height="2" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+        </svg>
+        <p className="text-xs text-[#4b6358]">No recent news found for this ticker.</p>
+      </div>
+    </div>
+  )
 
   const counts  = data.reduce((acc, item) => {
     const s = detectSentiment(item.headline)

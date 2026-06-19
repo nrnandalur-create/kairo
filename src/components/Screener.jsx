@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const FILTERS = [
   {
@@ -12,9 +12,9 @@ const FILTERS = [
   {
     key: 'rsi', label: 'RSI Signal',
     opts: [
-      { value: 'all',        label: 'All'         },
-      { value: 'oversold',   label: 'Oversold <35' },
-      { value: 'neutral',    label: 'Neutral'      },
+      { value: 'all',        label: 'All'          },
+      { value: 'oversold',   label: 'Oversold <35'  },
+      { value: 'neutral',    label: 'Neutral'       },
       { value: 'overbought', label: 'Overbought >65'},
     ],
   },
@@ -38,6 +38,10 @@ const FILTERS = [
 ]
 
 const INIT_FILTERS = { cap: 'all', rsi: 'all', bb: 'all', direction: 'all' }
+
+// AV free tier: 5 req/min — fetch in batches of 5, 62 s cooldown between batches
+const INDICATOR_BATCH = 5
+const INDICATOR_GAP   = 62_000
 
 function matches(stock, f) {
   if (f.cap !== 'all' && stock.cap !== f.cap) return false
@@ -81,21 +85,30 @@ function FilterChips({ def, value, onChange }) {
   )
 }
 
-function StockCard({ stock, onSelect }) {
-  const up       = (stock.changePct ?? 0) >= 0
-  const rsiColor = stock.rsi == null ? '#4b6358'
-                 : stock.rsi >= 65  ? '#e24b4a'
-                 : stock.rsi <= 35  ? '#1D9E75'
-                 : '#4b6358'
-  const rsiLabel = stock.rsi == null ? '—'
-                 : stock.rsi >= 65  ? 'Overbought'
-                 : stock.rsi <= 35  ? 'Oversold'
-                 : 'Neutral'
-  const bbLabel  = stock.bbPct == null ? '—'
-                 : stock.bbPct >= 75  ? 'Near Top'
-                 : stock.bbPct <= 25  ? 'Near Bottom'
-                 : 'Mid Band'
+function IndicatorCell({ label, value, loading, colorFn, labelFn }) {
+  return (
+    <div>
+      <p className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-1">{label}</p>
+      {loading ? (
+        <div className="h-3.5 w-20 rounded-full shimmer mt-0.5" />
+      ) : (
+        <p className="text-xs font-bold tabular-nums" style={{ color: colorFn ? colorFn(value) : '#d1d9d5' }}>
+          {value != null ? value : '—'}{' '}
+          {labelFn && value != null && (
+            <span className="text-[10px] font-normal text-[#4b6358]">{labelFn(value)}</span>
+          )}
+        </p>
+      )}
+    </div>
+  )
+}
 
+const rsiColor = v => v >= 65 ? '#e24b4a' : v <= 35 ? '#1D9E75' : '#4b6358'
+const rsiLabel = v => v >= 65 ? 'Overbought' : v <= 35 ? 'Oversold' : 'Neutral'
+const bbLabel  = v => v >= 75 ? 'Near Top' : v <= 25 ? 'Near Bottom' : 'Mid Band'
+
+function StockCard({ stock, indicatorLoading, onSelect }) {
+  const up = (stock.changePct ?? 0) >= 0
   return (
     <div
       onClick={() => onSelect(stock.symbol)}
@@ -116,20 +129,19 @@ function StockCard({ stock, onSelect }) {
       </span>
 
       <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#1a2e1f]">
-        <div>
-          <p className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-1">RSI (14)</p>
-          <p className="text-xs font-bold tabular-nums" style={{ color: rsiColor }}>
-            {stock.rsi ?? '—'}{' '}
-            <span className="text-[10px] font-normal text-[#4b6358]">{rsiLabel}</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-1">BB Position</p>
-          <p className="text-xs font-bold tabular-nums text-[#d1d9d5]">
-            {stock.bbPct != null ? `${stock.bbPct}%` : '—'}{' '}
-            <span className="text-[10px] font-normal text-[#4b6358]">{bbLabel}</span>
-          </p>
-        </div>
+        <IndicatorCell
+          label="RSI (14)"
+          value={stock.rsi}
+          loading={indicatorLoading}
+          colorFn={rsiColor}
+          labelFn={rsiLabel}
+        />
+        <IndicatorCell
+          label="BB Position"
+          value={stock.bbPct != null ? `${stock.bbPct}%` : null}
+          loading={indicatorLoading}
+          labelFn={v => bbLabel(parseInt(v))}
+        />
       </div>
     </div>
   )
@@ -152,31 +164,91 @@ function SkeletonCard() {
 }
 
 export default function Screener({ open, onClose, onAnalyze }) {
-  const [stocks,  setStocks]  = useState([])
-  const [loading, setLoading] = useState(true)  // start true so skeletons show immediately
-  const [filters, setFilters] = useState(INIT_FILTERS)
-  const [fetchError, setFetchError] = useState(null)
+  const [stocks,      setStocks]      = useState([])
+  const [indicators,  setIndicators]  = useState({})  // { [symbol]: { rsi, bbPct } }
+  const [indLoaded,   setIndLoaded]   = useState(0)   // count of settled indicator fetches
+  const [loading,     setLoading]     = useState(true)
+  const [filters,     setFilters]     = useState(INIT_FILTERS)
+  const [fetchError,  setFetchError]  = useState(null)
+  const cancelRef = useRef(false)
 
   const loadStocks = () => {
     setLoading(true)
     setFetchError(null)
+    setIndicators({})
+    setIndLoaded(0)
+    cancelRef.current = true   // cancel any in-flight indicator run
     fetch('/api/screener')
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
-      .then(d => setStocks(d.stocks ?? []))
+      .then(d => { cancelRef.current = false; setStocks(d.stocks ?? []) })
       .catch(() => setFetchError('Unable to load screener data. Please try again.'))
       .finally(() => setLoading(false))
   }
 
+  // Load quotes on open (cached in state across opens)
   useEffect(() => {
     if (!open) return
-    if (stocks.length) { setLoading(false); return }  // already cached
+    if (stocks.length) { setLoading(false); return }
     loadStocks()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const setFilter = (key, val) => setFilters(f => ({ ...f, [key]: val }))
-  const reset     = () => setFilters(INIT_FILTERS)
-  const filtered  = stocks.filter(s => matches(s, filters))
-  const isFiltered = Object.values(filters).some(v => v !== 'all')
+  // Progressive indicator loading after quotes arrive
+  useEffect(() => {
+    if (!stocks.length) return
+    // Skip if we already have all indicators
+    if (Object.keys(indicators).length >= stocks.length) return
+
+    cancelRef.current = false
+
+    ;(async () => {
+      for (let i = 0; i < stocks.length; i += INDICATOR_BATCH) {
+        if (cancelRef.current) return
+        const batch = stocks.slice(i, i + INDICATOR_BATCH)
+
+        await Promise.allSettled(
+          batch.map(async ({ symbol }) => {
+            if (cancelRef.current) return
+            try {
+              const r = await fetch(`/api/screener-indicators?ticker=${symbol}`)
+              if (cancelRef.current) return
+              if (r.status === 429) return   // rate-limited — skip, not cached
+              if (!r.ok) return
+              const d = await r.json()
+              if (!cancelRef.current) {
+                setIndicators(prev => ({ ...prev, [symbol]: d }))
+              }
+            } catch {}
+          })
+        )
+
+        if (!cancelRef.current) setIndLoaded(Math.min(i + INDICATOR_BATCH, stocks.length))
+
+        // Wait between batches to respect AV 5 req/min limit
+        if (i + INDICATOR_BATCH < stocks.length && !cancelRef.current) {
+          await new Promise(r => setTimeout(r, INDICATOR_GAP))
+        }
+      }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stocks])
+
+  const setFilter   = (key, val) => setFilters(f => ({ ...f, [key]: val }))
+  const reset       = () => setFilters(INIT_FILTERS)
+  const isFiltered  = Object.values(filters).some(v => v !== 'all')
+  const techFiltered = filters.rsi !== 'all' || filters.bb !== 'all'
+
+  const allLoaded    = stocks.length > 0 && Object.keys(indicators).length >= stocks.length
+  const indProgress  = `${Math.min(indLoaded, stocks.length)} / ${stocks.length}`
+  const showIndStatus = stocks.length > 0 && !allLoaded && !loading
+
+  const merged = stocks.map(s => ({
+    ...s,
+    rsi:   indicators[s.symbol]?.rsi   ?? null,
+    bbPct: indicators[s.symbol]?.bbPct ?? null,
+    indicatorLoading: !indicators[s.symbol],
+  }))
+  const filtered = merged.filter(s => matches(s, filters))
 
   if (!open) return null
 
@@ -216,9 +288,26 @@ export default function Screener({ open, onClose, onAnalyze }) {
 
         {/* Results */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          <p className="text-[10px] text-[#4b6358] mb-3">
-            {loading ? 'Loading…' : fetchError ? '' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''} · click any card to analyze`}
-          </p>
+          {/* Status line */}
+          <div className="flex items-center justify-between mb-3 min-h-[18px]">
+            {loading ? (
+              <p className="text-[10px] text-[#4b6358]">Loading…</p>
+            ) : fetchError ? null : (
+              <p className="text-[10px] text-[#4b6358]">
+                {filtered.length} result{filtered.length !== 1 ? 's' : ''} · click to analyze
+              </p>
+            )}
+            {showIndStatus && (
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+                <p className="text-[10px] text-[#4b6358]">
+                  {techFiltered
+                    ? `Loading indicators (${indProgress})…`
+                    : `Technical data ${indProgress}`}
+                </p>
+              </div>
+            )}
+          </div>
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -233,10 +322,16 @@ export default function Screener({ open, onClose, onAnalyze }) {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 flex flex-col gap-3">
-              <p className="text-sm text-[#4b6358]">No stocks match these filters.</p>
-              <button onClick={reset} className="text-xs text-[#1D9E75] hover:underline">
-                Reset filters
-              </button>
+              <p className="text-sm text-[#4b6358]">
+                {techFiltered && !allLoaded
+                  ? 'Indicators still loading — results will appear as data arrives.'
+                  : 'No stocks match these filters.'}
+              </p>
+              {(!techFiltered || allLoaded) && (
+                <button onClick={reset} className="text-xs text-[#1D9E75] hover:underline">
+                  Reset filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -244,6 +339,7 @@ export default function Screener({ open, onClose, onAnalyze }) {
                 <StockCard
                   key={stock.symbol}
                   stock={stock}
+                  indicatorLoading={stock.indicatorLoading}
                   onSelect={sym => { onClose(); onAnalyze(sym) }}
                 />
               ))}

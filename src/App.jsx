@@ -27,11 +27,14 @@ import { fetchAnalysis } from './services/analyze'
 import { fetchFundamentals } from './services/fundamentals'
 import { getMockOptions, getMockNews } from './mockData'
 import Nav from './components/Nav'
+import OnboardingBanner from './components/OnboardingBanner'
+import WatchlistSentiment from './components/WatchlistSentiment'
 import EarningsCalendar from './components/EarningsCalendar'
 import PriceTargets from './components/PriceTargets'
 import InsiderTrades from './components/InsiderTrades'
 import SectorHeatmap from './components/SectorHeatmap'
 import CompareView from './components/CompareView'
+import HeroMarketBackdrop from './components/HeroMarketBackdrop'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -66,8 +69,13 @@ export default function App() {
   const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
   const { user }       = useAuth()
-  const { watchlist: watchlistRows, addTicker, removeTicker } = useWatchlist(user?.id)
+  const { watchlist: watchlistRows, addTicker, removeTicker, updateNote, setAlert: setWatchlistAlert } = useWatchlist(user?.id)
+  const [recentTickers, setRecentTickers] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('kairo_recent') ?? '[]') }
+    catch { return [] }
+  })
   const alerts         = useAlerts()
+  const [onboarded, setOnboarded] = useState(() => !!localStorage.getItem('kairo_onboarded'))
   const [screenerOpen,  setScreenerOpen]  = useState(false)
   const [portfolioOpen, setPortfolioOpen] = useState(false)
   const [sectorsOpen,   setSectorsOpen]   = useState(false)
@@ -91,6 +99,13 @@ export default function App() {
         setLoading(LOADING_NONE)
         return
       }
+
+      // Persist to recently viewed (capped at 5, most recent first)
+      setRecentTickers(prev => {
+        const next = [sym, ...prev.filter(t => t !== sym)].slice(0, 5)
+        localStorage.setItem('kairo_recent', JSON.stringify(next))
+        return next
+      })
 
       setMarketData({ quote, profile, metrics, candles, synthetic, news })
       setLoading(LOADING_AI)
@@ -228,7 +243,8 @@ export default function App() {
 
         {/* Landing hero */}
         {!hasData && !isLoading && (
-          <div className="flex flex-col items-center text-center gap-6 pt-10 pb-6 animate-fade">
+          <div className="relative flex flex-col items-center text-center gap-6 pt-10 pb-6 animate-fade">
+            <HeroMarketBackdrop />
             {/* Ambient glow behind logo */}
             <div className="relative flex items-center justify-center">
               <div className="absolute w-48 h-48 rounded-full bg-[#1D9E75] opacity-[0.06] blur-3xl pointer-events-none" />
@@ -242,17 +258,47 @@ export default function App() {
               Real-time market data, interactive charts, technical indicators, and AI-powered analysis — all from a single ticker.
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
+
+            {/* Recently viewed chips */}
+            {recentTickers.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <span className="text-[9px] font-semibold text-[#263d2c] uppercase tracking-[0.15em]">Recent</span>
+                {recentTickers.map(sym => (
+                  <button
+                    key={sym}
+                    onClick={() => handleSearch(sym)}
+                    className="text-[11px] font-bold px-2.5 py-1 bg-[#0f1611] border border-[#1a2e1f] rounded-lg text-[#4b6358] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150 cursor-pointer"
+                  >
+                    {sym}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Onboarding banner — first visit only */}
+        {!hasData && !isLoading && !onboarded && (
+          <OnboardingBanner onDismiss={() => {
+            localStorage.setItem('kairo_onboarded', '1')
+            setOnboarded(true)
+          }} />
         )}
 
         {/* Watchlist — visible on landing only, above market pulse */}
         {!hasData && !isLoading && (
           <Watchlist
-            tickers={watchlistRows.map(w => w.ticker)}
+            rows={watchlistRows}
             onSelect={handleSearch}
             onRemove={removeTicker}
-            getAlert={alerts.getAlert}
+            onNoteUpdate={updateNote}
+            onAlertUpdate={user ? setWatchlistAlert : undefined}
           />
+        )}
+
+        {/* Watchlist Sentiment — shown when watchlist has tickers */}
+        {!hasData && !isLoading && watchlistRows.length > 0 && (
+          <WatchlistSentiment tickers={watchlistRows.map(r => r.ticker)} />
         )}
 
         {/* Market Pulse dashboard — visible on landing only */}
@@ -338,7 +384,7 @@ export default function App() {
 
             {/* Full width — News feed */}
             <div id="section-news">
-              <NewsFeed data={marketData.news} />
+              <NewsFeed data={marketData.news} loading={loading.ai} />
             </div>
           </ErrorBoundary>
         )}
