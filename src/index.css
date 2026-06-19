@@ -98,13 +98,15 @@ body {
 }
 
 @keyframes heroFloat {
-  0%, 100% { transform: translate3d(0, 0, 0);   opacity: 0.85; }
-  50%      { transform: translate3d(0, -6px, 0); opacity: 1; }
+  0%, 100% { transform: translate3d(0, 0, 0);                                          opacity: 0.85; }
+  30%      { transform: translate3d(0, calc(var(--float-amp, 10px) * -1), 0);          opacity: 1;    }
+  60%      { transform: translate3d(0, calc(var(--float-amp, 10px) * -0.35), 0);       opacity: 0.95; }
+  80%      { transform: translate3d(0, calc(var(--float-amp, 10px) * -0.6), 0);        opacity: 1;    }
 }
 
 .animate-hero-drift      { animation: heroDrift 60s linear infinite; will-change: transform; }
 .animate-hero-drift-slow { animation: heroDrift 95s linear infinite; will-change: transform; }
-.animate-hero-float      { animation: heroFloat  7s ease-in-out infinite; will-change: transform, opacity; }
+.animate-hero-float      { animation: heroFloat  9s ease-in-out infinite; will-change: transform, opacity; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-drift,
