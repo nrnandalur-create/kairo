@@ -286,7 +286,13 @@ export default function App() {
             </button>
             {hasData && (
               <>
-                <div className="flex items-center gap-2 hidden sm:flex">
+                <div className="hidden sm:flex items-center gap-2">
+                  {ticker && (
+                    <span className="font-mono text-sm font-black text-white tracking-[0.04em]">
+                      {ticker}
+                    </span>
+                  )}
+                  {ticker && marketData.profile?.name && <span className="text-[#263d2c]">·</span>}
                   {marketData.profile?.name && (
                     <span className="text-sm text-[#d1d9d5] font-semibold">{marketData.profile.name}</span>
                   )}
@@ -400,6 +406,7 @@ export default function App() {
           <ErrorBoundary>
             {/* Full width — Price + Metrics */}
             <MetricsBar
+              ticker={ticker}
               quote={marketData.quote}
               profile={marketData.profile}
               metrics={marketData.metrics}

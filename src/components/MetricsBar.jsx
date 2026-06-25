@@ -30,7 +30,7 @@ function pickPE(m) {
       ?? m?.peNormalizedAnnual
 }
 
-export default function MetricsBar({ quote, profile, metrics, candles, asOf }) {
+export default function MetricsBar({ ticker, quote, profile, metrics, candles, asOf }) {
   if (!quote) return null
 
   const up   = quote.dp > 0
@@ -56,19 +56,26 @@ export default function MetricsBar({ quote, profile, metrics, candles, asOf }) {
 
   return (
     <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
-      {/* Company + price row */}
+      {/* Identity + price row */}
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-6">
-        <div className="flex flex-col gap-0.5">
-          {profile?.name && (
-            <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col gap-1">
+          {/* Ticker · company · exchange */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {ticker && (
+              <span className="font-mono text-base font-black text-white tracking-[0.04em]">
+                {ticker}
+              </span>
+            )}
+            {ticker && profile?.name && <span className="text-[#263d2c]">·</span>}
+            {profile?.name && (
               <span className="text-sm font-semibold text-[#d1d9d5]">{profile.name}</span>
-              {profile.exchange && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
-                  {profile.exchange}
-                </span>
-              )}
-            </div>
-          )}
+            )}
+            {profile?.exchange && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
+                {profile.exchange}
+              </span>
+            )}
+          </div>
           <div className="flex items-baseline gap-3">
             <span className="text-4xl sm:text-5xl font-black text-white tabular-nums tracking-tight">
               {fmtPrice(quote.c)}
