@@ -37,6 +37,7 @@ const SectorHeatmap = lazy(() => import('./components/SectorHeatmap'))
 const CompareView   = lazy(() => import('./components/CompareView'))
 import HeroMarketBackdrop from './components/HeroMarketBackdrop'
 import MarketStatusPill from './components/MarketStatusPill'
+import AIChat from './components/AIChat'
 import CommandPalette from './components/CommandPalette'
 import StatusBar from './components/StatusBar'
 import Toaster from './components/Toaster'
@@ -424,6 +425,7 @@ export default function App() {
               <div className="flex flex-col gap-5">
                 <Recommendation data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
                 <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
+                {aiData && <AIChat ticker={ticker} context={aiData} />}
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <div id="section-alerts">
                   <PriceAlertForm
