@@ -22,9 +22,11 @@
   --c-border:            #1a2e1f;
   --c-border-strong:     #263d2c;
   --c-text:              #d1d9d5;
+  --c-text-strong:       #ffffff;   /* emphasis level — price headlines, brand title */
   --c-text-muted:        #8a9b91;
   --c-text-faint:        #4b6358;
   --c-text-fainter:      #3a4f44;
+  --c-chip-bg:           #1a2e1f;   /* small tag / progress track backgrounds */
 
   /* Glass tokens — RGB triplets used by rgba() in the glass classes,
      plus border + highlight + shadow alphas. */
@@ -44,8 +46,8 @@
   /* Body — sage-tinted off-white. Pure white is too stark and loses the
      Kairo identity; this base has clear brand character. */
   --c-bg:                #ebf1e9;
-  --c-bg-deep:           #f7faf6;
-  --c-card:              #ffffff;
+  --c-bg-deep:           #f4f8f2;
+  --c-card:              #fafdf7;    /* warm soft off-white — easier on the eyes than pure #ffffff */
 
   /* Borders — saturated sage tones so cards have real definition
      against the body bg. */
@@ -55,9 +57,11 @@
   /* Text — every level dark enough to clear AA contrast. The previous
      palette had muted/faint variants under 3:1 which read as washed out. */
   --c-text:              #0a1c10;   /* near-black with sage tint, ~16:1 */
+  --c-text-strong:       #050f08;   /* near-black emphasis — flipped from white */
   --c-text-muted:        #2c3e34;   /* ~9:1 */
   --c-text-faint:        #4d6055;   /* ~5.5:1 */
   --c-text-fainter:      #6c7e74;   /* ~3.6:1 */
+  --c-chip-bg:           #dfe9d8;   /* light sage chip / track */
 
   /* Glass — sage-tinted, not pure white. This is the key fix: glass
      panels over a near-white bg looked like flat translucent layers

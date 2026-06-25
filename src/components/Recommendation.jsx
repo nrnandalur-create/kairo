@@ -83,7 +83,7 @@ export default function Recommendation({ data, loading, asOf }) {
             <span className="text-3xl font-black tabular-nums leading-none" style={{ color: cfg.color }}>{confidence}</span>
             <span className="text-sm text-[var(--c-text-faint)] font-medium">% confidence</span>
           </div>
-          <div className="w-36 h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
+          <div className="w-36 h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full animate-bar"
               style={{ width: `${confidence}%`, backgroundColor: cfg.bar, transformOrigin: 'left' }}
@@ -93,7 +93,7 @@ export default function Recommendation({ data, loading, asOf }) {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-[#1a2e1f]" />
+      <div className="h-px bg-[var(--c-chip-bg)]" />
 
       {/* Summary */}
       {data.summary && (

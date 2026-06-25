@@ -268,7 +268,7 @@ export default function App() {
           >
             <KairoLogo size={32} />
             <div className="flex flex-col leading-none">
-              <span className="font-serif font-bold text-white text-lg tracking-tight group-hover:text-[var(--c-text)] transition-colors">kairo</span>
+              <span className="font-serif font-bold text-[var(--c-text-strong)] text-lg tracking-tight group-hover:text-[var(--c-text)] transition-colors">kairo</span>
               <span className="text-[8px] text-[var(--c-text-faint)] uppercase tracking-[0.25em] mt-0.5">Know the moment.</span>
             </div>
           </button>
@@ -295,7 +295,7 @@ export default function App() {
               <>
                 <div className="hidden sm:flex items-center gap-2">
                   {ticker && (
-                    <span className="font-mono text-sm font-black text-white tracking-[0.04em]">
+                    <span className="font-mono text-sm font-black text-[var(--c-text-strong)] tracking-[0.04em]">
                       {ticker}
                     </span>
                   )}
@@ -304,7 +304,7 @@ export default function App() {
                     <span className="text-sm text-[var(--c-text)] font-semibold">{marketData.profile.name}</span>
                   )}
                   {marketData.profile?.exchange && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#1a2e1f] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
                       {marketData.profile.exchange}
                     </span>
                   )}
@@ -334,7 +334,7 @@ export default function App() {
               <KairoLogo size={60} />
             </div>
             <div>
-              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">kairo</h1>
+              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-[var(--c-text-strong)] tracking-tight mb-2">kairo</h1>
               <p className="text-[var(--c-text-faint)] tracking-[0.3em] uppercase text-xs">Know the moment.</p>
             </div>
             <p className="text-[var(--c-text-faint)] text-sm max-w-sm leading-relaxed">

@@ -125,7 +125,7 @@ export default function EarningsCalendar({ data, loading }) {
                               ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
                               : miss
                               ? 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
-                              : 'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]'
+                              : 'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]'
                           }`}>
                             {beat ? 'Beat' : miss ? 'Miss' : 'Met'}
                           </span>

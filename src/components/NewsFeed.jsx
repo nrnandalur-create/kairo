@@ -23,7 +23,7 @@ const SENTIMENT = {
   },
   neutral: {
     dot:   'bg-[#4b6358]',
-    badge: 'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]',
+    badge: 'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]',
     label: 'Neutral',
   },
 }
@@ -43,7 +43,7 @@ function NewsCard({ item }) {
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-[var(--c-text)]/80 leading-snug hover:text-white transition-colors duration-150"
+            className="text-sm text-[var(--c-text)]/80 leading-snug hover:text-[var(--c-text-strong)] transition-colors duration-150"
           >
             {item.headline}
           </a>
@@ -144,7 +144,7 @@ export default function NewsFeed({ data, loading, asOf }) {
       <div className="flex h-1 rounded-full overflow-hidden gap-px">
         <div className="bg-[#1D9E75]" style={{ width: `${bullPct}%` }} />
         <div className="bg-[#e24b4a]" style={{ width: `${bearPct}%` }} />
-        <div className="bg-[#1a2e1f]" style={{ width: `${neutralPct}%` }} />
+        <div className="bg-[var(--c-chip-bg)]" style={{ width: `${neutralPct}%` }} />
       </div>
 
       {/* News items */}

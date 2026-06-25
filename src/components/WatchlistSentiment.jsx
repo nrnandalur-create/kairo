@@ -87,7 +87,7 @@ export default function WatchlistSentiment({ tickers }) {
           <div className="flex h-1.5 rounded-full overflow-hidden">
             <div className="bg-[#1D9E75] transition-all duration-700" style={{ width: `${bullPct}%` }} />
             <div className="bg-[#e24b4a] transition-all duration-700" style={{ width: `${bearPct}%` }} />
-            <div className="bg-[#1a2e1f] transition-all duration-700" style={{ width: `${neutPct}%` }} />
+            <div className="bg-[var(--c-chip-bg)] transition-all duration-700" style={{ width: `${neutPct}%` }} />
           </div>
 
           <div className="flex gap-4 text-[10px]">

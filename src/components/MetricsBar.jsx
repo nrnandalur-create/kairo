@@ -62,7 +62,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
           {/* Ticker · company · exchange */}
           <div className="flex items-center gap-2 flex-wrap">
             {ticker && (
-              <span className="font-mono text-base font-black text-white tracking-[0.04em]">
+              <span className="font-mono text-base font-black text-[var(--c-text-strong)] tracking-[0.04em]">
                 {ticker}
               </span>
             )}
@@ -71,13 +71,13 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
               <span className="text-sm font-semibold text-[var(--c-text)]">{profile.name}</span>
             )}
             {profile?.exchange && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1a2e1f] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
                 {profile.exchange}
               </span>
             )}
           </div>
           <div className="flex items-baseline gap-3">
-            <span className="text-4xl sm:text-5xl font-black text-white tabular-nums tracking-tight">
+            <span className="text-4xl sm:text-5xl font-black text-[var(--c-text-strong)] tabular-nums tracking-tight">
               {fmtPrice(quote.c)}
             </span>
             <span className={`text-base font-bold tabular-nums ${chgColor}`}>
@@ -88,7 +88,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-[#1a2e1f]" />
+      <div className="h-px bg-[var(--c-chip-bg)]" />
 
       {/* Row 1 — market overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -101,7 +101,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
       </div>
 
       {/* Subtle separator between overview and fundamentals + technicals */}
-      <div className="h-px bg-[#1a2e1f]/60" />
+      <div className="h-px bg-[var(--c-chip-bg)]/60" />
 
       {/* Row 2 — fundamentals + technicals */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">

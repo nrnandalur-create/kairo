@@ -22,7 +22,7 @@ function LevelRow({ price, level, isResistance }) {
       <span className={`text-xs font-semibold tabular-nums w-16 shrink-0 text-right ${labelColor}`}>
         ${fmt(level)}
       </span>
-      <div className="flex-1 h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
+      <div className="flex-1 h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full"
           style={{

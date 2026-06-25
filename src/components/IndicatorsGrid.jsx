@@ -11,7 +11,7 @@ function StatusBadge({ label, color }) {
     green:  'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
     red:    'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
     amber:  'bg-[#d4922a]/10 text-[#d4922a] border-[#d4922a]/25',
-    muted:  'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]',
+    muted:  'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]',
   }
   return (
     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest whitespace-nowrap ${styles[color] ?? styles.muted}`}>
@@ -30,7 +30,7 @@ function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) 
       </div>
       {sub && <span className="text-[11px] text-[var(--c-text-faint)] leading-tight">{sub}</span>}
       {bar != null && (
-        <div className="h-1 bg-[#1a2e1f] rounded-full overflow-hidden mt-0.5">
+        <div className="h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden mt-0.5">
           <div
             className="h-full rounded-full animate-bar"
             style={{ width: `${Math.min(100, Math.max(0, bar))}%`, backgroundColor: barColor ?? '#1D9E75', transformOrigin: 'left' }}

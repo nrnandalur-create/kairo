@@ -101,7 +101,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
           {/* Visual range bar */}
           {range > 0 && (
             <div className="flex flex-col gap-1.5">
-              <div className="relative h-1.5 bg-[#1a2e1f] rounded-full mx-2">
+              <div className="relative h-1.5 bg-[var(--c-chip-bg)] rounded-full mx-2">
                 <div
                   className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#1D9E75] border-[3px] border-[#0f1611] shadow"
                   style={{ left: `${meanPct}%`, transform: 'translate(-50%, -50%)' }}

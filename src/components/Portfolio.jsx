@@ -58,7 +58,7 @@ function HoldingRow({ h }) {
     ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
     : signal === 'Bearish'
     ? 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
-    : 'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]'
+    : 'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]'
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 flex-wrap">
@@ -73,7 +73,7 @@ function HoldingRow({ h }) {
           </span>
         </div>
       </div>
-      <div className="h-1 flex-1 hidden sm:block bg-[#1a2e1f] rounded-full overflow-hidden">
+      <div className="h-1 flex-1 hidden sm:block bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
         <div className="h-full bg-[#1D9E75]/40 rounded-full" style={{ width: `${Math.round(h.weight * 100)}%` }} />
       </div>
       <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest shrink-0 ${sigCls}`}>
@@ -333,7 +333,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 <div className="glass-card rounded-xl p-4 flex flex-col gap-1.5">
                   <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Health Score</span>
                   <span className="text-xl font-black tabular-nums text-[var(--c-text)]">{result.healthScore}<span className="text-sm text-[var(--c-text-faint)] font-normal">/100</span></span>
-                  <div className="h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
+                  <div className="h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
                     <div className="h-full bg-[#1D9E75] rounded-full animate-bar" style={{ width: `${result.healthScore}%` }} />
                   </div>
                 </div>

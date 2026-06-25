@@ -147,7 +147,7 @@ function PriceAxis() {
       {PRICE_LEVELS.map(p => (
         <div key={p} className="flex items-center gap-1.5 justify-end">
           <span className="font-mono text-[9.5px] tabular-nums tracking-tight text-[var(--c-text-faint)]">${p}</span>
-          <span className="w-1.5 h-px bg-[#1a2e1f]" />
+          <span className="w-1.5 h-px bg-[var(--c-chip-bg)]" />
         </div>
       ))}
     </div>
@@ -179,7 +179,7 @@ function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, classN
           </span>
         </div>
         <div className="text-[8.5px] uppercase tracking-[0.16em] text-[var(--c-text-fainter)] mb-1.5">{name}</div>
-        <div className="font-mono text-[15.5px] font-semibold text-white tabular-nums mb-2">${px}</div>
+        <div className="font-mono text-[15.5px] font-semibold text-[var(--c-text-strong)] tabular-nums mb-2">${px}</div>
 
         {/* Mini mountain chart */}
         <svg viewBox={`0 0 ${TILE_W} 50`} preserveAspectRatio="none" className="w-full h-8">

@@ -84,7 +84,7 @@ function ReliabilityPip({ pct }) {
   return (
     <div className="flex items-center gap-1.5 w-28">
       <span className="text-[10px] text-[var(--c-text-faint)] shrink-0">Reliability</span>
-      <div className="flex-1 h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
+      <div className="flex-1 h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${n}%`, backgroundColor: color }} />
       </div>
       <span className="text-[10px] tabular-nums shrink-0" style={{ color }}>{pct}</span>
