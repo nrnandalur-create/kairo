@@ -1,4 +1,18 @@
 import { useState, useEffect } from 'react'
+import { toast } from '../utils/toast'
+
+// Per-row form validation. Empty rows are tolerated (so the user can scaffold).
+// Once either field has content, both must be present and valid.
+function validateRow({ ticker, shares }) {
+  const t = (ticker ?? '').trim()
+  const s = (shares ?? '').toString().trim()
+  const errors = { ticker: null, shares: null }
+  if (t && !/^[A-Z]{1,5}$/.test(t)) errors.ticker = '1–5 letters'
+  if (s && (!Number.isFinite(+s) || +s <= 0)) errors.shares = 'Must be > 0'
+  if (t && !s) errors.shares = 'Required'
+  if (!t && s) errors.ticker = 'Required'
+  return errors
+}
 import { usePortfolio } from '../hooks/usePortfolio'
 import PortfolioChart from './PortfolioChart'
 import PortfolioAIReport from './PortfolioAIReport'
@@ -91,7 +105,17 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
     setHoldings(h => h.map((x, idx) => idx === i ? { ...x, [field]: val } : x))
 
   const add    = () => setHoldings(h => [...h, { ticker: '', shares: '' }])
-  const remove = (i) => setHoldings(h => h.filter((_, idx) => idx !== i))
+  const remove = (i) => {
+    const removed = holdings[i]
+    setHoldings(h => h.filter((_, idx) => idx !== i))
+    if (removed?.ticker?.trim()) toast.show(`${removed.ticker.trim()} removed`)
+  }
+
+  // Live per-row validation
+  const rowErrors = holdings.map(validateRow)
+  const anyRowError = rowErrors.some(e => e.ticker || e.shares)
+  const completedRows = holdings.filter(h => h.ticker.trim() && (+h.shares > 0)).length
+  const canSubmit = !anyRowError && completedRows > 0 && !loading
 
   const analyze = async () => {
     const valid = holdings.filter(h => h.ticker.trim() && +h.shares > 0)
@@ -110,8 +134,10 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
       if (userId) {
         await Promise.all(valid.map(h => upsertHolding(h.ticker.trim(), h.shares, 0)))
       }
+      toast.success(`Portfolio analyzed · ${valid.length} holding${valid.length === 1 ? '' : 's'}`)
     } catch {
       setError('Failed to fetch prices. Check your tickers and try again.')
+      toast.error("Couldn't fetch prices. Check your tickers and try again.")
     } finally {
       setLoading(false)
     }
@@ -212,40 +238,63 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
               )}
 
               <div className="flex flex-col gap-2">
-                {holdings.map((h, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={h.ticker}
-                      onChange={e => update(i, 'ticker', e.target.value.toUpperCase())}
-                      placeholder="AAPL"
-                      maxLength={5}
-                      className="w-24 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg px-3 py-2 text-sm font-bold text-[#d1d9d5] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors uppercase"
-                    />
-                    <input
-                      type="number"
-                      value={h.shares}
-                      onChange={e => update(i, 'shares', e.target.value)}
-                      placeholder="Shares"
-                      min="0"
-                      className="flex-1 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors"
-                    />
-                    {holdings.length > 1 && (
-                      <button
-                        onClick={() => remove(i)}
-                        className="text-[#263d2c] hover:text-[#e24b4a] transition-colors p-1 shrink-0"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {holdings.map((h, i) => {
+                  const err = rowErrors[i]
+                  return (
+                    <div key={i} className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={h.ticker}
+                          onChange={e => update(i, 'ticker', e.target.value.toUpperCase())}
+                          placeholder="AAPL"
+                          maxLength={5}
+                          aria-invalid={!!err.ticker}
+                          className={`w-24 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm font-bold text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors uppercase ${
+                            err.ticker
+                              ? 'border-[#e24b4a] focus:border-[#e24b4a]'
+                              : 'border-[#1a2e1f] focus:border-[#1D9E75]'
+                          }`}
+                        />
+                        <input
+                          type="number"
+                          value={h.shares}
+                          onChange={e => update(i, 'shares', e.target.value)}
+                          placeholder="Shares"
+                          min="0"
+                          aria-invalid={!!err.shares}
+                          className={`flex-1 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors ${
+                            err.shares
+                              ? 'border-[#e24b4a] focus:border-[#e24b4a]'
+                              : 'border-[#1a2e1f] focus:border-[#1D9E75]'
+                          }`}
+                        />
+                        {holdings.length > 1 && (
+                          <button
+                            onClick={() => remove(i)}
+                            aria-label="Remove holding"
+                            title="Remove this holding"
+                            className="text-[#263d2c] hover:text-[#e24b4a] transition-colors p-1 shrink-0 cursor-pointer"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                              <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      {(err.ticker || err.shares) && (
+                        <div className="flex gap-3 pl-1 text-[11px] text-[#e24b4a] leading-tight">
+                          {err.ticker && <span className="w-24 shrink-0">{err.ticker}</span>}
+                          {err.shares && <span className="flex-1">{err.shares}</span>}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
 
               {holdings.length < 10 && (
-                <button onClick={add} className="self-start text-xs text-[#1D9E75] hover:underline">
+                <button onClick={add} className="self-start text-xs text-[#1D9E75] hover:underline cursor-pointer">
                   + Add holding
                 </button>
               )}
@@ -254,8 +303,14 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
 
               <button
                 onClick={analyze}
-                disabled={loading}
-                className="bg-[#1D9E75] hover:bg-[#20b382] active:scale-[0.98] disabled:opacity-40 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
+                disabled={!canSubmit}
+                title={
+                  loading        ? undefined
+                  : anyRowError  ? 'Fix the errors above first'
+                  : !completedRows ? 'Enter at least one ticker and share count'
+                  : undefined
+                }
+                className="bg-[#1D9E75] hover:bg-[#20b382] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
               >
                 {loading ? 'Fetching prices…' : 'Analyze Portfolio'}
               </button>
