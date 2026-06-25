@@ -1,5 +1,9 @@
 import { rateLimit } from './_rateLimit.js'
 import { validateTicker } from './_validate.js'
+import yahooFinance from 'yahoo-finance2'
+
+// Suppress library notices that show up in the function logs.
+yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
 
 const FINNHUB_BASE = 'https://finnhub.io/api/v1'
 const AV_BASE      = 'https://www.alphavantage.co/query'
@@ -90,6 +94,143 @@ function syntheticCandles(quote) {
   return candles
 }
 
+// ── Finnhub primary path ─────────────────────────────────────────────────────
+async function fetchFinnhubMarket(sym) {
+  const finnhubKey = process.env.FINNHUB_API_KEY
+  if (!finnhubKey) throw new Error('FINNHUB_API_KEY not set')
+
+  const t   = `token=${finnhubKey}`
+  const now = new Date()
+  const from = new Date(now - 7 * 24 * 60 * 60 * 1000)
+  const fmt  = d => d.toISOString().slice(0, 10)
+
+  const [
+    [quote, profile, metrics, newsRaw],
+    avResult,
+  ] = await Promise.all([
+    Promise.all([
+      fget('quote',   `${FINNHUB_BASE}/quote?symbol=${sym}&${t}`),
+      fget('profile', `${FINNHUB_BASE}/stock/profile2?symbol=${sym}&${t}`),
+      fget('metrics', `${FINNHUB_BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
+      fget('news',    `${FINNHUB_BASE}/company-news?symbol=${sym}&from=${fmt(from)}&to=${fmt(now)}&${t}`)
+        .catch(() => []),
+    ]),
+    fetchAVCandles(sym).catch(() => null),
+  ])
+
+  const synthetic = avResult === null
+  const candles   = synthetic ? syntheticCandles(quote) : avResult
+  const news      = Array.isArray(newsRaw) ? newsRaw.slice(0, 10) : []
+
+  return { quote, profile, metrics, candles, synthetic, news }
+}
+
+// ── Yahoo Finance fallback ──────────────────────────────────────────────────
+// Used when Finnhub doesn't recognize the symbol (foreign listings, mutual
+// funds, less-common ETFs, etc.). Maps Yahoo's response into the same shape
+// the rest of the app expects from Finnhub.
+async function fetchYahooMarket(sym) {
+  // One call returns a rich superset of what Finnhub gives across three calls.
+  const [quoteRaw, summary] = await Promise.all([
+    yahooFinance.quote(sym),
+    yahooFinance.quoteSummary(sym, {
+      modules: ['summaryDetail', 'price', 'defaultKeyStatistics', 'assetProfile', 'financialData'],
+    }).catch(() => ({})),
+  ])
+
+  if (!quoteRaw || quoteRaw.regularMarketPrice == null) {
+    throw new Error('Symbol not found on Yahoo')
+  }
+
+  // ── Quote (Finnhub-compatible) ─────────────────────────────────────────────
+  const quote = {
+    c:  quoteRaw.regularMarketPrice,
+    d:  quoteRaw.regularMarketChange,
+    dp: quoteRaw.regularMarketChangePercent,
+    h:  quoteRaw.regularMarketDayHigh,
+    l:  quoteRaw.regularMarketDayLow,
+    o:  quoteRaw.regularMarketOpen,
+    pc: quoteRaw.regularMarketPreviousClose,
+    t:  Math.floor((quoteRaw.regularMarketTime ?? Date.now()) / 1000),
+  }
+
+  // ── Profile (Finnhub-compatible) ───────────────────────────────────────────
+  // Yahoo gives marketCap in raw dollars; Finnhub uses millions — convert.
+  const priceMod   = summary?.price ?? {}
+  const profileMod = summary?.assetProfile ?? {}
+  const mcRaw      = quoteRaw.marketCap ?? priceMod.marketCap
+  const profile    = {
+    ticker:               sym,
+    name:                 priceMod.longName ?? priceMod.shortName ?? quoteRaw.longName ?? quoteRaw.shortName ?? sym,
+    exchange:             quoteRaw.fullExchangeName ?? priceMod.exchangeName ?? quoteRaw.exchange ?? '',
+    currency:             quoteRaw.currency ?? priceMod.currency ?? 'USD',
+    country:              profileMod.country ?? '',
+    finnhubIndustry:      profileMod.industry ?? profileMod.sector ?? '',
+    weburl:               profileMod.website ?? '',
+    marketCapitalization: mcRaw ? mcRaw / 1_000_000 : null,
+    shareOutstanding:     quoteRaw.sharesOutstanding ? quoteRaw.sharesOutstanding / 1_000_000 : null,
+  }
+
+  // ── Metrics (Finnhub-compatible — only fields we actually surface) ─────────
+  const detail = summary?.summaryDetail        ?? {}
+  const stats  = summary?.defaultKeyStatistics ?? {}
+  const fin    = summary?.financialData        ?? {}
+
+  // Yahoo returns dividendYield as a decimal (0.0042 for 0.42%); Finnhub uses
+  // a percentage (0.42). Normalize to Finnhub's convention.
+  const divYieldPct = (detail.dividendYield ?? detail.trailingAnnualDividendYield)
+    ? (detail.dividendYield ?? detail.trailingAnnualDividendYield) * 100
+    : null
+
+  const metrics = {
+    metric: {
+      '52WeekHigh':                detail.fiftyTwoWeekHigh    ?? null,
+      '52WeekLow':                 detail.fiftyTwoWeekLow     ?? null,
+      beta:                        detail.beta ?? stats.beta  ?? null,
+      peBasicExclExtraTTM:         detail.trailingPE          ?? null,
+      peTTM:                       detail.trailingPE          ?? null,
+      peNormalizedAnnual:          stats.forwardPE            ?? null,
+      epsGrowth5Y:                 stats.earningsGrowth ? stats.earningsGrowth * 100 : null,
+      dividendYieldIndicatedAnnual: divYieldPct,
+      psTTM:                       detail.priceToSalesTrailing12Months ?? null,
+    },
+  }
+
+  // ── Candles ────────────────────────────────────────────────────────────────
+  // ~12 months of daily bars, mapped to the Finnhub-compatible shape.
+  const since = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60
+  let candles = []
+  try {
+    const bars = await yahooFinance.historical(sym, {
+      period1: new Date(since * 1000),
+      interval: '1d',
+    })
+    candles = bars.map(b => ({
+      time:   Math.floor(b.date.getTime() / 1000),
+      open:   b.open,
+      high:   b.high,
+      low:    b.low,
+      close:  b.close,
+      volume: b.volume,
+    }))
+  } catch {
+    // Yahoo historical may fail for mutual funds etc — fall back to synthetic.
+    candles = syntheticCandles(quote)
+  }
+  const synthetic = candles.length === 0
+  if (synthetic) candles = syntheticCandles(quote)
+
+  return {
+    quote,
+    profile,
+    metrics,
+    candles,
+    synthetic,
+    news: [],   // News fallback could call yahooFinance.search(sym).news in the future
+  }
+}
+
+// ── Handler ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
@@ -101,42 +242,30 @@ export default async function handler(req, res) {
   const ticker = validateTicker(req.query.ticker)
   if (!ticker) return res.status(400).json({ error: 'Invalid ticker. Must be 1-5 uppercase letters.' })
 
-  const finnhubKey = process.env.FINNHUB_API_KEY
-  if (!finnhubKey) return res.status(500).json({ error: 'Market data service is unavailable' })
-
+  // Try Finnhub first; if it returns no quote, fall back to Yahoo.
+  let finnhubData = null
+  let finnhubErr  = null
   try {
-    const sym = ticker
-    const t   = `token=${finnhubKey}`
-
-    const now  = new Date()
-    const from = new Date(now - 7 * 24 * 60 * 60 * 1000)
-    const fmt  = d => d.toISOString().slice(0, 10)
-
-    const [
-      [quote, profile, metrics, newsRaw],
-      avResult,
-    ] = await Promise.all([
-      Promise.all([
-        fget('quote',   `${FINNHUB_BASE}/quote?symbol=${sym}&${t}`),
-        fget('profile', `${FINNHUB_BASE}/stock/profile2?symbol=${sym}&${t}`),
-        fget('metrics', `${FINNHUB_BASE}/stock/metric?symbol=${sym}&metric=all&${t}`),
-        fget('news',    `${FINNHUB_BASE}/company-news?symbol=${sym}&from=${fmt(from)}&to=${fmt(now)}&${t}`)
-          .catch(() => []),
-      ]),
-      fetchAVCandles(sym).catch(() => null),
-    ])
-
-    const synthetic = avResult === null
-    const candles   = synthetic ? syntheticCandles(quote) : avResult
-    const news      = Array.isArray(newsRaw) ? newsRaw.slice(0, 10) : []
-
-    res.json({ quote, profile, metrics, candles, synthetic, news })
+    finnhubData = await fetchFinnhubMarket(ticker)
   } catch (err) {
-    const status = err.message.includes('401') ? 401 : err.message.includes('403') ? 403 : 500
-    // Return a safe message — don't leak internal details
-    const message = status === 401 || status === 403
-      ? 'Invalid API key. Check your FINNHUB_API_KEY configuration.'
-      : 'Failed to fetch market data. Please try again.'
-    res.status(status).json({ error: message })
+    finnhubErr = err
+  }
+
+  if (finnhubData?.quote?.c != null) {
+    return res.json({ ...finnhubData, source: 'finnhub' })
+  }
+
+  // Finnhub didn't recognize the ticker (or errored) — fall back to Yahoo.
+  try {
+    const yahooData = await fetchYahooMarket(ticker)
+    return res.json({ ...yahooData, source: 'yahoo' })
+  } catch (yahooErr) {
+    // Both providers failed. If Finnhub errored with auth, surface that;
+    // otherwise treat as a "ticker not found" 404 so the UI shows the
+    // friendly "No data" state instead of a generic error.
+    if (finnhubErr?.message?.includes('401') || finnhubErr?.message?.includes('403')) {
+      return res.status(401).json({ error: 'Invalid Finnhub API key. Check your FINNHUB_API_KEY configuration.' })
+    }
+    return res.status(404).json({ error: `No data found for "${ticker}". Check the symbol and try again.` })
   }
 }
