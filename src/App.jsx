@@ -225,11 +225,24 @@ export default function App() {
             </div>
           </button>
 
-          <div className="hidden md:flex ml-3">
+          <div className="ml-3">
             <MarketStatusPill />
           </div>
 
           <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
+            {/* Mobile palette entry — gives phones the same Cmd-K trigger desktop has in the StatusBar */}
+            <button
+              type="button"
+              onClick={() => palette.setOpen(true)}
+              aria-label="Open command palette"
+              title="Search ticker or jump to section"
+              className="lg:hidden p-2 rounded-lg border border-[#1a2e1f] text-[#4b6358] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-colors cursor-pointer"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             {hasData && (
               <>
                 <div className="flex items-center gap-2 hidden sm:flex">

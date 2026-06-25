@@ -34,10 +34,10 @@ export default function MarketStatusPill({ compact = false }) {
         {label}
       </span>
       {showClock && (
-        <>
+        <span className="hidden sm:inline-flex items-center gap-2">
           <span className="text-[#263d2c]">·</span>
           <span className="font-mono text-[11px] tabular-nums text-[#8a9b91]">{clockText}</span>
-        </>
+        </span>
       )}
     </div>
   )
