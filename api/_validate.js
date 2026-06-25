@@ -1,6 +1,7 @@
-// Ticker: 1-5 uppercase ASCII letters only.
-// Covers all standard US equity symbols (AAPL, GOOGL, BRK etc).
-const TICKER_RE = /^[A-Z]{1,5}$/
+// Ticker: 1-5 uppercase ASCII letters, optionally followed by `.` + 1-2
+// letters for class-share notation (BRK.B, BRK.A, RDS.A). Covers all
+// standard US equity + ETF symbols including dot-suffixed class shares.
+const TICKER_RE = /^[A-Z]{1,5}(\.[A-Z]{1,2})?$/
 
 export function validateTicker(raw) {
   if (typeof raw !== 'string') return null
