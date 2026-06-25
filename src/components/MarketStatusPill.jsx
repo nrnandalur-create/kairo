@@ -21,7 +21,7 @@ export default function MarketStatusPill({ compact = false }) {
 
   return (
     <div
-      className="flex items-center gap-2 px-2.5 py-1 rounded-full border border-[#1a2e1f] bg-[#0a100c]/80 backdrop-blur-sm"
+      className="glass flex items-center gap-2 px-2.5 py-1 rounded-full"
       title={`${label} · ${fmtETClock(now)}`}
     >
       <span className="relative flex h-2 w-2">

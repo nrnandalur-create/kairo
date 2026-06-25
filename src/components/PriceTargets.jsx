@@ -47,7 +47,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
   const bearPct     = totalTrend > 0 ? ((trend.sell + trend.strongSell)  / totalTrend) * 100 : 0
 
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">

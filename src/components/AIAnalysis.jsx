@@ -33,7 +33,7 @@ function ConfidenceRing({ confidence }) {
 
 function Skeleton() {
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
         <div className="h-2.5 w-28 rounded-full shimmer" />
@@ -57,7 +57,7 @@ function Skeleton() {
 export default function AIAnalysis({ data, loading, asOf }) {
   if (loading) return <Skeleton />
   if (!data) return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-3 animate-enter">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-3 animate-enter">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">AI Analysis</span>
         <span className="text-[9px] font-bold tracking-widest uppercase text-[#4b6358] border border-[#1a2e1f] rounded-full px-2 py-0.5">Unavailable</span>
@@ -81,7 +81,7 @@ export default function AIAnalysis({ data, loading, asOf }) {
                       : 'border-[#e24b4a]/25 text-[#e24b4a] bg-[#e24b4a]/10'
 
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5 animate-enter">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em] inline-flex items-center">

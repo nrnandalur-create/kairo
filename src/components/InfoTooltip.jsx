@@ -38,7 +38,7 @@ export default function InfoTooltip({ children, label = 'About this data', side 
           role="tooltip"
           className={`absolute z-50 ${posClass} w-64 max-w-[80vw] pointer-events-none`}
         >
-          <span className="block rounded-lg border border-[#263d2c] bg-[#0a100c]/95 backdrop-blur-md px-3 py-2.5 text-[12px] leading-relaxed text-[#d1d9d5] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.6)]">
+          <span className="glass block rounded-lg px-3 py-2.5 text-[12px] leading-relaxed text-[#d1d9d5]">
             {children}
           </span>
         </span>

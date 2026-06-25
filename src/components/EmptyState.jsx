@@ -8,7 +8,7 @@
 //   />
 export default function EmptyState({ icon, title, body, action, dense = false }) {
   return (
-    <div className={`w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl flex flex-col items-center text-center gap-3 ${
+    <div className={`w-full glass-card rounded-2xl flex flex-col items-center text-center gap-3 ${
       dense ? 'px-4 py-6' : 'px-6 py-10'
     } animate-enter`}>
       {icon && (

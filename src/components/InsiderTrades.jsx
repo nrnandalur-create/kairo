@@ -44,7 +44,7 @@ export default function InsiderTrades({ data, loading }) {
   const rows = data?.slice(0, 5) ?? []
 
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Insider Transactions</span>
 
       {loading ? (

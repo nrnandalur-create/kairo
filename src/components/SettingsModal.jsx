@@ -68,7 +68,7 @@ export default function SettingsModal({ open, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className="relative w-full max-w-md rounded-2xl border border-[#1a2e1f] bg-[#0a100c]/95 backdrop-blur-md shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7)] overflow-hidden animate-enter"
+        className="glass-strong relative w-full max-w-md rounded-2xl overflow-hidden animate-enter"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}

@@ -43,7 +43,7 @@ function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) 
 
 function Skeleton() {
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4">
       <div className="h-2.5 w-36 rounded-full shimmer" />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -110,7 +110,7 @@ export default function IndicatorsGrid({ candles, loading, asOf }) {
   const volBarClr = vol?.ratio >= 1.5 ? '#d4922a' : '#4b6358'
 
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Technical Indicators</span>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[

@@ -68,11 +68,63 @@
 
 body {
   background-color: #080c0a;
+  /* Ambient brand-tinted gradients — give glass surfaces something to blur. */
+  background-image:
+    radial-gradient(ellipse 65% 55% at 18% 8%,  rgba(29,158,117,0.075), transparent 62%),
+    radial-gradient(ellipse 55% 60% at 82% 92%, rgba(29,158,117,0.055), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(29,158,117,0.020), transparent 80%);
+  background-attachment: fixed;
   color: #d1d9d5;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* ── Glass morphism system ─────────────────────────────────────────────────── */
+/* Three tiers, all brand-green tinted so they read like the same material. */
+
+/* Top-layer modal overlays — most translucent, deepest blur */
+.glass-strong {
+  background: rgba(8, 12, 10, 0.62);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 24px 64px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* Persistent floating chrome — header, status bar, toaster */
+.glass {
+  background: rgba(8, 12, 10, 0.72);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Content cards in flow — subtle glass edge, keeps a solid-feeling
+   background so dense numbers stay crisp. */
+.glass-card {
+  background:
+    linear-gradient(180deg, rgba(15, 22, 17, 0.94), rgba(13, 19, 15, 0.91));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Inset variant for tiles + small panels — slightly more translucent than
+   glass-card, used in places like the hero watchlist tiles. */
+.glass-tile {
+  background: rgba(10, 16, 12, 0.78);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 * { box-sizing: border-box; }

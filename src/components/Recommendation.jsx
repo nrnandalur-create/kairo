@@ -19,7 +19,7 @@ function SkeletonLine({ w = 'full' }) {
 
 function Skeleton() {
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex flex-col gap-5">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
         <div className="h-2.5 w-40 rounded-full shimmer" />
@@ -36,7 +36,7 @@ function Skeleton() {
 
 function Unavailable() {
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-6 flex items-center gap-3">
+    <div className="w-full glass-card rounded-2xl p-6 flex items-center gap-3">
       <span className="text-[#4b6358] text-lg">—</span>
       <span className="text-sm text-[#4b6358]">AI recommendation unavailable</span>
     </div>

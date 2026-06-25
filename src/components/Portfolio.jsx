@@ -322,7 +322,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
             <div className="px-6 py-5 flex flex-col gap-5">
               {/* Scorecard */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-1.5">
+                <div className="glass-card rounded-xl p-4 flex flex-col gap-1.5">
                   <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Total Value</span>
                   <span className="text-xl font-black tabular-nums text-[#d1d9d5]">{fmtMoney(result.total)}</span>
                   <span className={`text-xs font-bold tabular-nums ${result.weightedChangePct >= 0 ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
@@ -330,7 +330,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                   </span>
                 </div>
 
-                <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-1.5">
+                <div className="glass-card rounded-xl p-4 flex flex-col gap-1.5">
                   <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Health Score</span>
                   <span className="text-xl font-black tabular-nums text-[#d1d9d5]">{result.healthScore}<span className="text-sm text-[#4b6358] font-normal">/100</span></span>
                   <div className="h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
@@ -352,7 +352,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
 
               {/* Performance chart */}
               {userId && (
-                <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+                <div className="glass-card rounded-xl p-4">
                   <PortfolioChart snapshots={snapshots} />
                 </div>
               )}

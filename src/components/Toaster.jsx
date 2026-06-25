@@ -13,7 +13,7 @@ function ToastCard({ id, variant, message, action }) {
   return (
     <div
       role="status"
-      className={`flex items-center gap-3 bg-[#0a100c]/95 backdrop-blur-md border ${v.border} text-[#d1d9d5] text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg whitespace-nowrap animate-enter pointer-events-auto`}
+      className={`glass flex items-center gap-3 ${v.border} text-[#d1d9d5] text-xs font-medium px-4 py-2.5 rounded-xl whitespace-nowrap animate-enter pointer-events-auto`}
       style={{ boxShadow: `0 12px 24px -8px rgba(0,0,0,0.55), ${v.glow}` }}
     >
       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: v.dot }} />

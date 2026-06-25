@@ -252,7 +252,7 @@ export default function App() {
       />
 
       {/* ── Header ── */}
-      <header className="border-b border-[#1a2e1f] bg-[#080c0a]/90 backdrop-blur-sm sticky top-0 z-20">
+      <header className="glass sticky top-0 z-20" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
           <button
             onClick={handleHome}

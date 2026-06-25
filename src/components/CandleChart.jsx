@@ -131,7 +131,7 @@ export default function CandleChart({ candles, synthetic }) {
   }, [showBands])
 
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl overflow-hidden animate-enter">
+    <div className="w-full glass-card rounded-2xl overflow-hidden animate-enter">
       <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Price Chart</span>

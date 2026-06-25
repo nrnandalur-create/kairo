@@ -122,7 +122,7 @@ function SidePanel({ ticker, loading, data, error }) {
     <div className="flex flex-col gap-3">
 
       {/* Price card */}
-      <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+      <div className="glass-card rounded-xl p-4">
         <div className="text-[10px] text-[#4b6358] uppercase tracking-widest mb-2 font-semibold">
           {profile?.name ?? ticker}
         </div>
@@ -139,7 +139,7 @@ function SidePanel({ ticker, loading, data, error }) {
 
       {/* AI signal */}
       {ai ? (
-        <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+        <div className="glass-card rounded-xl p-4">
           <div className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-3 font-semibold">AI Signal</div>
           <div className="flex items-center gap-3 mb-3">
             <span
@@ -177,14 +177,14 @@ function SidePanel({ ticker, loading, data, error }) {
           </div>
         </div>
       ) : (
-        <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+        <div className="glass-card rounded-xl p-4">
           <div className="text-[9px] text-[#4b6358] uppercase tracking-widest font-semibold">AI Signal</div>
           <div className="text-xs text-[#263d2c] mt-2">Analysis unavailable</div>
         </div>
       )}
 
       {/* Technicals */}
-      <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+      <div className="glass-card rounded-xl p-4">
         <div className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-3 font-semibold">Technicals</div>
         <MetricRow
           label="RSI (14)"
@@ -223,7 +223,7 @@ function SidePanel({ ticker, loading, data, error }) {
       </div>
 
       {/* Fundamentals */}
-      <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-4">
+      <div className="glass-card rounded-xl p-4">
         <div className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-3 font-semibold">Fundamentals</div>
         <MetricRow label="Market Cap" value={fmtCap(profile?.marketCapitalization)} />
         <MetricRow label="P/E (TTM)"  value={fmt(metrics?.metric?.peBasicExclExtraTTM, 1)} />

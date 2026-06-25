@@ -163,7 +163,7 @@ function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, classN
   return (
     <div className={`absolute ${className}`} style={position}>
       <div
-        className="rounded-xl border border-[#1a2e1f]/80 bg-[#0a100c]/85 backdrop-blur-sm px-3.5 pt-2.5 pb-3 w-[180px]"
+        className="glass-tile rounded-xl px-3.5 pt-2.5 pb-3 w-[180px]"
         style={{
           boxShadow: `0 0 32px -4px ${up ? 'rgba(29,158,117,0.22)' : 'rgba(226,75,74,0.20)'}, inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 24px -8px rgba(0,0,0,0.55)`,
         }}

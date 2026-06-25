@@ -12,7 +12,7 @@ import DataTimestamp from './DataTimestamp'
 //   ▸ ⌘K hint to open the command palette
 export default function StatusBar({ ticker, asOf, onOpenPalette }) {
   return (
-    <div className="hidden lg:flex fixed bottom-0 left-[60px] right-0 h-9 z-30 bg-[#0a100c]/95 backdrop-blur-sm border-t border-[#1a2e1f] items-center gap-3 px-4 pointer-events-auto">
+    <div className="glass hidden lg:flex fixed bottom-0 left-[60px] right-0 h-9 z-30 items-center gap-3 px-4 pointer-events-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}>
       {/* Ticker chip */}
       <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-[#d1d9d5] tabular-nums">
         {ticker ?? '—'}

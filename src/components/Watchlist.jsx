@@ -94,7 +94,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-1.5 w-48 bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2.5">
+        <div className="absolute top-full right-0 mt-1.5 w-48 glass-card rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2.5">
           <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Price Alert</p>
 
           {/* Direction toggle */}
@@ -232,7 +232,7 @@ function WatchlistTile({
 
   return (
     <div
-      className="group relative flex items-center gap-2 bg-[#0f1611] border border-[#1a2e1f] rounded-xl px-4 py-3 hover:border-[#263d2c] hover:bg-[#0c1410] transition-all duration-150 cursor-pointer"
+      className="group relative flex items-center gap-2 glass-card rounded-xl px-4 py-3 hover:border-[#263d2c] hover:bg-[#0c1410] transition-all duration-150 cursor-pointer"
       onClick={() => onSelect(symbol)}
     >
       <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -304,7 +304,7 @@ export default function Watchlist({ rows = [], onSelect, onRemove, onNoteUpdate,
   if (!rows.length) return (
     <div className="w-full flex flex-col gap-3 animate-enter">
       <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">My Watchlist</span>
-      <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-xl p-6 flex flex-col items-center gap-2 text-center">
+      <div className="glass-card rounded-xl p-6 flex flex-col items-center gap-2 text-center">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-[#263d2c] mb-1">
           <path d="M4 2.5h12a.5.5 0 01.5.5v15l-6.5-4-6.5 4V3a.5.5 0 01.5-.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
         </svg>

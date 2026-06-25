@@ -58,7 +58,7 @@ function Skeleton() {
   return (
     <div className="w-full flex flex-col gap-4">
       {/* Indices bar skeleton */}
-      <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl overflow-hidden flex divide-x divide-[#1a2e1f]">
+      <div className="w-full glass-card rounded-2xl overflow-hidden flex divide-x divide-[#1a2e1f]">
         {[1, 2, 3].map(i => (
           <div key={i} className="flex-1 px-6 py-5 flex flex-col gap-2.5">
             <div className="h-2.5 w-10 rounded-full shimmer" />
@@ -68,7 +68,7 @@ function Skeleton() {
       </div>
       {/* Movers + sentiment skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-        <div className="lg:col-span-2 bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4">
+        <div className="lg:col-span-2 glass-card rounded-2xl p-5 flex flex-col gap-4">
           <div className="h-2.5 w-24 rounded-full shimmer" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
             {[0, 1].map(col => (
@@ -86,7 +86,7 @@ function Skeleton() {
             ))}
           </div>
         </div>
-        <div className="bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4">
+        <div className="glass-card rounded-2xl p-5 flex flex-col gap-4">
           <div className="h-2.5 w-32 rounded-full shimmer" />
           <div className="h-10 w-32 rounded-full shimmer" />
           <div className="h-3 w-full rounded-full shimmer" />
@@ -142,7 +142,7 @@ export default function MarketPulse() {
     <div className="w-full flex flex-col gap-4 animate-enter">
 
       {/* ── Indices bar ── */}
-      <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl overflow-hidden">
+      <div className="w-full glass-card rounded-2xl overflow-hidden">
         <div className="flex divide-x divide-[#1a2e1f]">
           {(data.indices ?? []).map(idx => (
             <IndexTile key={idx.symbol} {...idx} />
@@ -154,7 +154,7 @@ export default function MarketPulse() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
 
         {/* Top Movers */}
-        <div className="lg:col-span-2 bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 flex flex-col gap-4">
+        <div className="lg:col-span-2 glass-card rounded-2xl p-5 flex flex-col gap-4">
           <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Top Movers</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0">
             <div>

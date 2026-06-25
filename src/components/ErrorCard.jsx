@@ -5,7 +5,7 @@
 // Bear-color left border so it reads as an error without being alarmist.
 export default function ErrorCard({ message, onRetry, dense = false }) {
   return (
-    <div className={`w-full bg-[#0f1611] border border-[#1a2e1f] border-l-2 border-l-[#e24b4a]/70 rounded-2xl flex items-start gap-4 ${
+    <div className={`w-full glass-card border-l-2 border-l-[#e24b4a]/70 rounded-2xl flex items-start gap-4 ${
       dense ? 'px-4 py-3' : 'px-5 py-4'
     } animate-enter`}>
       <span className="shrink-0 w-7 h-7 rounded-full bg-[#e24b4a]/10 border border-[#e24b4a]/25 text-[#e24b4a] flex items-center justify-center text-xs font-bold">

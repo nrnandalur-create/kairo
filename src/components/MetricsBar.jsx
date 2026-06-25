@@ -55,7 +55,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
   const macdBadgeColor = macd ? (macd.bullish ? '#1D9E75' : '#e24b4a') : '#4b6358'
 
   return (
-    <div className="w-full bg-[#0f1611] border border-[#1a2e1f] rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
+    <div className="w-full glass-card rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
       {/* Identity + price row */}
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-6">
         <div className="flex flex-col gap-1">
