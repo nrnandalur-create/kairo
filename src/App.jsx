@@ -42,7 +42,9 @@ import StatusBar from './components/StatusBar'
 import Toaster from './components/Toaster'
 import { useCommandPalette } from './hooks/useCommandPalette'
 import { useAutoRefresh } from './hooks/useAutoRefresh'
+import { usePrefs } from './hooks/usePrefs'
 import { toast } from './utils/toast'
+import SettingsModal from './components/SettingsModal'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
@@ -179,9 +181,13 @@ export default function App() {
     else toast.show('Search a ticker to view news')
   }
 
-  // Background refresh — re-fetch market data only (not AI / fundamentals)
-  // every 5 min while the user is on a ticker. Skips when the tab is
-  // hidden or the market is closed.
+  // User preferences (refresh interval + stale threshold)
+  const userPrefs = usePrefs()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Background refresh — re-fetch market data only (not AI / fundamentals).
+  // Interval is configurable via Settings. Skips when the tab is hidden
+  // or the market is closed.
   const refreshMarketOnly = async () => {
     if (!ticker) return
     try {
@@ -193,7 +199,12 @@ export default function App() {
       // once data crosses the stale threshold.
     }
   }
-  useAutoRefresh({ key: ticker, refresh: refreshMarketOnly, intervalMs: 300_000 })
+  // refreshMs === 0 disables auto-refresh entirely.
+  useAutoRefresh({
+    key:        userPrefs.refreshMs > 0 ? ticker : null,
+    refresh:    refreshMarketOnly,
+    intervalMs: userPrefs.refreshMs || 300_000,
+  })
 
   // Cmd-K command palette + jump table
   const palette = useCommandPalette()
@@ -222,6 +233,7 @@ export default function App() {
       <Nav
         activeKey={activeNav}
         onHome={handleHome}
+        onSettings={() => setSettingsOpen(true)}
         onScreener={() => setScreenerOpen(true)}
         onPortfolio={() => setPortfolioOpen(true)}
         onSectors={() => setSectorsOpen(true)}
@@ -490,6 +502,9 @@ export default function App() {
         asOf={marketData?.fetchedAt}
         onOpenPalette={() => palette.setOpen(true)}
       />
+
+      {/* ── Settings ── */}
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* ── Telemetry ── */}
       <Analytics />

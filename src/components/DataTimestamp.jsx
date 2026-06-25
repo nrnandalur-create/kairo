@@ -1,4 +1,5 @@
 import { useNow } from '../hooks/useNow'
+import { usePrefs } from '../hooks/usePrefs'
 import { fmtRelTime } from '../utils/format'
 
 // Renders "Updated 2m ago" with a live-updating relative time.
@@ -13,18 +14,22 @@ import { fmtRelTime } from '../utils/format'
 // threshold. Default 10 minutes mirrors the auto-refresh window (5 min
 // interval + 1 missed cycle) — by the time the dot turns amber, the
 // system has tried and failed to refresh at least once.
-export default function DataTimestamp({ asOf, source, prefix = 'Updated', staleAfterMs = 600_000 }) {
-  const now = useNow(15_000)            // re-render every 15s — granular enough for "Xs/m ago"
+export default function DataTimestamp({ asOf, source, prefix = 'Updated', staleAfterMs }) {
+  const now      = useNow(15_000)            // re-render every 15s — granular enough for "Xs/m ago"
+  const prefs    = usePrefs()
+  // Caller can override per-instance; otherwise pick up the user's Settings choice.
+  const stalemsEffective = staleAfterMs ?? prefs.staleMs
+
   if (!asOf) return null
   const nowMs = now.getTime()
   const rel   = fmtRelTime(asOf, nowMs)
-  const stale = (nowMs - asOf) >= staleAfterMs
+  const stale = (nowMs - asOf) >= stalemsEffective
 
   const dotClass  = stale ? 'bg-[#d4922a]/85' : 'bg-[#1D9E75]/80'
   const textClass = stale ? 'text-[#d4922a]'  : 'text-[#6b8478]'
   const srcClass  = stale ? 'text-[#a07520]'  : 'text-[#5d7868]'
   const title     = stale
-    ? `Data is older than ${Math.round(staleAfterMs / 60_000)} minutes. A refresh will run when you return to the tab.`
+    ? `Data is older than ${Math.round(stalemsEffective / 60_000)} minutes. A refresh will run when you return to the tab.`
     : undefined
 
   return (

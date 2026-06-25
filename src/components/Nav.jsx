@@ -126,7 +126,7 @@ function BottomItem({ item, active, onClick }) {
 
 export default function Nav({
   activeKey,
-  onHome, onScreener, onPortfolio, onAlerts, onNews, onSectors, onCompare,
+  onHome, onScreener, onPortfolio, onAlerts, onNews, onSectors, onCompare, onSettings,
 }) {
   const handlers = {
     home:      onHome,
@@ -136,7 +136,7 @@ export default function Nav({
     news:      onNews,
     sectors:   onSectors,
     compare:   onCompare,
-    settings:  () => {},
+    settings:  onSettings ?? (() => {}),
   }
 
   return (
@@ -161,7 +161,7 @@ export default function Nav({
 
         {/* Settings pinned at bottom */}
         <div className="border-t border-[#1a2e1f] py-2 shrink-0">
-          <SidebarItem item={SETTINGS_ITEM} active={false} onClick={() => {}} />
+          <SidebarItem item={SETTINGS_ITEM} active={false} onClick={handlers.settings} />
         </div>
       </nav>
 
