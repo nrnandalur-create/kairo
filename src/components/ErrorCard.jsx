@@ -13,13 +13,13 @@ export default function ErrorCard({ message, onRetry, dense = false }) {
       </span>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#e24b4a]">Something went wrong</p>
-        <p className="text-xs text-[#d1d9d5]/80 leading-relaxed">{message}</p>
+        <p className="text-xs text-[var(--c-text)]/80 leading-relaxed">{message}</p>
       </div>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="shrink-0 text-[10px] font-semibold tracking-[0.14em] uppercase text-[#4b6358] hover:text-[#1D9E75] border border-[#1a2e1f] hover:border-[#1D9E75]/40 rounded-md px-2.5 py-1 cursor-pointer transition-colors"
+          className="shrink-0 text-[10px] font-semibold tracking-[0.14em] uppercase text-[var(--c-text-faint)] hover:text-[#1D9E75] border border-[var(--c-border)] hover:border-[#1D9E75]/40 rounded-md px-2.5 py-1 cursor-pointer transition-colors"
         >
           Retry
         </button>

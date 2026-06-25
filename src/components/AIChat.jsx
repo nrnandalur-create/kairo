@@ -36,8 +36,8 @@ function Bubble({ role, content }) {
       <div
         className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed ${
           isUser
-            ? 'bg-[#1D9E75]/12 border border-[#1D9E75]/25 text-[#d1d9d5] rounded-br-md'
-            : 'bg-[#0a100c] border border-[#1a2e1f] text-[#d1d9d5]/90 rounded-bl-md'
+            ? 'bg-[#1D9E75]/12 border border-[#1D9E75]/25 text-[var(--c-text)] rounded-br-md'
+            : 'bg-[var(--c-bg-deep)] border border-[var(--c-border)] text-[var(--c-text)]/90 rounded-bl-md'
         }`}
       >
         {content}
@@ -49,7 +49,7 @@ function Bubble({ role, content }) {
 function ThinkingBubble() {
   return (
     <div className="flex justify-start">
-      <div className="bg-[#0a100c] border border-[#1a2e1f] rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
+      <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" />
         <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" style={{ animationDelay: '120ms' }} />
         <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" style={{ animationDelay: '240ms' }} />
@@ -120,7 +120,7 @@ export default function AIChat({ ticker, context }) {
     <div className="w-full glass-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em] inline-flex items-center">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
           Ask the analyst
           <InfoTooltip>
             Conversational follow-ups on {ticker}. Grounded in the prior AI Recommendation context; the model is told not to invent prices or fundamentals it doesn&apos;t have.
@@ -130,7 +130,7 @@ export default function AIChat({ ticker, context }) {
           <button
             type="button"
             onClick={clear}
-            className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#4b6358] hover:text-[#e24b4a] transition-colors cursor-pointer"
+            className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#e24b4a] transition-colors cursor-pointer"
           >
             Clear
           </button>
@@ -148,7 +148,7 @@ export default function AIChat({ ticker, context }) {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-[#6b8478] leading-relaxed">
+          <p className="text-xs text-[var(--c-text-muted)] leading-relaxed">
             Ask anything about {ticker}&apos;s analysis. Suggestions:
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -158,7 +158,7 @@ export default function AIChat({ ticker, context }) {
                 type="button"
                 onClick={() => send(s)}
                 disabled={loading}
-                className="px-2.5 py-1.5 rounded-lg border border-[#1a2e1f] bg-[#0a100c] text-[11.5px] text-[#8a9b91] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                className="px-2.5 py-1.5 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-deep)] text-[11.5px] text-[var(--c-text-muted)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {s}
               </button>
@@ -178,7 +178,7 @@ export default function AIChat({ ticker, context }) {
           placeholder={loading ? 'Thinking…' : `Ask about ${ticker}…`}
           maxLength={MAX_QUESTION}
           disabled={loading}
-          className="flex-1 bg-[#0a100c] border border-[#1a2e1f] rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#3a4f44] outline-none focus:border-[#1D9E75] transition-colors disabled:opacity-50"
+          className="flex-1 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#3a4f44] outline-none focus:border-[#1D9E75] transition-colors disabled:opacity-50"
         />
         <button
           type="button"
@@ -192,7 +192,7 @@ export default function AIChat({ ticker, context }) {
 
       {/* Footer — freshness of the last answer */}
       {lastAt && (
-        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[#1a2e1f]/60">
+        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[var(--c-border)]/60">
           <DataTimestamp asOf={lastAt} source="Groq" />
         </div>
       )}

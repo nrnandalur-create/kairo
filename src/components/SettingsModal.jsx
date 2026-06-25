@@ -22,8 +22,8 @@ function Choice({ label, options, value, onChange, hint }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <label className="text-[11px] font-semibold text-[#d1d9d5] uppercase tracking-[0.12em]">{label}</label>
-        {hint && <span className="text-[10.5px] text-[#6b8478]">{hint}</span>}
+        <label className="text-[11px] font-semibold text-[var(--c-text)] uppercase tracking-[0.12em]">{label}</label>
+        {hint && <span className="text-[10.5px] text-[var(--c-text-muted)]">{hint}</span>}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {options.map(opt => {
@@ -36,7 +36,7 @@ function Choice({ label, options, value, onChange, hint }) {
               className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono font-semibold tracking-[0.05em] cursor-pointer transition-colors ${
                 active
                   ? 'bg-[#1D9E75]/15 border-[#1D9E75]/50 text-[#1D9E75]'
-                  : 'bg-[#0a100c] border-[#1a2e1f] text-[#8a9b91] hover:border-[#263d2c] hover:text-[#d1d9d5]'
+                  : 'bg-[var(--c-bg-deep)] border-[var(--c-border)] text-[var(--c-text-muted)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
               }`}
             >
               {opt.label}
@@ -72,13 +72,13 @@ export default function SettingsModal({ open, onClose }) {
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a2e1f]">
-          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.14em]">Preferences</span>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--c-border)]">
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.14em]">Preferences</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-[#4b6358] hover:text-[#d1d9d5] transition-colors p-1 cursor-pointer"
+            className="text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors p-1 cursor-pointer"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -88,6 +88,69 @@ export default function SettingsModal({ open, onClose }) {
 
         {/* Body */}
         <div className="flex flex-col gap-5 px-5 py-5">
+          {/* Theme toggle */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label className="text-[11px] font-semibold text-[var(--c-text)] uppercase tracking-[0.12em]">Appearance</label>
+              <span className="text-[10.5px] text-[var(--c-text-muted)]">Light or dark</span>
+            </div>
+            <div className="flex gap-1.5 p-1 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-deep)]">
+              {[
+                { value: 'dark',  label: 'Dark',  icon: '☾' },
+                { value: 'light', label: 'Light', icon: '☀' },
+              ].map(opt => {
+                const active = cur.theme === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => prefs.set('theme', opt.value)}
+                    className={`flex-1 px-3 py-1.5 rounded-md text-[11px] font-mono font-semibold tracking-[0.05em] cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5 ${
+                      active
+                        ? 'bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/50'
+                        : 'text-[var(--c-text-muted)] hover:text-[var(--c-text)] border border-transparent'
+                    }`}
+                  >
+                    <span aria-hidden>{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Translucency slider */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label className="text-[11px] font-semibold text-[var(--c-text)] uppercase tracking-[0.12em]">Glass translucency</label>
+              <span className="text-[10.5px] text-[var(--c-text-muted)]">
+                {cur.glassMult <= 0.45 ? 'Clear'
+                  : cur.glassMult <= 0.85 ? 'Light'
+                  : cur.glassMult <= 1.15 ? 'Default'
+                  : cur.glassMult <= 1.35 ? 'Frosted'
+                  : 'Solid'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.2"
+              max="1.5"
+              step="0.05"
+              value={cur.glassMult}
+              onChange={e => prefs.set('glassMult', +e.target.value)}
+              className="w-full accent-[#1D9E75] cursor-pointer h-1 rounded-full"
+              style={{
+                background: `linear-gradient(to right, #1D9E75 0%, #1D9E75 ${((cur.glassMult - 0.2) / 1.3) * 100}%, #1a2e1f ${((cur.glassMult - 0.2) / 1.3) * 100}%, #1a2e1f 100%)`,
+                appearance: 'none',
+                WebkitAppearance: 'none',
+              }}
+            />
+            <div className="flex justify-between text-[9.5px] uppercase tracking-[0.14em] text-[var(--c-text-fainter)] font-mono">
+              <span>Clear</span>
+              <span>Frosted</span>
+            </div>
+          </div>
+
           <Choice
             label="Auto-refresh"
             options={REFRESH_OPTIONS}
@@ -103,22 +166,28 @@ export default function SettingsModal({ open, onClose }) {
             hint="When the dot turns amber"
           />
 
-          <p className="text-[11px] text-[#6b8478] leading-relaxed">
+          <p className="text-[11px] text-[var(--c-text-muted)] leading-relaxed">
             Auto-refresh skips when the tab is hidden or the market is closed. Preferences are saved locally on this device.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[#1a2e1f] bg-[#080c0a]/60">
+        <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[var(--c-border)] bg-[var(--c-bg)]/60">
           <button
             type="button"
             onClick={handleReset}
-            className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#4b6358] hover:text-[#d4922a] cursor-pointer transition-colors"
+            className="text-[11px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#d4922a] cursor-pointer transition-colors"
           >
             Reset to defaults
           </button>
-          <div className="flex items-center gap-2 text-[10px] font-mono text-[#3a4f44]">
-            <span>{cur.refreshMs === DEFAULTS.refreshMs && cur.staleMs === DEFAULTS.staleMs ? 'Default' : 'Custom'}</span>
+          <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--c-text-fainter)]">
+            <span>{
+              cur.refreshMs === DEFAULTS.refreshMs
+                && cur.staleMs   === DEFAULTS.staleMs
+                && cur.theme     === DEFAULTS.theme
+                && cur.glassMult === DEFAULTS.glassMult
+                ? 'Default' : 'Custom'
+            }</span>
           </div>
         </div>
       </div>

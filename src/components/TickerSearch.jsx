@@ -97,7 +97,7 @@ export default function TickerSearch({ onSearch, loading }) {
           disabled={loading}
           autoComplete="off"
           spellCheck={false}
-          className="w-full bg-[#0d1510] border border-[#1e2d28] rounded-xl px-4 py-2.5 text-sm text-[#d1d9d5] placeholder-[#2e4a3a] outline-none transition-all duration-200 focus:border-[#1D9E75] focus:bg-[#0f1a12] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full bg-[#0d1510] border border-[#1e2d28] rounded-xl px-4 py-2.5 text-sm text-[var(--c-text)] placeholder-[#2e4a3a] outline-none transition-all duration-200 focus:border-[#1D9E75] focus:bg-[#0f1a12] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
         />
 
         {/* Dropdown */}
@@ -120,11 +120,11 @@ export default function TickerSearch({ onSearch, loading }) {
                   onMouseDown={e => { e.preventDefault(); commit(r.symbol) }}
                   onMouseEnter={() => setHighlighted(i)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
-                    i > 0 ? 'border-t border-[#1a2e1f]' : ''
+                    i > 0 ? 'border-t border-[var(--c-border)]' : ''
                   } ${i === highlighted ? 'bg-[#1D9E75]/10' : 'hover:bg-[#0c1410]'}`}
                 >
-                  <span className="text-sm font-bold text-[#d1d9d5] shrink-0 w-16">{r.symbol}</span>
-                  <span className="text-xs text-[#4b6358] truncate">{r.name}</span>
+                  <span className="text-sm font-bold text-[var(--c-text)] shrink-0 w-16">{r.symbol}</span>
+                  <span className="text-xs text-[var(--c-text-faint)] truncate">{r.name}</span>
                 </button>
               ))
             )}

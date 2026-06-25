@@ -58,14 +58,14 @@ function HoldingRow({ h }) {
     ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
     : signal === 'Bearish'
     ? 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
-    : 'bg-[#1a2e1f] text-[#4b6358] border-[#1a2e1f]'
+    : 'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]'
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0 flex-wrap">
-      <span className="text-sm font-bold text-[#d1d9d5] w-14 shrink-0">{h.ticker}</span>
+    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 flex-wrap">
+      <span className="text-sm font-bold text-[var(--c-text)] w-14 shrink-0">{h.ticker}</span>
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <span className="text-xs tabular-nums text-[#d1d9d5]">{fmtMoney(h.value)}</span>
-        <div className="flex items-center gap-1.5 text-[10px] text-[#4b6358]">
+        <span className="text-xs tabular-nums text-[var(--c-text)]">{fmtMoney(h.value)}</span>
+        <div className="flex items-center gap-1.5 text-[10px] text-[var(--c-text-faint)]">
           <span className="tabular-nums">{Math.round(h.weight * 100)}%</span>
           <span>·</span>
           <span className={`tabular-nums font-semibold ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
@@ -208,13 +208,13 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-[#080c0a] border border-[#1a2e1f] rounded-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        className="w-full max-w-lg bg-[var(--c-bg)] border border-[var(--c-border)] rounded-2xl flex flex-col max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a2e1f] shrink-0">
-          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Portfolio Analyzer</span>
-          <button onClick={onClose} className="text-[#4b6358] hover:text-[#d1d9d5] transition-colors p-1">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--c-border)] shrink-0">
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Portfolio Analyzer</span>
+          <button onClick={onClose} className="text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors p-1">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
@@ -226,15 +226,15 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
           {!result && (
             <div className="px-6 py-5 flex flex-col gap-4">
               {userId && !portfolioLoading && savedHoldings.length === 0 ? (
-                <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex items-start gap-3">
+                <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex items-start gap-3">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#1D9E75] shrink-0 mt-0.5">
                     <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
                     <path d="M7 4.5v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
-                  <p className="text-[11px] text-[#4b6358] leading-relaxed">No positions tracked yet. Add your holdings below and they'll be saved automatically.</p>
+                  <p className="text-[11px] text-[var(--c-text-faint)] leading-relaxed">No positions tracked yet. Add your holdings below and they'll be saved automatically.</p>
                 </div>
               ) : (
-                <p className="text-xs text-[#4b6358]">Enter your holdings to get a portfolio health snapshot.</p>
+                <p className="text-xs text-[var(--c-text-faint)]">Enter your holdings to get a portfolio health snapshot.</p>
               )}
 
               <div className="flex flex-col gap-2">
@@ -250,10 +250,10 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                           placeholder="AAPL"
                           maxLength={5}
                           aria-invalid={!!err.ticker}
-                          className={`w-24 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm font-bold text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors uppercase ${
+                          className={`w-24 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors uppercase ${
                             err.ticker
                               ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                              : 'border-[#1a2e1f] focus:border-[#1D9E75]'
+                              : 'border-[var(--c-border)] focus:border-[#1D9E75]'
                           }`}
                         />
                         <input
@@ -263,10 +263,10 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                           placeholder="Shares"
                           min="0"
                           aria-invalid={!!err.shares}
-                          className={`flex-1 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors ${
+                          className={`flex-1 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors ${
                             err.shares
                               ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                              : 'border-[#1a2e1f] focus:border-[#1D9E75]'
+                              : 'border-[var(--c-border)] focus:border-[#1D9E75]'
                           }`}
                         />
                         {holdings.length > 1 && (
@@ -323,16 +323,16 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
               {/* Scorecard */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="glass-card rounded-xl p-4 flex flex-col gap-1.5">
-                  <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Total Value</span>
-                  <span className="text-xl font-black tabular-nums text-[#d1d9d5]">{fmtMoney(result.total)}</span>
+                  <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Total Value</span>
+                  <span className="text-xl font-black tabular-nums text-[var(--c-text)]">{fmtMoney(result.total)}</span>
                   <span className={`text-xs font-bold tabular-nums ${result.weightedChangePct >= 0 ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
                     {result.weightedChangePct >= 0 ? '+' : ''}{result.weightedChangePct.toFixed(2)}% today
                   </span>
                 </div>
 
                 <div className="glass-card rounded-xl p-4 flex flex-col gap-1.5">
-                  <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Health Score</span>
-                  <span className="text-xl font-black tabular-nums text-[#d1d9d5]">{result.healthScore}<span className="text-sm text-[#4b6358] font-normal">/100</span></span>
+                  <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Health Score</span>
+                  <span className="text-xl font-black tabular-nums text-[var(--c-text)]">{result.healthScore}<span className="text-sm text-[var(--c-text-faint)] font-normal">/100</span></span>
                   <div className="h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
                     <div className="h-full bg-[#1D9E75] rounded-full animate-bar" style={{ width: `${result.healthScore}%` }} />
                   </div>
@@ -346,8 +346,8 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 >
                   {result.riskLevel} Risk
                 </span>
-                <span className="text-[10px] text-[#4b6358]">·</span>
-                <span className="text-[10px] text-[#4b6358]">{result.items.length} position{result.items.length !== 1 ? 's' : ''}</span>
+                <span className="text-[10px] text-[var(--c-text-faint)]">·</span>
+                <span className="text-[10px] text-[var(--c-text-faint)]">{result.items.length} position{result.items.length !== 1 ? 's' : ''}</span>
               </div>
 
               {/* Performance chart */}
@@ -359,20 +359,20 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
 
               {/* Holdings breakdown */}
               <div>
-                <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest mb-3">Holdings</p>
+                <p className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest mb-3">Holdings</p>
                 {result.items.sort((a, b) => b.value - a.value).map(h => (
                   <HoldingRow key={h.ticker} h={h} />
                 ))}
               </div>
 
               {/* AI Health Report */}
-              <div className="border-t border-[#1a2e1f] pt-4 flex flex-col gap-3">
+              <div className="border-t border-[var(--c-border)] pt-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">AI Health Report</p>
+                  <p className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">AI Health Report</p>
                   {aiReport && aiReport !== 'loading' && (
                     <button
                       onClick={runAIAnalysis}
-                      className="text-[10px] text-[#4b6358] hover:text-[#1D9E75] transition-colors"
+                      className="text-[10px] text-[var(--c-text-faint)] hover:text-[#1D9E75] transition-colors"
                     >
                       Refresh
                     </button>
@@ -382,12 +382,12 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 {!aiReport && aiReport !== 'loading' && (
                   <button
                     onClick={runAIAnalysis}
-                    className="flex items-center justify-center gap-2 bg-[#0a0f0d] border border-[#1a2e1f] hover:border-[#1D9E75]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
+                    className="flex items-center justify-center gap-2 bg-[var(--c-bg-deep)] border border-[var(--c-border)] hover:border-[#1D9E75]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#1D9E75]">
                       <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
-                    <span className="text-xs font-semibold text-[#4b6358] group-hover:text-[#d1d9d5] transition-colors">
+                    <span className="text-xs font-semibold text-[var(--c-text-faint)] group-hover:text-[var(--c-text)] transition-colors">
                       Get AI Health Report
                     </span>
                   </button>
@@ -397,7 +397,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 py-1">
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
-                      <span className="text-xs text-[#4b6358]">Analyzing your portfolio…</span>
+                      <span className="text-xs text-[var(--c-text-faint)]">Analyzing your portfolio…</span>
                     </div>
                     <div className="flex flex-col gap-2">
                       <div className="h-16 rounded-xl shimmer" />
@@ -422,13 +422,13 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
 
               {/* Deep analysis shortcuts */}
               <div className="flex flex-col gap-2">
-                <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Full Chart Analysis</p>
+                <p className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Full Chart Analysis</p>
                 <div className="flex flex-wrap gap-2">
                   {result.items.map(h => (
                     <button
                       key={h.ticker}
                       onClick={() => { onClose(); onAnalyze(h.ticker) }}
-                      className="text-xs font-bold px-3 py-1.5 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg text-[#4b6358] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150"
+                      className="text-xs font-bold px-3 py-1.5 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150"
                     >
                       {h.ticker} →
                     </button>
@@ -436,7 +436,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 </div>
               </div>
 
-              <button onClick={reset} className="self-start text-xs text-[#4b6358] hover:text-[#d1d9d5] transition-colors">
+              <button onClick={reset} className="self-start text-xs text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors">
                 ← Edit holdings
               </button>
             </div>

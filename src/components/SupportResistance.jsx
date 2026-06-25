@@ -32,7 +32,7 @@ function LevelRow({ price, level, isResistance }) {
           }}
         />
       </div>
-      <span className="text-[11px] text-[#4b6358] tabular-nums w-12 shrink-0">
+      <span className="text-[11px] text-[var(--c-text-faint)] tabular-nums w-12 shrink-0">
         {isResistance ? '+' : ''}{pct}%
       </span>
     </div>
@@ -48,7 +48,7 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
 
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Support &amp; Resistance</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Support &amp; Resistance</span>
 
       <div className="flex flex-col gap-1">
         {/* Resistance levels — nearest first (lowest resistance above price) */}
@@ -58,7 +58,7 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
 
         {/* Current price marker */}
         <div className="flex items-center gap-3 py-2 px-2 -mx-2">
-          <span className="text-xs font-black tabular-nums w-16 shrink-0 text-right text-[#d1d9d5]">
+          <span className="text-xs font-black tabular-nums w-16 shrink-0 text-right text-[var(--c-text)]">
             ${fmt(currentPrice)}
           </span>
           <div className="flex-1 flex items-center gap-1.5">
@@ -66,7 +66,7 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
             <span className="text-[9px] font-bold text-[#1D9E75]/70 uppercase tracking-widest px-2 py-0.5 border border-[#1D9E75]/20 rounded-full bg-[#1D9E75]/5">Now</span>
             <div className="flex-1 h-px bg-[#263d2c]" />
           </div>
-          <span className="text-[11px] text-[#4b6358] w-12 shrink-0" />
+          <span className="text-[11px] text-[var(--c-text-faint)] w-12 shrink-0" />
         </div>
 
         {/* Support levels — nearest first (highest support below price) */}
@@ -75,13 +75,13 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
         ))}
       </div>
 
-      <p className="text-[10px] text-[#4b6358] leading-relaxed">
+      <p className="text-[10px] text-[var(--c-text-faint)] leading-relaxed">
         Levels derived from pivot highs/lows in the chart window. Use as zones, not exact prices.
       </p>
 
       {/* Footer — data freshness */}
       {asOf && (
-        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[#1a2e1f]/60">
+        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[var(--c-border)]/60">
           <DataTimestamp asOf={asOf} source="Computed" />
         </div>
       )}

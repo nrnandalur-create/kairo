@@ -92,7 +92,7 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
             Covered Call Scanner
           </span>
           <p className="text-[10px] text-[#263d2c] mt-0.5">Sell calls on your long position</p>
@@ -115,7 +115,7 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
         <div className="min-w-[520px]">
 
           {/* Column headers */}
-          <div className="flex items-center gap-3 pb-2 border-b border-[#1a2e1f]">
+          <div className="flex items-center gap-3 pb-2 border-b border-[var(--c-border)]">
             <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-10 shrink-0">OTM</span>
             <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-16 shrink-0">Strike</span>
             <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-16 shrink-0">Expiry</span>
@@ -128,7 +128,7 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
           {rows.map(row => (
             <div
               key={row.label}
-              className={`relative flex items-center gap-3 py-3 border-b border-[#1a2e1f] last:border-0 ${
+              className={`relative flex items-center gap-3 py-3 border-b border-[var(--c-border)] last:border-0 ${
                 row.suggested ? 'bg-[#1D9E75]/[0.04] rounded-lg' : ''
               }`}
             >
@@ -137,27 +137,27 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
               )}
 
               {/* OTM % */}
-              <span className="text-[10px] font-bold text-[#4b6358] w-10 shrink-0 tabular-nums pl-1">
+              <span className="text-[10px] font-bold text-[var(--c-text-faint)] w-10 shrink-0 tabular-nums pl-1">
                 {row.label}
               </span>
 
               {/* Strike */}
-              <span className="text-xs font-bold text-[#d1d9d5] w-16 shrink-0 tabular-nums">
+              <span className="text-xs font-bold text-[var(--c-text)] w-16 shrink-0 tabular-nums">
                 ${row.strike.toLocaleString()}
               </span>
 
               {/* Expiry */}
-              <span className="text-xs text-[#4b6358] w-16 shrink-0">
+              <span className="text-xs text-[var(--c-text-faint)] w-16 shrink-0">
                 {row.expiry ? fmtExpiry(row.expiry) : fmtExpiryFromDate(row.estExpiry)}
               </span>
 
               {/* Premium */}
               <div className="w-28 shrink-0">
-                <p className="text-xs text-[#d1d9d5] tabular-nums leading-none">
-                  ${row.premiumPer.toFixed(2)}<span className="text-[#4b6358]">/sh</span>
+                <p className="text-xs text-[var(--c-text)] tabular-nums leading-none">
+                  ${row.premiumPer.toFixed(2)}<span className="text-[var(--c-text-faint)]">/sh</span>
                   {!row.real && <span className="text-[#263d2c] ml-1 text-[9px]">(est.)</span>}
                 </p>
-                <p className="text-[9px] text-[#4b6358] tabular-nums mt-0.5">
+                <p className="text-[9px] text-[var(--c-text-faint)] tabular-nums mt-0.5">
                   {fmtMoney(row.premiumTotal)} total
                   {row.real && row.iv != null && (
                     <span className="ml-1 text-[#263d2c]">IV {(row.iv * 100).toFixed(0)}%</span>
@@ -187,7 +187,7 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
       </div>
 
       {/* Footer note */}
-      <p className="text-[10px] text-[#263d2c] leading-relaxed border-t border-[#1a2e1f] pt-3">
+      <p className="text-[10px] text-[#263d2c] leading-relaxed border-t border-[var(--c-border)] pt-3">
         {hasLive
           ? `Live data via Polygon.io · ${CONTRACTS} contracts (${SHARES} shares) · Midpoint of bid/ask`
           : `Based on ${CONTRACTS} contracts (${SHARES} shares). Premiums are estimates — verify with your broker.`

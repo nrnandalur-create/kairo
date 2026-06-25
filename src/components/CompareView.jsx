@@ -65,8 +65,8 @@ function Shimmer({ h = 40 }) {
 
 function MetricRow({ label, value, highlight }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-[#1a2e1f] last:border-0">
-      <span className="text-[10px] text-[#4b6358] uppercase tracking-wide">{label}</span>
+    <div className="flex items-center justify-between py-1.5 border-b border-[var(--c-border)] last:border-0">
+      <span className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-wide">{label}</span>
       <span
         className="text-xs font-semibold tabular-nums"
         style={{ color: highlight ?? '#d1d9d5' }}
@@ -123,16 +123,16 @@ function SidePanel({ ticker, loading, data, error }) {
 
       {/* Price card */}
       <div className="glass-card rounded-xl p-4">
-        <div className="text-[10px] text-[#4b6358] uppercase tracking-widest mb-2 font-semibold">
+        <div className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-widest mb-2 font-semibold">
           {profile?.name ?? ticker}
         </div>
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-2xl font-black text-[#d1d9d5] tabular-nums">{fmtPrice(quote.c)}</span>
+          <span className="text-2xl font-black text-[var(--c-text)] tabular-nums">{fmtPrice(quote.c)}</span>
           <span className={`text-sm font-bold tabular-nums ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
             {up ? '+' : ''}{fmt(quote.dp)}%
           </span>
         </div>
-        <div className="text-[10px] text-[#4b6358] mt-1">
+        <div className="text-[10px] text-[var(--c-text-faint)] mt-1">
           {profile?.finnhubIndustry} · {profile?.exchange}
         </div>
       </div>
@@ -140,7 +140,7 @@ function SidePanel({ ticker, loading, data, error }) {
       {/* AI signal */}
       {ai ? (
         <div className="glass-card rounded-xl p-4">
-          <div className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-3 font-semibold">AI Signal</div>
+          <div className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest mb-3 font-semibold">AI Signal</div>
           <div className="flex items-center gap-3 mb-3">
             <span
               className="text-sm font-black px-3 py-1.5 rounded-lg border"
@@ -150,10 +150,10 @@ function SidePanel({ ticker, loading, data, error }) {
             </span>
             <div className="flex flex-col gap-0.5 flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] text-[#4b6358] uppercase tracking-wide">Confidence</span>
+                <span className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-wide">Confidence</span>
                 <span className="text-[10px] font-bold" style={{ color: sc }}>{ai.confidence}/100</span>
               </div>
-              <div className="h-1.5 bg-[#0a0f0d] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--c-bg-deep)] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{ width: `${ai.confidence}%`, background: sc }}
@@ -162,30 +162,30 @@ function SidePanel({ ticker, loading, data, error }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <div className="flex-1 bg-[#080c0a] border border-[#1a2e1f] rounded-lg p-2">
-              <div className="text-[9px] text-[#4b6358] uppercase mb-1">Entry</div>
-              <div className="text-xs font-bold text-[#d1d9d5]">{fmtPrice(ai.entryPrice)}</div>
+            <div className="flex-1 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg p-2">
+              <div className="text-[9px] text-[var(--c-text-faint)] uppercase mb-1">Entry</div>
+              <div className="text-xs font-bold text-[var(--c-text)]">{fmtPrice(ai.entryPrice)}</div>
             </div>
-            <div className="flex-1 bg-[#080c0a] border border-[#1a2e1f] rounded-lg p-2">
-              <div className="text-[9px] text-[#4b6358] uppercase mb-1">Stop</div>
+            <div className="flex-1 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg p-2">
+              <div className="text-[9px] text-[var(--c-text-faint)] uppercase mb-1">Stop</div>
               <div className="text-xs font-bold text-[#e24b4a]">{fmtPrice(ai.stopLoss)}</div>
             </div>
-            <div className="flex-1 bg-[#080c0a] border border-[#1a2e1f] rounded-lg p-2">
-              <div className="text-[9px] text-[#4b6358] uppercase mb-1">Risk</div>
+            <div className="flex-1 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg p-2">
+              <div className="text-[9px] text-[var(--c-text-faint)] uppercase mb-1">Risk</div>
               <div className="text-xs font-bold" style={{ color: rc }}>{ai.riskLevel}</div>
             </div>
           </div>
         </div>
       ) : (
         <div className="glass-card rounded-xl p-4">
-          <div className="text-[9px] text-[#4b6358] uppercase tracking-widest font-semibold">AI Signal</div>
+          <div className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest font-semibold">AI Signal</div>
           <div className="text-xs text-[#263d2c] mt-2">Analysis unavailable</div>
         </div>
       )}
 
       {/* Technicals */}
       <div className="glass-card rounded-xl p-4">
-        <div className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-3 font-semibold">Technicals</div>
+        <div className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest mb-3 font-semibold">Technicals</div>
         <MetricRow
           label="RSI (14)"
           value={rsi != null ? `${fmt(rsi, 1)} · ${rsiZone}` : '—'}
@@ -207,12 +207,12 @@ function SidePanel({ ticker, loading, data, error }) {
           }
         />
         {rangePos != null && (
-          <div className="mt-2 pt-2 border-t border-[#1a2e1f]">
-            <div className="flex justify-between text-[9px] text-[#4b6358] mb-1">
+          <div className="mt-2 pt-2 border-t border-[var(--c-border)]">
+            <div className="flex justify-between text-[9px] text-[var(--c-text-faint)] mb-1">
               <span>52W Low {fmtPrice(lo52)}</span>
               <span>{fmtPrice(hi52)} 52W High</span>
             </div>
-            <div className="h-1.5 bg-[#0a0f0d] rounded-full overflow-hidden">
+            <div className="h-1.5 bg-[var(--c-bg-deep)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#1D9E75] rounded-full"
                 style={{ width: `${rangePos * 100}%` }}
@@ -224,7 +224,7 @@ function SidePanel({ ticker, loading, data, error }) {
 
       {/* Fundamentals */}
       <div className="glass-card rounded-xl p-4">
-        <div className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-3 font-semibold">Fundamentals</div>
+        <div className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest mb-3 font-semibold">Fundamentals</div>
         <MetricRow label="Market Cap" value={fmtCap(profile?.marketCapitalization)} />
         <MetricRow label="P/E (TTM)"  value={fmt(metrics?.metric?.peBasicExclExtraTTM, 1)} />
         <MetricRow label="EPS Growth (5Y)" value={metrics?.metric?.epsGrowth5Y != null ? `${fmt(metrics.metric.epsGrowth5Y, 1)}%` : '—'} />
@@ -256,14 +256,14 @@ export default function CompareView({ open, onClose }) {
 
   if (!open) return null
 
-  const inputCls = "flex-1 min-w-0 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg px-3 py-2 text-sm font-bold text-[#d1d9d5] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors uppercase"
+  const inputCls = "flex-1 min-w-0 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors uppercase"
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#080c0a] flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-[var(--c-bg)] flex flex-col" onClick={e => e.stopPropagation()}>
 
       {/* Header */}
-      <div className="border-b border-[#1a2e1f] px-6 py-4 flex items-center gap-4 shrink-0">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Compare</span>
+      <div className="border-b border-[var(--c-border)] px-6 py-4 flex items-center gap-4 shrink-0">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Compare</span>
 
         {/* Ticker inputs */}
         <div className="flex items-center gap-2 flex-1 max-w-lg">
@@ -294,7 +294,7 @@ export default function CompareView({ open, onClose }) {
           </button>
         </div>
 
-        <button onClick={onClose} className="ml-auto text-[#4b6358] hover:text-[#d1d9d5] transition-colors p-1 cursor-pointer shrink-0">
+        <button onClick={onClose} className="ml-auto text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors p-1 cursor-pointer shrink-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
@@ -304,10 +304,10 @@ export default function CompareView({ open, onClose }) {
       {/* Column labels */}
       {(left.data || right.data || left.loading || right.loading) && (
         <div className="grid grid-cols-2 gap-4 px-6 pt-4 shrink-0">
-          <div className="text-xs font-black text-[#d1d9d5] uppercase tracking-widest">
+          <div className="text-xs font-black text-[var(--c-text)] uppercase tracking-widest">
             {leftTicker || '—'}
           </div>
-          <div className="text-xs font-black text-[#d1d9d5] uppercase tracking-widest">
+          <div className="text-xs font-black text-[var(--c-text)] uppercase tracking-widest">
             {rightTicker || '—'}
           </div>
         </div>

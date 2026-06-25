@@ -136,7 +136,7 @@ function LiveIndicator() {
       </span>
       <span className="text-[#1D9E75] font-semibold">Live</span>
       <span className="text-[#1a2e1f]">·</span>
-      <span className="text-[#4b6358]">NYSE 14:32 ET</span>
+      <span className="text-[var(--c-text-faint)]">NYSE 14:32 ET</span>
     </div>
   )
 }
@@ -146,7 +146,7 @@ function PriceAxis() {
     <div className="absolute right-3 top-[20%] bottom-[36%] hidden md:flex flex-col justify-between">
       {PRICE_LEVELS.map(p => (
         <div key={p} className="flex items-center gap-1.5 justify-end">
-          <span className="font-mono text-[9.5px] tabular-nums tracking-tight text-[#4b6358]">${p}</span>
+          <span className="font-mono text-[9.5px] tabular-nums tracking-tight text-[var(--c-text-faint)]">${p}</span>
           <span className="w-1.5 h-px bg-[#1a2e1f]" />
         </div>
       ))}
@@ -171,14 +171,14 @@ function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, classN
         {/* Header: ticker + exchange tag · delta */}
         <div className="flex items-baseline justify-between mb-0.5">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-mono text-[11.5px] font-bold text-[#d1d9d5] tracking-[0.08em]">{sym}</span>
-            <span className="font-mono text-[8.5px] font-semibold tracking-[0.12em] text-[#4b6358]">{ex}</span>
+            <span className="font-mono text-[11.5px] font-bold text-[var(--c-text)] tracking-[0.08em]">{sym}</span>
+            <span className="font-mono text-[8.5px] font-semibold tracking-[0.12em] text-[var(--c-text-faint)]">{ex}</span>
           </div>
           <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color }}>
             {up ? '▲' : '▼'} {d}
           </span>
         </div>
-        <div className="text-[8.5px] uppercase tracking-[0.16em] text-[#3a4f44] mb-1.5">{name}</div>
+        <div className="text-[8.5px] uppercase tracking-[0.16em] text-[var(--c-text-fainter)] mb-1.5">{name}</div>
         <div className="font-mono text-[15.5px] font-semibold text-white tabular-nums mb-2">${px}</div>
 
         {/* Mini mountain chart */}
@@ -203,9 +203,9 @@ function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, classN
         </svg>
 
         {/* Footer: volume */}
-        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[#1a2e1f]/60">
-          <span className="font-mono text-[8.5px] uppercase tracking-[0.14em] text-[#3a4f44]">Vol</span>
-          <span className="font-mono text-[9.5px] tabular-nums text-[#4b6358]">{vol}</span>
+        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--c-border)]/60">
+          <span className="font-mono text-[8.5px] uppercase tracking-[0.14em] text-[var(--c-text-fainter)]">Vol</span>
+          <span className="font-mono text-[9.5px] tabular-nums text-[var(--c-text-faint)]">{vol}</span>
         </div>
       </div>
     </div>
@@ -215,9 +215,9 @@ function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, classN
 function TickerItem({ ex, sym, px, d, up }) {
   return (
     <span className="flex items-center gap-2 font-mono text-[11px] tracking-wider">
-      <span className="text-[#3a4f44] text-[9px] font-semibold tracking-[0.15em]">{ex}</span>
-      <span className="text-[#d1d9d5] font-semibold">{sym}</span>
-      <span className="text-[#4b6358] tabular-nums">{px}</span>
+      <span className="text-[var(--c-text-fainter)] text-[9px] font-semibold tracking-[0.15em]">{ex}</span>
+      <span className="text-[var(--c-text)] font-semibold">{sym}</span>
+      <span className="text-[var(--c-text-faint)] tabular-nums">{px}</span>
       <span className={`tabular-nums ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
         {up ? '▲' : '▼'} {d}
       </span>

@@ -12,15 +12,15 @@ export default function EmptyState({ icon, title, body, action, dense = false })
       dense ? 'px-4 py-6' : 'px-6 py-10'
     } animate-enter`}>
       {icon && (
-        <div className="w-10 h-10 rounded-full bg-[#0a100c] border border-[#1a2e1f] flex items-center justify-center text-[#3a4f44]">
+        <div className="w-10 h-10 rounded-full bg-[var(--c-bg-deep)] border border-[var(--c-border)] flex items-center justify-center text-[var(--c-text-fainter)]">
           {icon}
         </div>
       )}
       {title && (
-        <p className="text-sm font-semibold text-[#d1d9d5]">{title}</p>
+        <p className="text-sm font-semibold text-[var(--c-text)]">{title}</p>
       )}
       {body && (
-        <p className="text-xs text-[#4b6358] leading-relaxed max-w-xs">{body}</p>
+        <p className="text-xs text-[var(--c-text-faint)] leading-relaxed max-w-xs">{body}</p>
       )}
       {action && (
         <button

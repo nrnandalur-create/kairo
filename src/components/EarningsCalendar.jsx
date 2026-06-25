@@ -21,7 +21,7 @@ function fmtEps(n) {
 
 function SkeletonRow() {
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0">
+    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
       <div className="h-3 w-12 rounded-full shimmer shrink-0" />
       <div className="h-3 w-20 rounded-full shimmer shrink-0" />
       <div className="h-3 w-12 rounded-full shimmer ml-auto" />
@@ -46,7 +46,7 @@ export default function EarningsCalendar({ data, loading }) {
 
   return (
     <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Earnings Calendar</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Earnings Calendar</span>
 
       {loading ? (
         <div className="flex flex-col gap-3">
@@ -66,8 +66,8 @@ export default function EarningsCalendar({ data, loading }) {
               </div>
               <div className="flex items-start justify-between gap-2 flex-wrap">
                 <div>
-                  <span className="text-sm font-bold text-[#d1d9d5]">Q{next.quarter} {next.year}</span>
-                  <span className="text-xs text-[#4b6358] ml-2">{fmtDate(next.date)}</span>
+                  <span className="text-sm font-bold text-[var(--c-text)]">Q{next.quarter} {next.year}</span>
+                  <span className="text-xs text-[var(--c-text-faint)] ml-2">{fmtDate(next.date)}</span>
                 </div>
                 {next.hour && (
                   <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#1D9E75]/10 text-[#1D9E75] border border-[#1D9E75]/20 uppercase tracking-widest shrink-0">
@@ -76,9 +76,9 @@ export default function EarningsCalendar({ data, loading }) {
                 )}
               </div>
               {next.epsEstimate != null && (
-                <p className="text-[11px] text-[#4b6358]">
+                <p className="text-[11px] text-[var(--c-text-faint)]">
                   Est. EPS{' '}
-                  <span className="text-[#d1d9d5] font-bold tabular-nums">{fmtEps(next.epsEstimate)}</span>
+                  <span className="text-[var(--c-text)] font-bold tabular-nums">{fmtEps(next.epsEstimate)}</span>
                   {next.epsLow != null && next.epsHigh != null && (
                     <span className="text-[#263d2c] ml-1 tabular-nums">
                       ({fmtEps(next.epsLow)} – {fmtEps(next.epsHigh)})
@@ -88,7 +88,7 @@ export default function EarningsCalendar({ data, loading }) {
               )}
             </div>
           ) : (
-            <div className="border border-dashed border-[#1a2e1f] rounded-xl px-4 py-3 text-xs text-[#4b6358]">
+            <div className="border border-dashed border-[var(--c-border)] rounded-xl px-4 py-3 text-xs text-[var(--c-text-faint)]">
               No upcoming earnings scheduled
             </div>
           )}
@@ -103,19 +103,19 @@ export default function EarningsCalendar({ data, loading }) {
                   const beat = hasBoth && e.epsActual > e.epsEstimate
                   const miss = hasBoth && e.epsActual < e.epsEstimate
                   return (
-                    <div key={`${e.year}-${e.quarter}`} className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0 flex-wrap">
-                      <span className="text-[10px] font-bold text-[#4b6358] w-12 shrink-0 tabular-nums">
+                    <div key={`${e.year}-${e.quarter}`} className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 flex-wrap">
+                      <span className="text-[10px] font-bold text-[var(--c-text-faint)] w-12 shrink-0 tabular-nums">
                         Q{e.quarter} '{String(e.year).slice(2)}
                       </span>
                       <span className="text-[10px] text-[#263d2c] shrink-0">{fmtDateShort(e.date)}</span>
                       <div className="flex items-center gap-2 ml-auto flex-wrap justify-end">
                         {e.epsEstimate != null && (
-                          <span className="text-[10px] text-[#4b6358] tabular-nums">
+                          <span className="text-[10px] text-[var(--c-text-faint)] tabular-nums">
                             Est {fmtEps(e.epsEstimate)}
                           </span>
                         )}
                         {e.epsActual != null && (
-                          <span className={`text-[10px] font-bold tabular-nums ${beat ? 'text-[#1D9E75]' : miss ? 'text-[#e24b4a]' : 'text-[#d1d9d5]'}`}>
+                          <span className={`text-[10px] font-bold tabular-nums ${beat ? 'text-[#1D9E75]' : miss ? 'text-[#e24b4a]' : 'text-[var(--c-text)]'}`}>
                             {fmtEps(e.epsActual)}
                           </span>
                         )}
@@ -125,7 +125,7 @@ export default function EarningsCalendar({ data, loading }) {
                               ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
                               : miss
                               ? 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
-                              : 'bg-[#1a2e1f] text-[#4b6358] border-[#1a2e1f]'
+                              : 'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]'
                           }`}>
                             {beat ? 'Beat' : miss ? 'Miss' : 'Met'}
                           </span>

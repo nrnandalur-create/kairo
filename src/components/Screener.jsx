@@ -67,7 +67,7 @@ function matches(stock, f) {
 function FilterChips({ def, value, onChange }) {
   return (
     <div>
-      <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest mb-2">{def.label}</p>
+      <p className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest mb-2">{def.label}</p>
       <div className="flex flex-wrap gap-1.5">
         {def.opts.map(opt => (
           <button
@@ -76,7 +76,7 @@ function FilterChips({ def, value, onChange }) {
             className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer ${
               value === opt.value
                 ? 'bg-[#1D9E75] text-white border-[#1D9E75]'
-                : 'bg-[#0a0f0d] text-[#4b6358] border-[#1a2e1f] hover:border-[#263d2c] hover:text-[#d1d9d5]'
+                : 'bg-[var(--c-bg-deep)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
             }`}
           >
             {opt.label}
@@ -90,14 +90,14 @@ function FilterChips({ def, value, onChange }) {
 function IndicatorCell({ label, value, loading, colorFn, labelFn }) {
   return (
     <div>
-      <p className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest mb-1">{label}</p>
       {loading ? (
         <div className="h-3.5 w-20 rounded-full shimmer mt-0.5" />
       ) : (
         <p className="text-xs font-bold tabular-nums" style={{ color: colorFn ? colorFn(value) : '#d1d9d5' }}>
           {value != null ? value : '—'}{' '}
           {labelFn && value != null && (
-            <span className="text-[10px] font-normal text-[#4b6358]">{labelFn(value)}</span>
+            <span className="text-[10px] font-normal text-[var(--c-text-faint)]">{labelFn(value)}</span>
           )}
         </p>
       )}
@@ -114,23 +114,23 @@ function StockCard({ stock, indicatorLoading, onSelect }) {
   return (
     <div
       onClick={() => onSelect(stock.symbol)}
-      className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[#263d2c] hover:bg-[#0c1410] transition-all duration-150 animate-enter"
+      className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--c-border-strong)] hover:bg-[#0c1410] transition-all duration-150 animate-enter"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <span className="text-sm font-bold text-[#d1d9d5]">{stock.symbol}</span>
-          <span className="text-xs text-[#4b6358] ml-1.5 truncate">{stock.name}</span>
+          <span className="text-sm font-bold text-[var(--c-text)]">{stock.symbol}</span>
+          <span className="text-xs text-[var(--c-text-faint)] ml-1.5 truncate">{stock.name}</span>
         </div>
         <span className={`text-xs font-bold tabular-nums shrink-0 ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
           {up ? '+' : ''}{(stock.changePct ?? 0).toFixed(2)}%
         </span>
       </div>
 
-      <span className="text-2xl font-black tabular-nums text-[#d1d9d5] leading-none">
+      <span className="text-2xl font-black tabular-nums text-[var(--c-text)] leading-none">
         ${stock.price?.toFixed(2) ?? '—'}
       </span>
 
-      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#1a2e1f]">
+      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[var(--c-border)]">
         <IndicatorCell
           label="RSI (14)"
           value={stock.rsi}
@@ -151,13 +151,13 @@ function StockCard({ stock, indicatorLoading, onSelect }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-3">
       <div className="flex justify-between">
         <div className="h-3 w-20 rounded-full shimmer" />
         <div className="h-3 w-10 rounded-full shimmer" />
       </div>
       <div className="h-7 w-24 rounded-full shimmer" />
-      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#1a2e1f]">
+      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[var(--c-border)]">
         <div className="h-8 rounded-lg shimmer" />
         <div className="h-8 rounded-lg shimmer" />
       </div>
@@ -257,19 +257,19 @@ export default function Screener({ open, onClose, onAnalyze }) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-full max-w-xl h-full bg-[#080c0a] border-l border-[#1a2e1f] flex flex-col overflow-hidden">
+      <div className="w-full max-w-xl h-full bg-[var(--c-bg)] border-l border-[var(--c-border)] flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a2e1f] shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--c-border)] shrink-0">
           <div>
-            <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Stock Screener</span>
+            <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Stock Screener</span>
             {isFiltered && (
               <button onClick={reset} className="ml-3 text-[10px] text-[#1D9E75] hover:underline">
                 Clear filters
               </button>
             )}
           </div>
-          <button onClick={onClose} className="text-[#4b6358] hover:text-[#d1d9d5] transition-colors p-1">
+          <button onClick={onClose} className="text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors p-1">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
@@ -277,7 +277,7 @@ export default function Screener({ open, onClose, onAnalyze }) {
         </div>
 
         {/* Filters */}
-        <div className="px-6 py-4 flex flex-col gap-4 border-b border-[#1a2e1f] shrink-0">
+        <div className="px-6 py-4 flex flex-col gap-4 border-b border-[var(--c-border)] shrink-0">
           {FILTERS.map(def => (
             <FilterChips
               key={def.key}
@@ -293,16 +293,16 @@ export default function Screener({ open, onClose, onAnalyze }) {
           {/* Status line */}
           <div className="flex items-center justify-between mb-3 min-h-[18px]">
             {loading ? (
-              <p className="text-[10px] text-[#4b6358]">Loading…</p>
+              <p className="text-[10px] text-[var(--c-text-faint)]">Loading…</p>
             ) : fetchError ? null : (
-              <p className="text-[10px] text-[#4b6358]">
+              <p className="text-[10px] text-[var(--c-text-faint)]">
                 {filtered.length} result{filtered.length !== 1 ? 's' : ''} · click to analyze
               </p>
             )}
             {showIndStatus && (
               <div className="flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
-                <p className="text-[10px] text-[#4b6358]">
+                <p className="text-[10px] text-[var(--c-text-faint)]">
                   {techFiltered
                     ? `Loading indicators (${indProgress})…`
                     : `Technical data ${indProgress}`}

@@ -134,11 +134,11 @@ export default function CandleChart({ candles, synthetic }) {
     <div className="w-full glass-card rounded-2xl overflow-hidden animate-enter">
       <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Price Chart</span>
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Price Chart</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Timeframe buttons */}
-          <div className="flex items-center gap-1 bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg p-0.5">
             {TIMEFRAMES.map(({ label }) => (
               <button
                 key={label}
@@ -146,7 +146,7 @@ export default function CandleChart({ candles, synthetic }) {
                 className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all duration-150 cursor-pointer active:scale-[0.94] ${
                   tf === label
                     ? 'bg-[#1D9E75] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
-                    : 'text-[#4b6358] hover:text-[#d1d9d5] hover:bg-[#0f1611]'
+                    : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[#0f1611]'
                 }`}
               >
                 {label}
@@ -159,7 +159,7 @@ export default function CandleChart({ candles, synthetic }) {
             className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer active:scale-[0.94] ${
               showBands
                 ? 'bg-[#1D9E75] text-white border-[#1D9E75] shadow-[0_0_8px_rgba(29,158,117,0.25)]'
-                : 'bg-[#0a0f0d] text-[#4b6358] border-[#1a2e1f] hover:border-[#1D9E75]/50 hover:text-[#1D9E75]'
+                : 'bg-[var(--c-bg-deep)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#1D9E75]/50 hover:text-[#1D9E75]'
             }`}
           >
             BB

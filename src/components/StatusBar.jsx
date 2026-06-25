@@ -14,7 +14,7 @@ export default function StatusBar({ ticker, asOf, onOpenPalette }) {
   return (
     <div className="glass hidden lg:flex fixed bottom-0 left-[60px] right-0 h-9 z-30 items-center gap-3 px-4 pointer-events-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}>
       {/* Ticker chip */}
-      <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-[#d1d9d5] tabular-nums">
+      <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-[var(--c-text)] tabular-nums">
         {ticker ?? '—'}
       </span>
       <span className="text-[#263d2c]">·</span>
@@ -40,10 +40,10 @@ export default function StatusBar({ ticker, asOf, onOpenPalette }) {
         <button
           type="button"
           onClick={onOpenPalette}
-          className="flex items-center gap-1.5 text-[10.5px] font-mono tracking-[0.1em] text-[#8a9b91] hover:text-[#1D9E75] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-[10.5px] font-mono tracking-[0.1em] text-[var(--c-text-muted)] hover:text-[#1D9E75] transition-colors cursor-pointer"
           title="Open command palette"
         >
-          <kbd className="font-mono text-[10.5px] font-bold border border-[#263d2c] rounded px-1.5 py-0.5 leading-none">⌘K</kbd>
+          <kbd className="font-mono text-[10.5px] font-bold border border-[var(--c-border-strong)] rounded px-1.5 py-0.5 leading-none">⌘K</kbd>
           <span className="uppercase tracking-[0.14em]">Search</span>
         </button>
       </div>

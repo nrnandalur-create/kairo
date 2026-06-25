@@ -37,8 +37,8 @@ function Skeleton() {
 function Unavailable() {
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex items-center gap-3">
-      <span className="text-[#4b6358] text-lg">—</span>
-      <span className="text-sm text-[#4b6358]">AI recommendation unavailable</span>
+      <span className="text-[var(--c-text-faint)] text-lg">—</span>
+      <span className="text-sm text-[var(--c-text-faint)]">AI recommendation unavailable</span>
     </div>
   )
 }
@@ -62,7 +62,7 @@ export default function Recommendation({ data, loading, asOf }) {
 
       {/* Header */}
       <div className="relative flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em] inline-flex items-center">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
           AI Recommendation
           <InfoTooltip>
             Verdict, confidence, entry, and stop derived from a Groq LLaMA-3.3 model conditioned on technical indicators and recent OHLC. Educational only — not financial advice.
@@ -81,7 +81,7 @@ export default function Recommendation({ data, loading, asOf }) {
         <div className="flex flex-col gap-2 mb-1.5">
           <div className="flex items-baseline gap-1.5">
             <span className="text-3xl font-black tabular-nums leading-none" style={{ color: cfg.color }}>{confidence}</span>
-            <span className="text-sm text-[#4b6358] font-medium">% confidence</span>
+            <span className="text-sm text-[var(--c-text-faint)] font-medium">% confidence</span>
           </div>
           <div className="w-36 h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
             <div
@@ -97,21 +97,21 @@ export default function Recommendation({ data, loading, asOf }) {
 
       {/* Summary */}
       {data.summary && (
-        <p className="text-sm text-[#d1d9d5]/80 leading-relaxed">{data.summary}</p>
+        <p className="text-sm text-[var(--c-text)]/80 leading-relaxed">{data.summary}</p>
       )}
 
       {/* Entry / Stop grid */}
       {(data.entryPrice || data.stopLoss) && (
-        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#1a2e1f]">
+        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[var(--c-border)]">
           {data.entryPrice && (
             <div className="flex flex-col gap-1">
-              <p className="text-[10px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">Entry</p>
-              <p className="text-base font-bold text-[#d1d9d5] tabular-nums">${Number(data.entryPrice).toFixed(2)}</p>
+              <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Entry</p>
+              <p className="text-base font-bold text-[var(--c-text)] tabular-nums">${Number(data.entryPrice).toFixed(2)}</p>
             </div>
           )}
           {data.stopLoss && (
             <div className="flex flex-col gap-1">
-              <p className="text-[10px] text-[#4b6358] uppercase tracking-[0.12em] font-semibold">Stop Loss</p>
+              <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Stop Loss</p>
               <p className="text-base font-bold tabular-nums" style={{ color: '#e24b4a' }}>${Number(data.stopLoss).toFixed(2)}</p>
             </div>
           )}
@@ -120,7 +120,7 @@ export default function Recommendation({ data, loading, asOf }) {
 
       {/* Footer — data freshness */}
       {asOf && (
-        <div className="relative flex items-center justify-end pt-3 -mb-1 border-t border-[#1a2e1f]/60">
+        <div className="relative flex items-center justify-end pt-3 -mb-1 border-t border-[var(--c-border)]/60">
           <DataTimestamp asOf={asOf} source="Groq" />
         </div>
       )}

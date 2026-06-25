@@ -83,7 +83,7 @@ function ReliabilityPip({ pct }) {
   const color = n >= 70 ? '#1D9E75' : n >= 50 ? '#d4922a' : '#e24b4a'
   return (
     <div className="flex items-center gap-1.5 w-28">
-      <span className="text-[10px] text-[#4b6358] shrink-0">Reliability</span>
+      <span className="text-[10px] text-[var(--c-text-faint)] shrink-0">Reliability</span>
       <div className="flex-1 h-1 bg-[#1a2e1f] rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${n}%`, backgroundColor: color }} />
       </div>
@@ -95,12 +95,12 @@ function ReliabilityPip({ pct }) {
 function PatternCard({ pattern }) {
   const s = SIGNAL[pattern.signal] ?? SIGNAL.neutral
   return (
-    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-3 transition-colors duration-200 hover:border-[#263d2c] hover:bg-[#0c1410]">
+    <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-3 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410]">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="shrink-0">{getPatternSvg(pattern.name)}</div>
           <div className="flex flex-col gap-1 min-w-0">
-            <span className="text-sm font-semibold text-[#d1d9d5] leading-tight">{pattern.name}</span>
+            <span className="text-sm font-semibold text-[var(--c-text)] leading-tight">{pattern.name}</span>
             <div className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
               <span className={`text-[10px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full ${s.badge}`}>
@@ -111,16 +111,16 @@ function PatternCard({ pattern }) {
         </div>
       </div>
 
-      <p className="text-xs text-[#d1d9d5]/70 leading-relaxed">{pattern.explanation}</p>
+      <p className="text-xs text-[var(--c-text)]/70 leading-relaxed">{pattern.explanation}</p>
 
       {pattern.traderAction && (
-        <p className="text-xs text-[#4b6358] italic leading-relaxed border-l-2 border-[#1a2e1f] pl-2.5">
+        <p className="text-xs text-[var(--c-text-faint)] italic leading-relaxed border-l-2 border-[var(--c-border)] pl-2.5">
           {pattern.traderAction}
         </p>
       )}
 
       <div className="flex items-center justify-between pt-0.5">
-        <span className="text-[10px] text-[#4b6358]">{pattern.timeframe}</span>
+        <span className="text-[10px] text-[var(--c-text-faint)]">{pattern.timeframe}</span>
         {pattern.reliability && <ReliabilityPip pct={pattern.reliability} />}
       </div>
     </div>
@@ -130,10 +130,10 @@ function PatternCard({ pattern }) {
 function Skeleton() {
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Candle Patterns</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Candle Patterns</span>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[1, 2].map(i => (
-          <div key={i} className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 space-y-3">
+          <div key={i} className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 space-y-3">
             <div className="h-3 rounded-full shimmer w-2/3" />
             <div className="h-3 rounded-full shimmer w-full" />
             <div className="h-3 rounded-full shimmer w-4/5" />
@@ -150,7 +150,7 @@ export default function CandlePatterns({ data, loading }) {
 
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Candle Patterns · AI Detected</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Candle Patterns · AI Detected</span>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {data.map((p, i) => <PatternCard key={i} pattern={p} />)}
       </div>

@@ -287,7 +287,7 @@ function ResultRow({ item, active, onSelect }) {
       {/* Leading icon: ticker mono / section glyph / search magnifier */}
       <span className={`shrink-0 w-9 h-9 rounded-md border flex items-center justify-center font-mono text-[10px] font-bold tabular-nums ${
         item.kind === 'section'
-          ? 'border-[#1a2e1f] bg-[#0a100c] text-[#4b6358]'
+          ? 'border-[var(--c-border)] bg-[var(--c-bg-deep)] text-[var(--c-text-faint)]'
           : 'border-[#1D9E75]/25 bg-[#1D9E75]/5 text-[#1D9E75]'
       }`}>
         {item.kind === 'ticker' || item.kind === 'recent' ? item.sym
@@ -302,15 +302,15 @@ function ResultRow({ item, active, onSelect }) {
 
       {/* Label + sub */}
       <span className="flex-1 min-w-0 flex flex-col">
-        <span className="text-sm font-semibold text-[#d1d9d5] truncate">
+        <span className="text-sm font-semibold text-[var(--c-text)] truncate">
           {item.kind === 'ticker' ? `${item.sym}`
             : item.kind === 'search' ? <>Search for <span className="font-mono text-[#1D9E75]">{item.sym}</span></>
             : item.label}
           {item.kind === 'ticker' && item.name && (
-            <span className="ml-2 text-[#4b6358] font-normal">{item.name}</span>
+            <span className="ml-2 text-[var(--c-text-faint)] font-normal">{item.name}</span>
           )}
         </span>
-        {item.sub && <span className="text-[11px] text-[#4b6358] truncate">{item.sub}</span>}
+        {item.sub && <span className="text-[11px] text-[var(--c-text-faint)] truncate">{item.sub}</span>}
       </span>
 
       {/* Trailing badge: exchange or hint */}
@@ -480,8 +480,8 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Search input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#1a2e1f]">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#4b6358] shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--c-border)]">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[var(--c-text-faint)] shrink-0">
             <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4" />
             <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
@@ -490,9 +490,9 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search ticker or jump to section…"
-            className="flex-1 bg-transparent text-sm text-[#d1d9d5] placeholder:text-[#4b6358] outline-none"
+            className="flex-1 bg-transparent text-sm text-[var(--c-text)] placeholder:text-[var(--c-text-faint)] outline-none"
           />
-          <span className="font-mono text-[10px] font-semibold tracking-[0.14em] uppercase text-[#8a9b91] border border-[#263d2c] rounded px-1.5 py-0.5">
+          <span className="font-mono text-[10px] font-semibold tracking-[0.14em] uppercase text-[var(--c-text-muted)] border border-[var(--c-border-strong)] rounded px-1.5 py-0.5">
             Esc
           </span>
         </div>
@@ -524,20 +524,20 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
             </>
           )}
           {flat.length === 0 && (
-            <div className="px-3 py-8 text-center text-xs text-[#4b6358]">
+            <div className="px-3 py-8 text-center text-xs text-[var(--c-text-faint)]">
               No matches. Try a different ticker or section name.
             </div>
           )}
         </div>
 
         {/* Footer hints */}
-        <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-[#1a2e1f] bg-[#080c0a]/60 text-[11px] font-mono tracking-wide text-[#8a9b91]">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-[var(--c-border)] bg-[var(--c-bg)]/60 text-[11px] font-mono tracking-wide text-[var(--c-text-muted)]">
           <span className="flex items-center gap-2">
-            <span><kbd className="text-[#d1d9d5] font-bold">↑↓</kbd> navigate</span>
+            <span><kbd className="text-[var(--c-text)] font-bold">↑↓</kbd> navigate</span>
             <span className="text-[#263d2c]">·</span>
-            <span><kbd className="text-[#d1d9d5] font-bold">↵</kbd> select</span>
+            <span><kbd className="text-[var(--c-text)] font-bold">↵</kbd> select</span>
           </span>
-          <span><kbd className="text-[#d1d9d5] font-bold">⌘K</kbd> toggle</span>
+          <span><kbd className="text-[var(--c-text)] font-bold">⌘K</kbd> toggle</span>
         </div>
       </div>
     </div>,

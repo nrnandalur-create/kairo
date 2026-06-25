@@ -28,7 +28,7 @@ function titleCase(str) {
 
 function SkeletonRow() {
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0">
+    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
       <div className="h-3 flex-1 rounded-full shimmer" />
       <div className="h-5 w-10 rounded-full shimmer shrink-0" />
       <div className="h-3 w-10 rounded-full shimmer shrink-0" />
@@ -45,7 +45,7 @@ export default function InsiderTrades({ data, loading }) {
 
   return (
     <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Insider Transactions</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Insider Transactions</span>
 
       {loading ? (
         <div className="flex flex-col">
@@ -54,7 +54,7 @@ export default function InsiderTrades({ data, loading }) {
       ) : (
         <div className="flex flex-col">
           {/* Column headers */}
-          <div className="flex items-center gap-3 pb-2 mb-0.5 border-b border-[#1a2e1f]">
+          <div className="flex items-center gap-3 pb-2 mb-0.5 border-b border-[var(--c-border)]">
             <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest flex-1">Insider</span>
             <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-10 text-center shrink-0">Type</span>
             <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-12 text-right shrink-0">Shares</span>
@@ -67,8 +67,8 @@ export default function InsiderTrades({ data, loading }) {
             const value  = fmtValue(t.change, t.transactionPrice)
             const date   = t.transactionDate || t.filingDate
             return (
-              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0">
-                <span className="text-xs text-[#d1d9d5] flex-1 min-w-0 truncate">{titleCase(t.name)}</span>
+              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
+                <span className="text-xs text-[var(--c-text)] flex-1 min-w-0 truncate">{titleCase(t.name)}</span>
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-widest shrink-0 w-10 text-center ${
                   isBuy
                     ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
@@ -76,13 +76,13 @@ export default function InsiderTrades({ data, loading }) {
                 }`}>
                   {isBuy ? 'Buy' : 'Sell'}
                 </span>
-                <span className="text-xs tabular-nums text-[#d1d9d5] w-12 text-right shrink-0">
+                <span className="text-xs tabular-nums text-[var(--c-text)] w-12 text-right shrink-0">
                   {fmtShares(t.change)}
                 </span>
-                <span className="text-xs tabular-nums text-[#4b6358] w-14 text-right shrink-0 hidden sm:block">
+                <span className="text-xs tabular-nums text-[var(--c-text-faint)] w-14 text-right shrink-0 hidden sm:block">
                   {value ?? '—'}
                 </span>
-                <span className="text-xs tabular-nums text-[#4b6358] w-14 text-right shrink-0">
+                <span className="text-xs tabular-nums text-[var(--c-text-faint)] w-14 text-right shrink-0">
                   {fmtDate(date)}
                 </span>
               </div>

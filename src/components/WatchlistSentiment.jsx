@@ -54,19 +54,19 @@ export default function WatchlistSentiment({ tickers }) {
   return (
     <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-3 animate-enter">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
           Watchlist Sentiment
         </span>
         {isLoading && (
           <div className="flex items-center gap-1.5">
             <span className="w-1 h-1 rounded-full bg-[#1D9E75] animate-pulse" />
-            <span className="text-[10px] text-[#4b6358]">{loaded}/{tickers.length}</span>
+            <span className="text-[10px] text-[var(--c-text-faint)]">{loaded}/{tickers.length}</span>
           </div>
         )}
       </div>
 
       {!isLoading && total === 0 ? (
-        <p className="text-xs text-[#4b6358]">No recent news found across your watchlist.</p>
+        <p className="text-xs text-[var(--c-text-faint)]">No recent news found across your watchlist.</p>
       ) : (
         <>
           <div className="flex items-baseline gap-3">
@@ -77,7 +77,7 @@ export default function WatchlistSentiment({ tickers }) {
                 <span className="text-2xl font-black leading-none" style={{ color: moodColor }}>
                   {mood}
                 </span>
-                <span className="text-[10px] text-[#4b6358]">
+                <span className="text-[10px] text-[var(--c-text-faint)]">
                   {total} headline{total !== 1 ? 's' : ''} · {tickers.length} ticker{tickers.length !== 1 ? 's' : ''}
                 </span>
               </>
@@ -93,7 +93,7 @@ export default function WatchlistSentiment({ tickers }) {
           <div className="flex gap-4 text-[10px]">
             <span className="text-[#1D9E75]">{bullPct}% bull</span>
             <span className="text-[#e24b4a]">{bearPct}% bear</span>
-            <span className="text-[#4b6358]">{neutPct}% neutral</span>
+            <span className="text-[var(--c-text-faint)]">{neutPct}% neutral</span>
           </div>
         </>
       )}

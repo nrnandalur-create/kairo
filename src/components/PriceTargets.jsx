@@ -51,7 +51,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Analyst Price Targets</span>
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Analyst Price Targets</span>
         <div className="flex items-center gap-2">
           {!loading && consensus && (
             <span
@@ -66,7 +66,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
             </span>
           )}
           {!loading && data?.numberOfAnalysts && (
-            <span className="text-[9px] text-[#4b6358]">{data.numberOfAnalysts} analysts</span>
+            <span className="text-[9px] text-[var(--c-text-faint)]">{data.numberOfAnalysts} analysts</span>
           )}
         </div>
       </div>
@@ -89,8 +89,8 @@ export default function PriceTargets({ data, currentPrice, loading }) {
         <>
           {/* Consensus price + upside */}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xl font-black tabular-nums text-[#d1d9d5]">{fmtPrice(mean)}</span>
-            <span className="text-xs text-[#4b6358]">consensus</span>
+            <span className="text-2xl font-black tabular-nums text-[var(--c-text)]">{fmtPrice(mean)}</span>
+            <span className="text-xs text-[var(--c-text-faint)]">consensus</span>
             {upside != null && (
               <span className={`ml-auto text-sm font-bold tabular-nums shrink-0 ${isUpside ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
                 {fmtPct(upside)}
@@ -115,11 +115,11 @@ export default function PriceTargets({ data, currentPrice, loading }) {
                   />
                 )}
               </div>
-              <div className="flex justify-between text-[9px] text-[#4b6358] px-0.5">
+              <div className="flex justify-between text-[9px] text-[var(--c-text-faint)] px-0.5">
                 <span>{fmtPrice(low)}</span>
                 <span>{fmtPrice(high)}</span>
               </div>
-              <div className="flex items-center gap-3 text-[9px] text-[#4b6358]">
+              <div className="flex items-center gap-3 text-[9px] text-[var(--c-text-faint)]">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#d1d9d5] shrink-0" />
                   Current {currentPrice != null ? fmtPrice(currentPrice) : ''}
@@ -140,7 +140,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
                 {neutralPct > 0 && <div className="bg-[#d4922a]"    style={{ width: `${neutralPct}%` }} title={`Hold: ${trend.hold}`} />}
                 {bearPct    > 0 && <div className="bg-[#e24b4a]"    style={{ width: `${bearPct}%`    }} title={`Sell: ${trend.sell + trend.strongSell}`} />}
               </div>
-              <div className="flex items-center gap-3 text-[9px] text-[#4b6358]">
+              <div className="flex items-center gap-3 text-[9px] text-[var(--c-text-faint)]">
                 {bullPct > 0 && (
                   <span className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] shrink-0" />
@@ -164,15 +164,15 @@ export default function PriceTargets({ data, currentPrice, loading }) {
           )}
 
           {/* Stat grid */}
-          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[#1a2e1f]">
+          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[var(--c-border)]">
             {[
               { label: 'Low Target',  value: fmtPrice(data.targetLow)  },
               { label: 'Mean Target', value: fmtPrice(data.targetMean) },
               { label: 'High Target', value: fmtPrice(data.targetHigh) },
             ].map(({ label, value }) => (
               <div key={label}>
-                <p className="text-[9px] text-[#4b6358] uppercase tracking-widest mb-1">{label}</p>
-                <p className="text-xs font-bold tabular-nums text-[#d1d9d5]">{value}</p>
+                <p className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest mb-1">{label}</p>
+                <p className="text-xs font-bold tabular-nums text-[var(--c-text)]">{value}</p>
               </div>
             ))}
           </div>

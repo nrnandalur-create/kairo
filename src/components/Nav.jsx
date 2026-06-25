@@ -94,7 +94,7 @@ function SidebarItem({ item, active, onClick }) {
       className={`relative flex items-center gap-3.5 w-full pl-[18px] pr-4 py-3 transition-colors duration-150 cursor-pointer ${
         active
           ? 'text-[#1D9E75]'
-          : 'text-[#4b6358] hover:text-[#d1d9d5] hover:bg-[#0d1510]'
+          : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[#0d1510]'
       }`}
     >
       {active && (
@@ -115,7 +115,7 @@ function BottomItem({ item, active, onClick }) {
     <button
       onClick={onClick}
       className={`flex flex-col items-center justify-center gap-1 flex-1 py-2.5 transition-colors duration-150 cursor-pointer ${
-        active ? 'text-[#1D9E75]' : 'text-[#4b6358] active:text-[#d1d9d5]'
+        active ? 'text-[#1D9E75]' : 'text-[var(--c-text-faint)] active:text-[var(--c-text)]'
       }`}
     >
       <item.Icon />
@@ -142,10 +142,10 @@ export default function Nav({
   return (
     <>
       {/* ── Desktop sidebar ── */}
-      <nav className="group fixed left-0 top-0 bottom-0 z-30 hidden lg:flex flex-col w-[60px] hover:w-[200px] transition-[width] duration-200 ease-out overflow-hidden bg-[#080c0a] border-r border-[#1a2e1f]">
+      <nav className="group fixed left-0 top-0 bottom-0 z-30 hidden lg:flex flex-col w-[60px] hover:w-[200px] transition-[width] duration-200 ease-out overflow-hidden bg-[var(--c-bg)] border-r border-[var(--c-border)]">
 
         {/* Spacer matches header height */}
-        <div className="h-[57px] shrink-0 border-b border-[#1a2e1f]" />
+        <div className="h-[57px] shrink-0 border-b border-[var(--c-border)]" />
 
         {/* Main nav items */}
         <div className="flex-1 flex flex-col py-2 overflow-y-auto">
@@ -160,13 +160,13 @@ export default function Nav({
         </div>
 
         {/* Settings pinned at bottom */}
-        <div className="border-t border-[#1a2e1f] py-2 shrink-0">
+        <div className="border-t border-[var(--c-border)] py-2 shrink-0">
           <SidebarItem item={SETTINGS_ITEM} active={false} onClick={handlers.settings} />
         </div>
       </nav>
 
       {/* ── Mobile bottom tab bar (first 5 items only) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden bg-[#080c0a] border-t border-[#1a2e1f]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden bg-[var(--c-bg)] border-t border-[var(--c-border)]">
         {MOBILE_NAV_ITEMS.map(item => (
           <BottomItem
             key={item.key}

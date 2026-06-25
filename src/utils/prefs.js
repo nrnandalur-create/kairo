@@ -15,6 +15,12 @@ export const DEFAULTS = {
   refreshMs: 300_000,   // 5 min
   // When the DataTimestamp dot turns amber.
   staleMs:   600_000,   // 10 min
+  // Color theme. App was built dark-first; light is supported but a
+  // small handful of low-priority surfaces may still read as dark.
+  theme:     'dark',    // 'dark' | 'light'
+  // Translucency multiplier for the glass classes. 1 = default frosted;
+  // < 1 → more transparent (clear); > 1 → more opaque (solid-ish).
+  glassMult: 1,         // 0.2 – 1.5
 }
 
 function load() {

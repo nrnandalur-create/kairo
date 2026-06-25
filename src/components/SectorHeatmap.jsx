@@ -67,13 +67,13 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
       <div className="flex-1 bg-black/60 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-xl bg-[#080c0a] border-l border-[#1a2e1f] flex flex-col h-full"
+        className="relative w-full max-w-xl bg-[var(--c-bg)] border-l border-[var(--c-border)] flex flex-col h-full"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a2e1f] shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--c-border)] shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Sector Heatmap</span>
+            <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Sector Heatmap</span>
             {updated && (
               <span className="text-[10px] text-[#263d2c]">
                 {updated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -83,7 +83,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
               <div className="w-3 h-3 rounded-full border border-transparent border-t-[#1D9E75] animate-spin" />
             )}
           </div>
-          <button onClick={onClose} className="text-[#4b6358] hover:text-[#d1d9d5] transition-colors p-1 cursor-pointer">
+          <button onClick={onClose} className="text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors p-1 cursor-pointer">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
@@ -109,7 +109,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
                 >
                   {/* Top row: ETF + pct */}
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-[#4b6358] uppercase tracking-widest">{s.etf}</span>
+                    <span className="text-[10px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">{s.etf}</span>
                     {s.changePct != null ? (
                       <span className="text-xs font-black tabular-nums" style={{ color: text }}>
                         {up ? '+' : ''}{s.changePct.toFixed(2)}%
@@ -121,14 +121,14 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
 
                   {/* Sector name + price */}
                   <div>
-                    <div className="text-sm font-semibold text-[#d1d9d5] leading-tight">{s.name}</div>
-                    <div className="text-[11px] text-[#4b6358] tabular-nums mt-0.5">
+                    <div className="text-sm font-semibold text-[var(--c-text)] leading-tight">{s.name}</div>
+                    <div className="text-[11px] text-[var(--c-text-faint)] tabular-nums mt-0.5">
                       {s.price != null ? `$${s.price.toFixed(2)}` : '—'}
                     </div>
                   </div>
 
                   {/* Magnitude bar */}
-                  <div className="h-[3px] bg-[#0a0f0d] rounded-full overflow-hidden">
+                  <div className="h-[3px] bg-[var(--c-bg-deep)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${barW}%`, background: up ? '#1D9E75' : '#e24b4a' }}

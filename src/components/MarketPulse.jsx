@@ -25,11 +25,11 @@ function IndexTile({ symbol, price, changePct }) {
   return (
     <div className="flex-1 flex flex-col gap-1.5 px-6 py-5 transition-colors duration-150 hover:bg-[#0c1410]" style={{ background: bgBar }}>
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-bold text-[#d1d9d5] uppercase tracking-[0.1em]">{symbol}</span>
-        <span className="text-[9px] text-[#4b6358] hidden sm:inline">{INDEX_NAMES[symbol]}</span>
+        <span className="text-[10px] font-bold text-[var(--c-text)] uppercase tracking-[0.1em]">{symbol}</span>
+        <span className="text-[9px] text-[var(--c-text-faint)] hidden sm:inline">{INDEX_NAMES[symbol]}</span>
       </div>
       <div className="flex items-baseline gap-2.5 flex-wrap">
-        <span className="text-xl font-black tabular-nums text-[#d1d9d5] leading-none">${fmtPrice(price)}</span>
+        <span className="text-xl font-black tabular-nums text-[var(--c-text)] leading-none">${fmtPrice(price)}</span>
         <span className="text-xs font-bold tabular-nums leading-none" style={{ color }}>{fmtPct(changePct)}</span>
       </div>
     </div>
@@ -43,10 +43,10 @@ function MoverRow({ symbol, price, changePct, rank }) {
     : 'bg-[#e24b4a]/10 border-[#e24b4a]/25 text-[#e24b4a]'
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0 -mx-1 px-1 rounded-md hover:bg-[#0c1410] transition-colors duration-150">
+    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 -mx-1 px-1 rounded-md hover:bg-[#0c1410] transition-colors duration-150">
       <span className="text-[10px] text-[#263d2c] tabular-nums w-4 shrink-0 text-right">{rank}</span>
-      <span className="text-sm font-bold text-[#d1d9d5] w-14 shrink-0">{symbol}</span>
-      <span className="text-sm tabular-nums text-[#4b6358] flex-1">${fmtPrice(price)}</span>
+      <span className="text-sm font-bold text-[var(--c-text)] w-14 shrink-0">{symbol}</span>
+      <span className="text-sm tabular-nums text-[var(--c-text-faint)] flex-1">${fmtPrice(price)}</span>
       <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest shrink-0 ${badge}`}>
         {fmtPct(changePct)}
       </span>
@@ -75,7 +75,7 @@ function Skeleton() {
               <div key={col} className="flex flex-col gap-1">
                 <div className="h-2 w-14 rounded-full shimmer mb-2" />
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[#1a2e1f] last:border-0">
+                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
                     <div className="h-3 w-4 rounded-full shimmer shrink-0" />
                     <div className="h-3 w-14 rounded-full shimmer shrink-0" />
                     <div className="h-3 flex-1 rounded-full shimmer" />
@@ -155,7 +155,7 @@ export default function MarketPulse() {
 
         {/* Top Movers */}
         <div className="lg:col-span-2 glass-card rounded-2xl p-5 flex flex-col gap-4">
-          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Top Movers</span>
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Top Movers</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0">
             <div>
               <p className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest mb-2">Gainers</p>
@@ -170,16 +170,16 @@ export default function MarketPulse() {
 
         {/* Market Sentiment */}
         <div className={`bg-[#0f1611] border ${moodBorder} rounded-2xl p-5 flex flex-col gap-4`}>
-          <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Market Sentiment</span>
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Market Sentiment</span>
           <span className="text-5xl font-black leading-none" style={{ color: moodColor }}>{mood}</span>
-          <p className="text-xs text-[#4b6358] leading-relaxed">
+          <p className="text-xs text-[var(--c-text-faint)] leading-relaxed">
             {upCount} of {total} tracked stocks are up today
           </p>
           <div className="flex h-1.5 rounded-full overflow-hidden">
             <div className="bg-[#1D9E75] transition-all duration-700" style={{ width: `${upPct}%` }} />
             <div className="bg-[#e24b4a] transition-all duration-700" style={{ width: `${downPct}%` }} />
           </div>
-          <div className="flex justify-between text-[10px] text-[#4b6358]">
+          <div className="flex justify-between text-[10px] text-[var(--c-text-faint)]">
             <span className="text-[#1D9E75]">{upPct}% up</span>
             <span className="text-[#e24b4a]">{downPct}% down</span>
           </div>

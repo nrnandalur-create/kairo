@@ -5,9 +5,9 @@ import { calcRSI, calcMACD, calcVWAP } from '../utils/indicators'
 function MetricCell({ label, value, color, badge, badgeColor }) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <span className="text-[10px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">{label}</span>
+      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">{label}</span>
       <div className="flex items-baseline gap-1.5 flex-wrap">
-        <span className={`text-sm font-semibold tabular-nums ${color || 'text-[#d1d9d5]'} truncate`}>{value}</span>
+        <span className={`text-sm font-semibold tabular-nums ${color || 'text-[var(--c-text)]'} truncate`}>{value}</span>
         {badge && (
           <span
             className="text-[10px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5 rounded border whitespace-nowrap leading-none"
@@ -35,7 +35,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
 
   const up   = quote.dp > 0
   const down = quote.dp < 0
-  const chgColor = up ? 'text-[#1D9E75]' : down ? 'text-[#e24b4a]' : 'text-[#4b6358]'
+  const chgColor = up ? 'text-[#1D9E75]' : down ? 'text-[#e24b4a]' : 'text-[var(--c-text-faint)]'
   const arrow    = up ? '▲' : down ? '▼' : '◆'
   const chgStr   = quote.d != null
     ? `${up ? '+' : ''}${fmtRatio(quote.d)} (${up ? '+' : ''}${fmtRatio(quote.dp)}%)`
@@ -68,10 +68,10 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
             )}
             {ticker && profile?.name && <span className="text-[#263d2c]">·</span>}
             {profile?.name && (
-              <span className="text-sm font-semibold text-[#d1d9d5]">{profile.name}</span>
+              <span className="text-sm font-semibold text-[var(--c-text)]">{profile.name}</span>
             )}
             {profile?.exchange && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1a2e1f] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
                 {profile.exchange}
               </span>
             )}
@@ -125,7 +125,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
 
       {/* Footer — data freshness */}
       {asOf && (
-        <div className="flex items-center justify-end pt-3 -mb-1 border-t border-[#1a2e1f]/60">
+        <div className="flex items-center justify-end pt-3 -mb-1 border-t border-[var(--c-border)]/60">
           <DataTimestamp asOf={asOf} source="Finnhub" />
         </div>
       )}

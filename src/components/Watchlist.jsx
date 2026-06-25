@@ -95,7 +95,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
 
       {open && (
         <div className="absolute top-full right-0 mt-1.5 w-48 glass-card rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2.5">
-          <p className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Price Alert</p>
+          <p className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Price Alert</p>
 
           {/* Direction toggle */}
           <div className="flex gap-1">
@@ -108,7 +108,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
                     ? d === 'above'
                       ? 'bg-[#1D9E75]/10 border-[#1D9E75]/30 text-[#1D9E75]'
                       : 'bg-[#e24b4a]/10 border-[#e24b4a]/30 text-[#e24b4a]'
-                    : 'bg-transparent border-[#1a2e1f] text-[#4b6358] hover:border-[#263d2c]'
+                    : 'bg-transparent border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[var(--c-border-strong)]'
                 }`}
               >
                 {d === 'above' ? '▲ Above' : '▼ Below'}
@@ -126,7 +126,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.key === 'Enter' && handleSave(e)}
             placeholder={price != null ? fmtPrice(price) : 'Price'}
-            className="w-full bg-[#0a0f0d] border border-[#1a2e1f] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[#d1d9d5] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors"
+            className="w-full bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[var(--c-text)] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors"
           />
 
           {/* Actions */}
@@ -141,7 +141,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
             {hasAlert && (
               <button
                 onClick={handleClear}
-                className="text-[10px] text-[#4b6358] hover:text-[#e24b4a] transition-colors shrink-0"
+                className="text-[10px] text-[var(--c-text-faint)] hover:text-[#e24b4a] transition-colors shrink-0"
               >
                 Clear
               </button>
@@ -202,7 +202,7 @@ function NoteInline({ symbol, note, onSave }) {
         className="flex items-center gap-1 text-left group/note"
         title="Edit note"
       >
-        <span className="text-[10px] text-[#4b6358] leading-tight truncate max-w-[120px]">{note}</span>
+        <span className="text-[10px] text-[var(--c-text-faint)] leading-tight truncate max-w-[120px]">{note}</span>
         <svg className="opacity-0 group-hover/note:opacity-100 shrink-0 transition-opacity" width="9" height="9" viewBox="0 0 12 12" fill="none">
           <path d="M8.5 1.5a1.5 1.5 0 012.12 2.12L3.75 10.5 1 11l.5-2.75 6.94-6.75z" stroke="#4b6358" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -213,7 +213,7 @@ function NoteInline({ symbol, note, onSave }) {
   return (
     <button
       onClick={e => { e.stopPropagation(); setEditing(true) }}
-      className="text-[10px] text-[#263d2c] hover:text-[#4b6358] leading-tight opacity-0 group-hover:opacity-100 transition-opacity"
+      className="text-[10px] text-[#263d2c] hover:text-[var(--c-text-faint)] leading-tight opacity-0 group-hover:opacity-100 transition-opacity"
     >
       + note
     </button>
@@ -232,19 +232,19 @@ function WatchlistTile({
 
   return (
     <div
-      className="group relative flex items-center gap-2 glass-card rounded-xl px-4 py-3 hover:border-[#263d2c] hover:bg-[#0c1410] transition-all duration-150 cursor-pointer"
+      className="group relative flex items-center gap-2 glass-card rounded-xl px-4 py-3 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410] transition-all duration-150 cursor-pointer"
       onClick={() => onSelect(symbol)}
     >
       <div className="flex flex-col gap-1 min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-[#d1d9d5] leading-none">{symbol}</span>
+          <span className="text-xs font-bold text-[var(--c-text)] leading-none">{symbol}</span>
           <AlertBadge price={price} alertPrice={alertPrice} alertDirection={alertDirection} />
         </div>
         {loading && price == null ? (
           <div className="h-3 w-16 rounded-full shimmer mt-0.5" />
         ) : (
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-xs tabular-nums text-[#4b6358] leading-none">${fmtPrice(price)}</span>
+            <span className="text-xs tabular-nums text-[var(--c-text-faint)] leading-none">${fmtPrice(price)}</span>
             <span className="text-[10px] font-bold tabular-nums leading-none" style={{ color: pctColor }}>
               {fmtPct(changePct)}
             </span>
@@ -303,12 +303,12 @@ export default function Watchlist({ rows = [], onSelect, onRemove, onNoteUpdate,
 
   if (!rows.length) return (
     <div className="w-full flex flex-col gap-3 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">My Watchlist</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">My Watchlist</span>
       <div className="glass-card rounded-xl p-6 flex flex-col items-center gap-2 text-center">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-[#263d2c] mb-1">
           <path d="M4 2.5h12a.5.5 0 01.5.5v15l-6.5-4-6.5 4V3a.5.5 0 01.5-.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
         </svg>
-        <p className="text-xs font-semibold text-[#4b6358]">Your watchlist is empty</p>
+        <p className="text-xs font-semibold text-[var(--c-text-faint)]">Your watchlist is empty</p>
         <p className="text-[11px] text-[#263d2c] max-w-[220px] leading-relaxed">Search for a ticker above, then click the bookmark icon to track it here.</p>
       </div>
     </div>
@@ -328,7 +328,7 @@ export default function Watchlist({ rows = [], onSelect, onRemove, onNoteUpdate,
 
   return (
     <div className="w-full flex flex-col gap-3 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">My Watchlist</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">My Watchlist</span>
       <div className="flex flex-wrap gap-2">
         {items.map(item => (
           <WatchlistTile

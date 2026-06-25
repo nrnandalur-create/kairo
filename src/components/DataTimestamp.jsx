@@ -7,7 +7,7 @@ import { fmtRelTime } from '../utils/format'
 // `source` optionally appends the provider chip ("· Finnhub").
 //
 // Drop into any data-card footer. Designed to be subtle:
-//   <div className="text-[10px] text-[#4b6358] mt-3 ...">
+//   <div className="text-[10px] text-[var(--c-text-faint)] mt-3 ...">
 //     <DataTimestamp asOf={data.fetchedAt} source="Finnhub" />
 //   </div>
 // `staleAfterMs` flips the dot + text to amber when the data crosses the
@@ -26,7 +26,7 @@ export default function DataTimestamp({ asOf, source, prefix = 'Updated', staleA
   const stale = (nowMs - asOf) >= stalemsEffective
 
   const dotClass  = stale ? 'bg-[#d4922a]/85' : 'bg-[#1D9E75]/80'
-  const textClass = stale ? 'text-[#d4922a]'  : 'text-[#6b8478]'
+  const textClass = stale ? 'text-[#d4922a]'  : 'text-[var(--c-text-muted)]'
   const srcClass  = stale ? 'text-[#a07520]'  : 'text-[#5d7868]'
   const title     = stale
     ? `Data is older than ${Math.round(stalemsEffective / 60_000)} minutes. A refresh will run when you return to the tab.`

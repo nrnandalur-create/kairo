@@ -51,7 +51,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
   return (
     <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Price Alerts</span>
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Price Alerts</span>
         {isSet && (
           <button
             onClick={handleClear}
@@ -81,7 +81,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
 
       <div className="flex items-start gap-3 flex-wrap">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Target</label>
+          <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Target</label>
           <input
             type="number"
             min="0"
@@ -90,16 +90,16 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             onChange={e => setTarget(e.target.value)}
             placeholder={p ? `e.g. ${(p * 1.1).toFixed(2)}` : 'Price'}
             aria-invalid={!!errors.target}
-            className={`w-32 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
+            className={`w-32 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
               errors.target
                 ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                : 'border-[#1a2e1f] focus:border-[#1D9E75]'
+                : 'border-[var(--c-border)] focus:border-[#1D9E75]'
             }`}
           />
           {errors.target && <span className="text-[11px] text-[#e24b4a] max-w-[180px] leading-tight">{errors.target}</span>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Stop Loss</label>
+          <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Stop Loss</label>
           <input
             type="number"
             min="0"
@@ -108,10 +108,10 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             onChange={e => setStop(e.target.value)}
             placeholder={p ? `e.g. ${(p * 0.9).toFixed(2)}` : 'Price'}
             aria-invalid={!!errors.stop}
-            className={`w-32 bg-[#0a0f0d] border rounded-lg px-3 py-2 text-sm text-[#d1d9d5] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
+            className={`w-32 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
               errors.stop
                 ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                : 'border-[#1a2e1f] focus:border-[#e24b4a]'
+                : 'border-[var(--c-border)] focus:border-[#e24b4a]'
             }`}
           />
           {errors.stop && <span className="text-[11px] text-[#e24b4a] max-w-[180px] leading-tight">{errors.stop}</span>}
@@ -126,7 +126,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
         </button>
       </div>
 
-      <p className="text-[11px] text-[#4b6358] leading-relaxed">
+      <p className="text-[11px] text-[var(--c-text-faint)] leading-relaxed">
         Alerts are stored locally. Your watchlist will show a badge when price crosses a level.
       </p>
     </div>

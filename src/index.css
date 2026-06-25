@@ -11,6 +11,54 @@
   --color-muted:    #4b6358;
 }
 
+/* ── Theme tokens ──────────────────────────────────────────────────────────── */
+/* Dark theme defaults. Light theme overrides below switch them in one place,
+   so any component using `var(--c-*)` flips automatically. Brand accents
+   (#1D9E75 etc) stay the same in both themes for consistency. */
+:root {
+  --c-bg:                #080c0a;
+  --c-bg-deep:           #0a100c;
+  --c-card:              #0f1611;
+  --c-border:            #1a2e1f;
+  --c-border-strong:     #263d2c;
+  --c-text:              #d1d9d5;
+  --c-text-muted:        #8a9b91;
+  --c-text-faint:        #4b6358;
+  --c-text-fainter:      #3a4f44;
+
+  /* Glass tokens — RGB triplets used by rgba() in the glass classes,
+     plus border + highlight + shadow alphas. */
+  --c-glass-rgb:         8, 12, 10;
+  --c-glass-card-rgb:    15, 22, 17;
+  --c-glass-border:      rgba(255, 255, 255, 0.05);
+  --c-glass-border-strong: rgba(255, 255, 255, 0.07);
+  --c-glass-highlight:   rgba(255, 255, 255, 0.04);
+  --c-shadow-alpha:      0.5;
+
+  /* Translucency multiplier — controlled by the Settings slider.
+     1 = default; <1 → more transparent (clear); >1 → more opaque (frosted). */
+  --glass-mult: 1;
+}
+
+[data-theme="light"] {
+  --c-bg:                #f0f3ee;
+  --c-bg-deep:           #ffffff;
+  --c-card:              #ffffff;
+  --c-border:            #d2dccf;
+  --c-border-strong:     #b6c4b0;
+  --c-text:              #1a2e1f;
+  --c-text-muted:        #4d605a;
+  --c-text-faint:        #6b8478;
+  --c-text-fainter:      #8a9b91;
+
+  --c-glass-rgb:         255, 255, 255;
+  --c-glass-card-rgb:    255, 255, 255;
+  --c-glass-border:      rgba(0, 0, 0, 0.07);
+  --c-glass-border-strong: rgba(0, 0, 0, 0.10);
+  --c-glass-highlight:   rgba(255, 255, 255, 0.7);
+  --c-shadow-alpha:      0.12;
+}
+
 /* ── Keyframes ─────────────────────────────────────────────────────────────── */
 
 @keyframes fadeSlideIn {
@@ -67,64 +115,81 @@
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 
 body {
-  background-color: #080c0a;
+  background-color: var(--c-bg);
   /* Ambient brand-tinted gradients — give glass surfaces something to blur. */
   background-image:
     radial-gradient(ellipse 65% 55% at 18% 8%,  rgba(29,158,117,0.075), transparent 62%),
     radial-gradient(ellipse 55% 60% at 82% 92%, rgba(29,158,117,0.055), transparent 70%),
     radial-gradient(ellipse 40% 40% at 50% 50%, rgba(29,158,117,0.020), transparent 80%);
   background-attachment: fixed;
-  color: #d1d9d5;
+  color: var(--c-text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Light-mode ambient gradient is softer — high-key bg doesn't need as much
+   brand wash to feel alive. */
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse 65% 55% at 18% 8%,  rgba(29,158,117,0.10), transparent 62%),
+    radial-gradient(ellipse 55% 60% at 82% 92%, rgba(29,158,117,0.07), transparent 70%);
 }
 
 /* ── Glass morphism system ─────────────────────────────────────────────────── */
-/* Three tiers, all brand-green tinted so they read like the same material. */
+/* Three tiers, all themed via --c-glass-rgb and scaled by --glass-mult so
+   the Settings slider can move every glass surface from clear → frosted. */
 
 /* Top-layer modal overlays — most translucent, deepest blur */
 .glass-strong {
-  background: rgba(8, 12, 10, 0.62);
+  background: rgba(var(--c-glass-rgb), min(1, calc(0.62 * var(--glass-mult))));
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--c-glass-border-strong);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.055),
-    0 24px 64px -16px rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 var(--c-glass-highlight),
+    0 24px 64px -16px rgba(0, 0, 0, calc(var(--c-shadow-alpha) * 1.4));
+  transition: background 200ms ease;
 }
 
 /* Persistent floating chrome — header, status bar, toaster */
 .glass {
-  background: rgba(8, 12, 10, 0.72);
+  background: rgba(var(--c-glass-rgb), min(1, calc(0.72 * var(--glass-mult))));
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--c-glass-border);
+  transition: background 200ms ease;
 }
 
 /* Content cards in flow — subtle glass edge, keeps a solid-feeling
    background so dense numbers stay crisp. */
 .glass-card {
   background:
-    linear-gradient(180deg, rgba(15, 22, 17, 0.94), rgba(13, 19, 15, 0.91));
+    linear-gradient(
+      180deg,
+      rgba(var(--c-glass-card-rgb), min(1, calc(0.94 * var(--glass-mult)))),
+      rgba(var(--c-glass-card-rgb), min(1, calc(0.91 * var(--glass-mult))))
+    );
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--c-glass-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 1px 2px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 var(--c-glass-highlight),
+    0 1px 2px rgba(0, 0, 0, calc(var(--c-shadow-alpha) * 0.4));
+  transition: background 200ms ease;
 }
 
-/* Inset variant for tiles + small panels — slightly more translucent than
-   glass-card, used in places like the hero watchlist tiles. */
+/* Inset variant for tiles + small panels. */
 .glass-tile {
-  background: rgba(10, 16, 12, 0.78);
+  background: rgba(var(--c-glass-rgb), min(1, calc(0.78 * var(--glass-mult))));
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--c-glass-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    inset 0 1px 0 var(--c-glass-highlight);
+  transition: background 200ms ease;
 }
 
 * { box-sizing: border-box; }

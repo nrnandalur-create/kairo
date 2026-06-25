@@ -11,7 +11,7 @@ function StatusBadge({ label, color }) {
     green:  'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
     red:    'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
     amber:  'bg-[#d4922a]/10 text-[#d4922a] border-[#d4922a]/25',
-    muted:  'bg-[#1a2e1f] text-[#4b6358] border-[#1a2e1f]',
+    muted:  'bg-[#1a2e1f] text-[var(--c-text-faint)] border-[var(--c-border)]',
   }
   return (
     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest whitespace-nowrap ${styles[color] ?? styles.muted}`}>
@@ -22,13 +22,13 @@ function StatusBadge({ label, color }) {
 
 function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) {
   return (
-    <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-2.5 transition-colors duration-200 hover:border-[#263d2c] hover:bg-[#0c1410]">
-      <span className="text-[10px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">{title}</span>
+    <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-2.5 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410]">
+      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">{title}</span>
       <div className="flex items-end justify-between gap-2">
-        <span className="text-xl font-black tabular-nums text-[#d1d9d5] leading-none">{value}</span>
+        <span className="text-xl font-black tabular-nums text-[var(--c-text)] leading-none">{value}</span>
         {badge && <StatusBadge label={badge} color={badgeColor} />}
       </div>
-      {sub && <span className="text-[11px] text-[#4b6358] leading-tight">{sub}</span>}
+      {sub && <span className="text-[11px] text-[var(--c-text-faint)] leading-tight">{sub}</span>}
       {bar != null && (
         <div className="h-1 bg-[#1a2e1f] rounded-full overflow-hidden mt-0.5">
           <div
@@ -47,7 +47,7 @@ function Skeleton() {
       <div className="h-2.5 w-36 rounded-full shimmer" />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4 flex flex-col gap-2.5">
+          <div key={i} className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-2.5">
             <div className="h-2 rounded-full shimmer w-3/5" />
             <div className="h-6 rounded-full shimmer w-2/5" />
           </div>
@@ -111,7 +111,7 @@ export default function IndicatorsGrid({ candles, loading, asOf }) {
 
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
-      <span className="text-[11px] font-semibold text-[#4b6358] uppercase tracking-[0.12em]">Technical Indicators</span>
+      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Technical Indicators</span>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { title: 'RSI (14)',     value: rsiLabel,   sub: null,       badge: rsiBadge,   badgeColor: rsiBColor, bar: rsi,       barColor: rsi >= 70 ? '#e24b4a' : rsi <= 30 ? '#1D9E75' : '#4b6358' },
@@ -129,7 +129,7 @@ export default function IndicatorsGrid({ candles, loading, asOf }) {
 
       {/* Footer — data freshness */}
       {asOf && (
-        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[#1a2e1f]/60">
+        <div className="flex items-center justify-end pt-2 -mb-1 border-t border-[var(--c-border)]/60">
           <DataTimestamp asOf={asOf} source="Computed" />
         </div>
       )}

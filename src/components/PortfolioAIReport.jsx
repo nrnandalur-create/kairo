@@ -41,7 +41,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
     <div className="flex flex-col gap-4 pt-1 animate-enter">
 
       {/* Verdict header */}
-      <div className="flex items-center gap-4 bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-4">
+      <div className="flex items-center gap-4 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4">
         <ScoreRing score={report.overallScore ?? 0} color={cfg.color} />
         <div className="flex flex-col gap-1.5 min-w-0">
           <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
 
       {/* Strengths + Risks */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-3 flex flex-col gap-2">
+        <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-3 flex flex-col gap-2">
           <span className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest">Strengths</span>
           {(report.strengths ?? []).map((s, i) => (
             <div key={i} className="flex items-start gap-1.5">
@@ -67,7 +67,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
             </div>
           ))}
         </div>
-        <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-3 flex flex-col gap-2">
+        <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-3 flex flex-col gap-2">
           <span className="text-[9px] font-bold text-[#e24b4a] uppercase tracking-widest">Risks</span>
           {(report.risks ?? []).map((r, i) => (
             <div key={i} className="flex items-start gap-1.5">
@@ -81,7 +81,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
       {/* Holding signals */}
       {report.holdingSignals?.length > 0 && (
         <div className="flex flex-col gap-2">
-          <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Holding Signals</span>
+          <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Holding Signals</span>
           <div className="flex flex-col gap-1.5">
             {report.holdingSignals.map(sig => {
               const ac = ACTION_CONFIG[sig.action] ?? ACTION_CONFIG.HOLD
@@ -90,7 +90,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
                   <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
                     <button
                       onClick={() => onAnalyzeTicker?.(sig.ticker)}
-                      className="text-[11px] font-bold text-[#d1d9d5] hover:text-[#1D9E75] transition-colors w-12 text-left"
+                      className="text-[11px] font-bold text-[var(--c-text)] hover:text-[#1D9E75] transition-colors w-12 text-left"
                     >
                       {sig.ticker}
                     </button>
@@ -101,7 +101,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
                       {sig.action}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#4b6358] leading-relaxed">{sig.note}</p>
+                  <p className="text-[11px] text-[var(--c-text-faint)] leading-relaxed">{sig.note}</p>
                 </div>
               )
             })}
@@ -111,16 +111,16 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
 
       {/* Top recommendation */}
       {report.topRecommendation && (
-        <div className="bg-[#0a0f0d] border border-[#1D9E75]/20 rounded-xl p-3 flex flex-col gap-1.5">
+        <div className="bg-[var(--c-bg-deep)] border border-[#1D9E75]/20 rounded-xl p-3 flex flex-col gap-1.5">
           <span className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest">Top Recommendation</span>
-          <p className="text-xs text-[#d1d9d5] leading-relaxed">{report.topRecommendation}</p>
+          <p className="text-xs text-[var(--c-text)] leading-relaxed">{report.topRecommendation}</p>
         </div>
       )}
 
       {/* Rebalance idea */}
       {report.rebalanceIdea && (
-        <div className="bg-[#0a0f0d] border border-[#1a2e1f] rounded-xl p-3 flex flex-col gap-1.5">
-          <span className="text-[9px] font-bold text-[#4b6358] uppercase tracking-widest">Rebalance Idea</span>
+        <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-3 flex flex-col gap-1.5">
+          <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Rebalance Idea</span>
           <p className="text-xs text-[#8aab97] leading-relaxed">{report.rebalanceIdea}</p>
         </div>
       )}

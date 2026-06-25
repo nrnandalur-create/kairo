@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import ErrorBoundary from './components/ErrorBoundary'
 import KairoLogo from './components/KairoLogo'
 import TickerSearch from './components/TickerSearch'
@@ -57,7 +57,7 @@ function BookmarkButton({ saved, onToggle }) {
       className={`p-2 rounded-lg border transition-all duration-150 cursor-pointer ${
         saved
           ? 'bg-[#1D9E75]/10 border-[#1D9E75]/30 text-[#1D9E75] hover:bg-[#1D9E75]/20'
-          : 'bg-transparent border-[#1a2e1f] text-[#4b6358] hover:border-[#263d2c] hover:text-[#d1d9d5]'
+          : 'bg-transparent border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
       }`}
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -190,9 +190,16 @@ export default function App() {
     else toast.show('Search a ticker to view news')
   }
 
-  // User preferences (refresh interval + stale threshold)
+  // User preferences (refresh interval + stale threshold + theme + glass)
   const userPrefs = usePrefs()
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Apply theme + translucency to <html> so the CSS vars in index.css flip.
+  useEffect(() => {
+    const root = document.documentElement
+    root.setAttribute('data-theme', userPrefs.theme ?? 'dark')
+    root.style.setProperty('--glass-mult', String(userPrefs.glassMult ?? 1))
+  }, [userPrefs.theme, userPrefs.glassMult])
 
   // Background refresh — re-fetch market data only (not AI / fundamentals).
   // Interval is configurable via Settings. Skips when the tab is hidden
@@ -237,7 +244,7 @@ export default function App() {
     : null
 
   return (
-    <div className="min-h-screen bg-[#080c0a] text-[#d1d9d5] flex flex-col lg:pl-[60px] pb-16 lg:pb-9">
+    <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-text)] flex flex-col lg:pl-[60px] pb-16 lg:pb-9">
 
       <Nav
         activeKey={activeNav}
@@ -261,8 +268,8 @@ export default function App() {
           >
             <KairoLogo size={32} />
             <div className="flex flex-col leading-none">
-              <span className="font-serif font-bold text-white text-lg tracking-tight group-hover:text-[#d1d9d5] transition-colors">kairo</span>
-              <span className="text-[8px] text-[#4b6358] uppercase tracking-[0.25em] mt-0.5">Know the moment.</span>
+              <span className="font-serif font-bold text-white text-lg tracking-tight group-hover:text-[var(--c-text)] transition-colors">kairo</span>
+              <span className="text-[8px] text-[var(--c-text-faint)] uppercase tracking-[0.25em] mt-0.5">Know the moment.</span>
             </div>
           </button>
 
@@ -277,7 +284,7 @@ export default function App() {
               onClick={() => palette.setOpen(true)}
               aria-label="Open command palette"
               title="Search ticker or jump to section"
-              className="lg:hidden p-2 rounded-lg border border-[#1a2e1f] text-[#4b6358] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-colors cursor-pointer"
+              className="lg:hidden p-2 rounded-lg border border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-colors cursor-pointer"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
@@ -294,10 +301,10 @@ export default function App() {
                   )}
                   {ticker && marketData.profile?.name && <span className="text-[#263d2c]">·</span>}
                   {marketData.profile?.name && (
-                    <span className="text-sm text-[#d1d9d5] font-semibold">{marketData.profile.name}</span>
+                    <span className="text-sm text-[var(--c-text)] font-semibold">{marketData.profile.name}</span>
                   )}
                   {marketData.profile?.exchange && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#1a2e1f] text-[#4b6358] uppercase tracking-widest border border-[#263d2c]">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#1a2e1f] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
                       {marketData.profile.exchange}
                     </span>
                   )}
@@ -328,9 +335,9 @@ export default function App() {
             </div>
             <div>
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">kairo</h1>
-              <p className="text-[#4b6358] tracking-[0.3em] uppercase text-xs">Know the moment.</p>
+              <p className="text-[var(--c-text-faint)] tracking-[0.3em] uppercase text-xs">Know the moment.</p>
             </div>
-            <p className="text-[#4b6358] text-sm max-w-sm leading-relaxed">
+            <p className="text-[var(--c-text-faint)] text-sm max-w-sm leading-relaxed">
               Real-time market data, interactive charts, technical indicators, and AI-powered analysis — all from a single ticker.
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
@@ -343,7 +350,7 @@ export default function App() {
                   <button
                     key={sym}
                     onClick={() => handleSearch(sym)}
-                    className="text-[11px] font-bold px-2.5 py-1 bg-[#0f1611] border border-[#1a2e1f] rounded-lg text-[#4b6358] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150 cursor-pointer"
+                    className="text-[11px] font-bold px-2.5 py-1 bg-[#0f1611] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150 cursor-pointer"
                   >
                     {sym}
                   </button>
@@ -384,11 +391,11 @@ export default function App() {
         {loading.market && (
           <div className="flex flex-col items-center gap-5 py-32 animate-fade">
             <div className="relative w-10 h-10">
-              <div className="absolute inset-0 rounded-full border border-[#1a2e1f]" />
+              <div className="absolute inset-0 rounded-full border border-[var(--c-border)]" />
               <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#1D9E75] animate-spin" />
             </div>
-            <p className="text-sm text-[#4b6358]">
-              Analyzing <span className="text-[#d1d9d5] font-semibold">{ticker}</span>
+            <p className="text-sm text-[var(--c-text-faint)]">
+              Analyzing <span className="text-[var(--c-text)] font-semibold">{ticker}</span>
             </p>
           </div>
         )}
@@ -495,7 +502,7 @@ export default function App() {
       )}
 
       {/* ── Footer ── */}
-      <footer className="border-t border-[#1a2e1f] mt-auto">
+      <footer className="border-t border-[var(--c-border)] mt-auto">
         <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[#263d2c] text-center">
           Kairo is for informational purposes only and does not constitute financial advice.
           Market data via Finnhub · Alpha Vantage. AI analysis via Groq.
