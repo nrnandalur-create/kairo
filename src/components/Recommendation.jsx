@@ -53,7 +53,7 @@ export default function Recommendation({ data, loading, asOf }) {
   const riskClass  = RISK[data.riskLevel] ?? RISK.MEDIUM
 
   return (
-    <div className={`relative w-full bg-[#0f1611] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter overflow-hidden`}>
+    <div className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter overflow-hidden`}>
       {/* Ambient verdict glow */}
       <div
         className="absolute -top-8 -left-8 w-48 h-48 rounded-full blur-3xl pointer-events-none"

@@ -62,7 +62,7 @@ export default function SettingsModal({ open, onClose }) {
       className="fixed inset-0 z-[80] flex items-center justify-center p-4 animate-fade"
       onMouseDown={onClose}
     >
-      <div className="absolute inset-0 bg-[#040605]/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[var(--c-overlay)] backdrop-blur-sm" />
 
       <div
         role="dialog"

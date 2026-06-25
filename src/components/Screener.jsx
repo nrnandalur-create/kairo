@@ -114,7 +114,7 @@ function StockCard({ stock, indicatorLoading, onSelect }) {
   return (
     <div
       onClick={() => onSelect(stock.symbol)}
-      className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--c-border-strong)] hover:bg-[#0c1410] transition-all duration-150 animate-enter"
+      className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)] transition-all duration-150 animate-enter"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">

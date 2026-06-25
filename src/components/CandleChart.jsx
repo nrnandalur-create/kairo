@@ -146,7 +146,7 @@ export default function CandleChart({ candles, synthetic }) {
                 className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all duration-150 cursor-pointer active:scale-[0.94] ${
                   tf === label
                     ? 'bg-[#1D9E75] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
-                    : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[#0f1611]'
+                    : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-card)]'
                 }`}
               >
                 {label}

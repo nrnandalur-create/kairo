@@ -23,7 +23,7 @@ function IndexTile({ symbol, price, changePct }) {
   const bgBar = !valid ? '#1a2e1f' : up ? 'rgba(29,158,117,0.08)' : 'rgba(226,75,74,0.08)'
 
   return (
-    <div className="flex-1 flex flex-col gap-1.5 px-6 py-5 transition-colors duration-150 hover:bg-[#0c1410]" style={{ background: bgBar }}>
+    <div className="flex-1 flex flex-col gap-1.5 px-6 py-5 transition-colors duration-150 hover:bg-[var(--c-hover-bg)]" style={{ background: bgBar }}>
       <div className="flex items-center gap-1.5">
         <span className="text-[10px] font-bold text-[var(--c-text)] uppercase tracking-[0.1em]">{symbol}</span>
         <span className="text-[9px] text-[var(--c-text-faint)] hidden sm:inline">{INDEX_NAMES[symbol]}</span>
@@ -43,7 +43,7 @@ function MoverRow({ symbol, price, changePct, rank }) {
     : 'bg-[#e24b4a]/10 border-[#e24b4a]/25 text-[#e24b4a]'
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 -mx-1 px-1 rounded-md hover:bg-[#0c1410] transition-colors duration-150">
+    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 -mx-1 px-1 rounded-md hover:bg-[var(--c-hover-bg)] transition-colors duration-150">
       <span className="text-[10px] text-[#263d2c] tabular-nums w-4 shrink-0 text-right">{rank}</span>
       <span className="text-sm font-bold text-[var(--c-text)] w-14 shrink-0">{symbol}</span>
       <span className="text-sm tabular-nums text-[var(--c-text-faint)] flex-1">${fmtPrice(price)}</span>
@@ -169,7 +169,7 @@ export default function MarketPulse() {
         </div>
 
         {/* Market Sentiment */}
-        <div className={`bg-[#0f1611] border ${moodBorder} rounded-2xl p-5 flex flex-col gap-4`}>
+        <div className={`bg-[var(--c-card)] border ${moodBorder} rounded-2xl p-5 flex flex-col gap-4`}>
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Market Sentiment</span>
           <span className="text-5xl font-black leading-none" style={{ color: moodColor }}>{mood}</span>
           <p className="text-xs text-[var(--c-text-faint)] leading-relaxed">

@@ -18,7 +18,7 @@ function LevelRow({ price, level, isResistance }) {
   const labelColor = isResistance ? 'text-[#e24b4a]' : 'text-[#1D9E75]'
 
   return (
-    <div className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-[#0c1410] transition-colors duration-150">
+    <div className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-[var(--c-hover-bg)] transition-colors duration-150">
       <span className={`text-xs font-semibold tabular-nums w-16 shrink-0 text-right ${labelColor}`}>
         ${fmt(level)}
       </span>

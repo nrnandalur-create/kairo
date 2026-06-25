@@ -103,13 +103,13 @@ export default function PriceTargets({ data, currentPrice, loading }) {
             <div className="flex flex-col gap-1.5">
               <div className="relative h-1.5 bg-[var(--c-chip-bg)] rounded-full mx-2">
                 <div
-                  className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#1D9E75] border-[3px] border-[#0f1611] shadow"
+                  className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#1D9E75] border-[3px] border-[var(--c-card)] shadow"
                   style={{ left: `${meanPct}%`, transform: 'translate(-50%, -50%)' }}
                   title={`Target: ${fmtPrice(mean)}`}
                 />
                 {currentPct != null && (
                   <div
-                    className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#d1d9d5] border-[3px] border-[#0f1611] shadow"
+                    className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#d1d9d5] border-[3px] border-[var(--c-card)] shadow"
                     style={{ left: `${currentPct}%`, transform: 'translate(-50%, -50%)' }}
                     title={`Current: ${fmtPrice(currentPrice)}`}
                   />

@@ -281,7 +281,7 @@ function ResultRow({ item, active, onSelect }) {
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-left transition-colors ${
         active
           ? 'bg-[#1D9E75]/10 border border-[#1D9E75]/25'
-          : 'border border-transparent hover:bg-[#0c1410]'
+          : 'border border-transparent hover:bg-[var(--c-hover-bg)]'
       }`}
     >
       {/* Leading icon: ticker mono / section glyph / search magnifier */}
@@ -469,7 +469,7 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
       onMouseDown={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-[#040605]/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[var(--c-overlay)] backdrop-blur-sm" />
 
       {/* Modal */}
       <div

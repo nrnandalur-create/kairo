@@ -33,6 +33,12 @@
   --c-input-border:      #1a2e1f;
   --c-input-placeholder: #5d7068;   /* readable but not competing */
 
+  /* Subtle row hover bg — slightly lifted from the card surface */
+  --c-hover-bg:          #0c1410;
+
+  /* Modal backdrop dimming */
+  --c-overlay:           rgba(4, 6, 5, 0.7);
+
   /* Glass tokens — RGB triplets used by rgba() in the glass classes,
      plus border + highlight + shadow alphas. */
   --c-glass-rgb:         8, 12, 10;
@@ -73,6 +79,12 @@
   --c-input-bg:          #f0f5ed;
   --c-input-border:      #c5d3bd;
   --c-input-placeholder: #8a9b91;   /* visible but recedes from typed text */
+
+  /* Light hover row — slightly darker than card so hover reads as "lifted" */
+  --c-hover-bg:          #ecf2e9;
+
+  /* Light modal backdrop — soft sage dim, NOT dark */
+  --c-overlay:           rgba(70, 100, 80, 0.30);
 
   /* Glass — sage-tinted, not pure white. This is the key fix: glass
      panels over a near-white bg looked like flat translucent layers

@@ -190,7 +190,7 @@ function NoteInline({ symbol, note, onSave }) {
         onClick={e => e.stopPropagation()}
         maxLength={120}
         placeholder="Add a note…"
-        className="w-full text-[10px] text-[#8aab97] bg-[#0a130c] border border-[#1D9E75]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
+        className="w-full text-[10px] text-[#8aab97] bg-[var(--c-input-bg)] border border-[#1D9E75]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
       />
     )
   }
@@ -232,7 +232,7 @@ function WatchlistTile({
 
   return (
     <div
-      className="group relative flex items-center gap-2 glass-card rounded-xl px-4 py-3 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410] transition-all duration-150 cursor-pointer"
+      className="group relative flex items-center gap-2 glass-card rounded-xl px-4 py-3 hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)] transition-all duration-150 cursor-pointer"
       onClick={() => onSelect(symbol)}
     >
       <div className="flex flex-col gap-1 min-w-0 flex-1">

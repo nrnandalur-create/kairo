@@ -94,7 +94,7 @@ function SidebarItem({ item, active, onClick }) {
       className={`relative flex items-center gap-3.5 w-full pl-[18px] pr-4 py-3 transition-colors duration-150 cursor-pointer ${
         active
           ? 'text-[#1D9E75]'
-          : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[#0d1510]'
+          : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-input-bg)]'
       }`}
     >
       {active && (

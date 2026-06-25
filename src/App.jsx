@@ -350,7 +350,7 @@ export default function App() {
                   <button
                     key={sym}
                     onClick={() => handleSearch(sym)}
-                    className="text-[11px] font-bold px-2.5 py-1 bg-[#0f1611] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150 cursor-pointer"
+                    className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150 cursor-pointer"
                   >
                     {sym}
                   </button>

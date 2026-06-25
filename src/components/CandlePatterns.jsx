@@ -95,7 +95,7 @@ function ReliabilityPip({ pct }) {
 function PatternCard({ pattern }) {
   const s = SIGNAL[pattern.signal] ?? SIGNAL.neutral
   return (
-    <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410]">
+    <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)]">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="shrink-0">{getPatternSvg(pattern.name)}</div>
