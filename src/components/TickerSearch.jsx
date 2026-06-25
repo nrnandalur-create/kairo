@@ -97,7 +97,7 @@ export default function TickerSearch({ onSearch, loading }) {
           disabled={loading}
           autoComplete="off"
           spellCheck={false}
-          className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-all duration-200 focus:border-[#1D9E75] focus:bg-[var(--c-input-bg)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-all duration-200 focus:border-[#22B585] focus:bg-[var(--c-input-bg)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
         />
 
         {/* Dropdown */}
@@ -121,7 +121,7 @@ export default function TickerSearch({ onSearch, loading }) {
                   onMouseEnter={() => setHighlighted(i)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
                     i > 0 ? 'border-t border-[var(--c-border)]' : ''
-                  } ${i === highlighted ? 'bg-[#1D9E75]/10' : 'hover:bg-[var(--c-hover-bg)]'}`}
+                  } ${i === highlighted ? 'bg-[#22B585]/10' : 'hover:bg-[var(--c-hover-bg)]'}`}
                 >
                   <span className="text-sm font-bold text-[var(--c-text)] shrink-0 w-16">{r.symbol}</span>
                   <span className="text-xs text-[var(--c-text-faint)] truncate">{r.name}</span>
@@ -135,7 +135,7 @@ export default function TickerSearch({ onSearch, loading }) {
       <button
         type="submit"
         disabled={loading || !value.trim()}
-        className="bg-[#1D9E75] hover:bg-[#20b382] active:scale-[0.96] active:bg-[#178f68] disabled:opacity-35 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer select-none whitespace-nowrap"
+        className="bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.96] active:bg-[#178f68] disabled:opacity-35 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer select-none whitespace-nowrap"
       >
         {loading ? '…' : 'Analyze'}
       </button>

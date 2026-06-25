@@ -5,8 +5,8 @@ function TypeBadge({ type }) {
   return (
     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-widest ${
       isCall
-        ? 'bg-[#1D9E75]/10 text-[#1D9E75]'
-        : 'bg-[#e24b4a]/10 text-[#e24b4a]'
+        ? 'bg-[#22B585]/10 text-[#22B585]'
+        : 'bg-[#ef5454]/10 text-[#ef5454]'
     }`}>
       {type}
     </span>
@@ -24,7 +24,7 @@ export default function OptionsScanner({ data }) {
         <div className="flex items-center gap-3">
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Options Flow</span>
           {unusual.length > 0 && (
-            <span className="text-[10px] font-bold text-[#d4922a] bg-[#d4922a]/10 border border-[#d4922a]/25 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-[#e3a234] bg-[#e3a234]/10 border border-[#e3a234]/25 px-2 py-0.5 rounded-full">
               {unusual.length} unusual
             </span>
           )}
@@ -50,7 +50,7 @@ export default function OptionsScanner({ data }) {
             {data.map((opt, i) => (
               <tr
                 key={i}
-                className={`border-b border-[var(--c-border)]/60 last:border-0 ${opt.unusual ? 'bg-[#d4922a]/5' : ''}`}
+                className={`border-b border-[var(--c-border)]/60 last:border-0 ${opt.unusual ? 'bg-[#e3a234]/5' : ''}`}
               >
                 <td className="py-3 px-2 first:pl-1">
                   <TypeBadge type={opt.type} />
@@ -60,7 +60,7 @@ export default function OptionsScanner({ data }) {
                 <td className="py-3 px-2 tabular-nums text-[var(--c-text)]">{opt.oi}</td>
                 <td className="py-3 px-2 font-semibold tabular-nums text-[var(--c-text)]">{opt.premium}</td>
                 <td className="py-3 px-2 last:pr-1">
-                  <span className={`italic ${opt.unusual ? 'text-[#d4922a]' : 'text-[var(--c-text-faint)]'}`}>
+                  <span className={`italic ${opt.unusual ? 'text-[#e3a234]' : 'text-[var(--c-text-faint)]'}`}>
                     {opt.note}
                   </span>
                 </td>

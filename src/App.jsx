@@ -56,7 +56,7 @@ function BookmarkButton({ saved, onToggle }) {
       title={saved ? 'Remove from watchlist' : 'Add to watchlist'}
       className={`p-2 rounded-lg border transition-all duration-150 cursor-pointer ${
         saved
-          ? 'bg-[#1D9E75]/10 border-[#1D9E75]/30 text-[#1D9E75] hover:bg-[#1D9E75]/20'
+          ? 'bg-[#22B585]/10 border-[#22B585]/30 text-[#22B585] hover:bg-[#22B585]/20'
           : 'bg-transparent border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
       }`}
     >
@@ -284,7 +284,7 @@ export default function App() {
               onClick={() => palette.setOpen(true)}
               aria-label="Open command palette"
               title="Search ticker or jump to section"
-              className="lg:hidden p-2 rounded-lg border border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-colors cursor-pointer"
+              className="lg:hidden p-2 rounded-lg border border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-colors cursor-pointer"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
@@ -330,7 +330,7 @@ export default function App() {
             <HeroMarketBackdrop />
             {/* Ambient glow behind logo */}
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-48 h-48 rounded-full bg-[#1D9E75] opacity-[0.06] blur-3xl pointer-events-none" />
+              <div className="absolute w-48 h-48 rounded-full bg-[#22B585] opacity-[0.06] blur-3xl pointer-events-none" />
               <KairoLogo size={60} />
             </div>
             <div>
@@ -350,7 +350,7 @@ export default function App() {
                   <button
                     key={sym}
                     onClick={() => handleSearch(sym)}
-                    className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150 cursor-pointer"
+                    className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150 cursor-pointer"
                   >
                     {sym}
                   </button>
@@ -392,7 +392,7 @@ export default function App() {
           <div className="flex flex-col items-center gap-5 py-32 animate-fade">
             <div className="relative w-10 h-10">
               <div className="absolute inset-0 rounded-full border border-[var(--c-border)]" />
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#1D9E75] animate-spin" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#22B585] animate-spin" />
             </div>
             <p className="text-sm text-[var(--c-text-faint)]">
               Analyzing <span className="text-[var(--c-text)] font-semibold">{ticker}</span>
@@ -402,7 +402,7 @@ export default function App() {
 
         {/* Error */}
         {error && (
-          <div className="bg-[#e24b4a]/10 border border-[#e24b4a]/25 rounded-2xl p-5 text-sm text-[#e24b4a] flex items-start gap-3">
+          <div className="bg-[#ef5454]/10 border border-[#ef5454]/25 rounded-2xl p-5 text-sm text-[#ef5454] flex items-start gap-3">
             <span className="shrink-0 mt-0.5">⚠</span>
             <span>{error}</span>
           </div>

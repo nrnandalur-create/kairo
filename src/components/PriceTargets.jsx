@@ -9,11 +9,11 @@ function fmtPct(n) {
 }
 
 const CONSENSUS = {
-  strong_buy:   { label: 'Strong Buy',    color: '#1D9E75' },
-  buy:          { label: 'Buy',           color: '#1D9E75' },
-  hold:         { label: 'Hold',          color: '#d4922a' },
-  underperform: { label: 'Underperform',  color: '#e24b4a' },
-  sell:         { label: 'Sell',          color: '#e24b4a' },
+  strong_buy:   { label: 'Strong Buy',    color: '#22B585' },
+  buy:          { label: 'Buy',           color: '#22B585' },
+  hold:         { label: 'Hold',          color: '#e3a234' },
+  underperform: { label: 'Underperform',  color: '#ef5454' },
+  sell:         { label: 'Sell',          color: '#ef5454' },
 }
 
 export default function PriceTargets({ data, currentPrice, loading }) {
@@ -92,7 +92,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
             <span className="text-2xl font-black tabular-nums text-[var(--c-text)]">{fmtPrice(mean)}</span>
             <span className="text-xs text-[var(--c-text-faint)]">consensus</span>
             {upside != null && (
-              <span className={`ml-auto text-sm font-bold tabular-nums shrink-0 ${isUpside ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
+              <span className={`ml-auto text-sm font-bold tabular-nums shrink-0 ${isUpside ? 'text-[#22B585]' : 'text-[#ef5454]'}`}>
                 {fmtPct(upside)}
               </span>
             )}
@@ -103,7 +103,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
             <div className="flex flex-col gap-1.5">
               <div className="relative h-1.5 bg-[var(--c-chip-bg)] rounded-full mx-2">
                 <div
-                  className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#1D9E75] border-[3px] border-[var(--c-card)] shadow"
+                  className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#22B585] border-[3px] border-[var(--c-card)] shadow"
                   style={{ left: `${meanPct}%`, transform: 'translate(-50%, -50%)' }}
                   title={`Target: ${fmtPrice(mean)}`}
                 />
@@ -125,7 +125,7 @@ export default function PriceTargets({ data, currentPrice, loading }) {
                   Current {currentPrice != null ? fmtPrice(currentPrice) : ''}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#1D9E75] shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-[#22B585] shrink-0" />
                   Target {fmtPrice(mean)}
                 </span>
               </div>
@@ -136,26 +136,26 @@ export default function PriceTargets({ data, currentPrice, loading }) {
           {totalTrend > 0 && (
             <div className="flex flex-col gap-1.5">
               <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
-                {bullPct    > 0 && <div className="bg-[#1D9E75]"    style={{ width: `${bullPct}%`    }} title={`Buy: ${trend.strongBuy + trend.buy}`} />}
-                {neutralPct > 0 && <div className="bg-[#d4922a]"    style={{ width: `${neutralPct}%` }} title={`Hold: ${trend.hold}`} />}
-                {bearPct    > 0 && <div className="bg-[#e24b4a]"    style={{ width: `${bearPct}%`    }} title={`Sell: ${trend.sell + trend.strongSell}`} />}
+                {bullPct    > 0 && <div className="bg-[#22B585]"    style={{ width: `${bullPct}%`    }} title={`Buy: ${trend.strongBuy + trend.buy}`} />}
+                {neutralPct > 0 && <div className="bg-[#e3a234]"    style={{ width: `${neutralPct}%` }} title={`Hold: ${trend.hold}`} />}
+                {bearPct    > 0 && <div className="bg-[#ef5454]"    style={{ width: `${bearPct}%`    }} title={`Sell: ${trend.sell + trend.strongSell}`} />}
               </div>
               <div className="flex items-center gap-3 text-[9px] text-[var(--c-text-faint)]">
                 {bullPct > 0 && (
                   <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#22B585] shrink-0" />
                     Buy {trend.strongBuy + trend.buy}
                   </span>
                 )}
                 {neutralPct > 0 && (
                   <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4922a] shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#e3a234] shrink-0" />
                     Hold {trend.hold}
                   </span>
                 )}
                 {bearPct > 0 && (
                   <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#e24b4a] shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ef5454] shrink-0" />
                     Sell {trend.sell + trend.strongSell}
                   </span>
                 )}

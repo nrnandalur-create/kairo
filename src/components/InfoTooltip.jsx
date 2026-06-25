@@ -24,7 +24,7 @@ export default function InfoTooltip({ children, label = 'About this data', side 
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-[var(--c-border-strong)] text-[var(--c-text-muted)] hover:text-[#1D9E75] hover:border-[#1D9E75]/50 transition-colors cursor-help align-middle ml-1.5"
+        className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-[var(--c-border-strong)] text-[var(--c-text-muted)] hover:text-[#22B585] hover:border-[#22B585]/50 transition-colors cursor-help align-middle ml-1.5"
       >
         {/* Universal "info" glyph — dot + stem, more readable than "?" at this size */}
         <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">

@@ -36,7 +36,7 @@ function Bubble({ role, content }) {
       <div
         className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed ${
           isUser
-            ? 'bg-[#1D9E75]/12 border border-[#1D9E75]/25 text-[var(--c-text)] rounded-br-md'
+            ? 'bg-[#22B585]/12 border border-[#22B585]/25 text-[var(--c-text)] rounded-br-md'
             : 'bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text)]/90 rounded-bl-md'
         }`}
       >
@@ -50,9 +50,9 @@ function ThinkingBubble() {
   return (
     <div className="flex justify-start">
       <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" />
-        <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" style={{ animationDelay: '120ms' }} />
-        <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" style={{ animationDelay: '240ms' }} />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]/60 animate-pulse" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]/60 animate-pulse" style={{ animationDelay: '120ms' }} />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]/60 animate-pulse" style={{ animationDelay: '240ms' }} />
       </div>
     </div>
   )
@@ -130,7 +130,7 @@ export default function AIChat({ ticker, context }) {
           <button
             type="button"
             onClick={clear}
-            className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#e24b4a] transition-colors cursor-pointer"
+            className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#ef5454] transition-colors cursor-pointer"
           >
             Clear
           </button>
@@ -158,7 +158,7 @@ export default function AIChat({ ticker, context }) {
                 type="button"
                 onClick={() => send(s)}
                 disabled={loading}
-                className="px-2.5 py-1.5 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)] text-[11.5px] text-[var(--c-text-muted)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                className="px-2.5 py-1.5 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)] text-[11.5px] text-[var(--c-text-muted)] hover:border-[#22B585]/40 hover:text-[#22B585] cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {s}
               </button>
@@ -178,13 +178,13 @@ export default function AIChat({ ticker, context }) {
           placeholder={loading ? 'Thinking…' : `Ask about ${ticker}…`}
           maxLength={MAX_QUESTION}
           disabled={loading}
-          className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#1D9E75] transition-colors disabled:opacity-50"
+          className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors disabled:opacity-50"
         />
         <button
           type="button"
           onClick={() => send()}
           disabled={!input.trim() || loading}
-          className="bg-[#1D9E75] hover:bg-[#20b382] active:scale-[0.96] disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+          className="bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.96] disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
         >
           Send
         </button>

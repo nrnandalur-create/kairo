@@ -12,7 +12,7 @@ import DataTimestamp from './DataTimestamp'
 //   ▸ ⌘K hint to open the command palette
 export default function StatusBar({ ticker, asOf, onOpenPalette }) {
   return (
-    <div className="glass hidden lg:flex fixed bottom-0 left-[60px] right-0 h-9 z-30 items-center gap-3 px-4 pointer-events-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}>
+    <div data-statusbar className="glass hidden lg:flex fixed bottom-0 left-[60px] right-0 h-9 z-30 items-center gap-3 px-4 pointer-events-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none', borderLeft: 'none', borderRight: 'none', transition: 'left 200ms ease-out, background 200ms ease' }}>
       {/* Ticker chip */}
       <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-[var(--c-text)] tabular-nums">
         {ticker ?? '—'}
@@ -40,7 +40,7 @@ export default function StatusBar({ ticker, asOf, onOpenPalette }) {
         <button
           type="button"
           onClick={onOpenPalette}
-          className="flex items-center gap-1.5 text-[10.5px] font-mono tracking-[0.1em] text-[var(--c-text-muted)] hover:text-[#1D9E75] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-[10.5px] font-mono tracking-[0.1em] text-[var(--c-text-muted)] hover:text-[#22B585] transition-colors cursor-pointer"
           title="Open command palette"
         >
           <kbd className="font-mono text-[10.5px] font-bold border border-[var(--c-border-strong)] rounded px-1.5 py-0.5 leading-none">⌘K</kbd>

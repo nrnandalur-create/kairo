@@ -59,10 +59,10 @@ export default function EarningsCalendar({ data, loading }) {
         <>
           {/* Next upcoming earnings */}
           {next ? (
-            <div className="bg-[#1D9E75]/5 border border-[#1D9E75]/20 rounded-xl p-4 flex flex-col gap-2">
+            <div className="bg-[#22B585]/5 border border-[#22B585]/20 rounded-xl p-4 flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse shrink-0" />
-                <span className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest">Next Earnings</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse shrink-0" />
+                <span className="text-[9px] font-bold text-[#22B585] uppercase tracking-widest">Next Earnings</span>
               </div>
               <div className="flex items-start justify-between gap-2 flex-wrap">
                 <div>
@@ -70,7 +70,7 @@ export default function EarningsCalendar({ data, loading }) {
                   <span className="text-xs text-[var(--c-text-faint)] ml-2">{fmtDate(next.date)}</span>
                 </div>
                 {next.hour && (
-                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#1D9E75]/10 text-[#1D9E75] border border-[#1D9E75]/20 uppercase tracking-widest shrink-0">
+                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#22B585]/10 text-[#22B585] border border-[#22B585]/20 uppercase tracking-widest shrink-0">
                     {HOUR_LABEL[next.hour] ?? next.hour}
                   </span>
                 )}
@@ -115,16 +115,16 @@ export default function EarningsCalendar({ data, loading }) {
                           </span>
                         )}
                         {e.epsActual != null && (
-                          <span className={`text-[10px] font-bold tabular-nums ${beat ? 'text-[#1D9E75]' : miss ? 'text-[#e24b4a]' : 'text-[var(--c-text)]'}`}>
+                          <span className={`text-[10px] font-bold tabular-nums ${beat ? 'text-[#22B585]' : miss ? 'text-[#ef5454]' : 'text-[var(--c-text)]'}`}>
                             {fmtEps(e.epsActual)}
                           </span>
                         )}
                         {hasBoth && (
                           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-widest shrink-0 ${
                             beat
-                              ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
+                              ? 'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25'
                               : miss
-                              ? 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
+                              ? 'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25'
                               : 'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]'
                           }`}>
                             {beat ? 'Beat' : miss ? 'Miss' : 'Met'}

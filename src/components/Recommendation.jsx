@@ -2,15 +2,15 @@ import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
 
 const CONFIG = {
-  BUY:  { label: 'BUY',  color: '#1D9E75', bg: 'bg-[#1D9E75]/10', border: 'border-[#1D9E75]/30', bar: '#1D9E75', glow: 'rgba(29,158,117,0.07)' },
-  HOLD: { label: 'HOLD', color: '#d4922a', bg: 'bg-[#d4922a]/10',  border: 'border-[#d4922a]/30', bar: '#d4922a', glow: 'rgba(212,146,42,0.07)'  },
-  SELL: { label: 'SELL', color: '#e24b4a', bg: 'bg-[#e24b4a]/10',  border: 'border-[#e24b4a]/30', bar: '#e24b4a', glow: 'rgba(226,75,74,0.07)'   },
+  BUY:  { label: 'BUY',  color: '#22B585', bg: 'bg-[#22B585]/10', border: 'border-[#22B585]/30', bar: '#22B585', glow: 'rgba(29,158,117,0.07)' },
+  HOLD: { label: 'HOLD', color: '#e3a234', bg: 'bg-[#e3a234]/10',  border: 'border-[#e3a234]/30', bar: '#e3a234', glow: 'rgba(212,146,42,0.07)'  },
+  SELL: { label: 'SELL', color: '#ef5454', bg: 'bg-[#ef5454]/10',  border: 'border-[#ef5454]/30', bar: '#ef5454', glow: 'rgba(226,75,74,0.07)'   },
 }
 
 const RISK = {
-  LOW:    'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
-  MEDIUM: 'bg-[#d4922a]/10 text-[#d4922a] border-[#d4922a]/25',
-  HIGH:   'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
+  LOW:    'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25',
+  MEDIUM: 'bg-[#e3a234]/10 text-[#e3a234] border-[#e3a234]/25',
+  HIGH:   'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25',
 }
 
 function SkeletonLine({ w = 'full' }) {
@@ -21,7 +21,7 @@ function Skeleton() {
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+        <div className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
         <div className="h-2.5 w-40 rounded-full shimmer" />
       </div>
       <div className="h-16 w-36 rounded-xl shimmer" />
@@ -112,7 +112,7 @@ export default function Recommendation({ data, loading, asOf }) {
           {data.stopLoss && (
             <div className="flex flex-col gap-1">
               <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Stop Loss</p>
-              <p className="text-base font-bold tabular-nums" style={{ color: '#e24b4a' }}>${Number(data.stopLoss).toFixed(2)}</p>
+              <p className="text-base font-bold tabular-nums" style={{ color: '#ef5454' }}>${Number(data.stopLoss).toFixed(2)}</p>
             </div>
           )}
         </div>

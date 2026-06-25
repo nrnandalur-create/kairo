@@ -80,7 +80,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
               </span>
             )}
             {loading && (
-              <div className="w-3 h-3 rounded-full border border-transparent border-t-[#1D9E75] animate-spin" />
+              <div className="w-3 h-3 rounded-full border border-transparent border-t-[#22B585] animate-spin" />
             )}
           </div>
           <button onClick={onClose} className="text-[var(--c-text-faint)] hover:text-[var(--c-text)] transition-colors p-1 cursor-pointer">
@@ -131,7 +131,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
                   <div className="h-[3px] bg-[var(--c-input-bg)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${barW}%`, background: up ? '#1D9E75' : '#e24b4a' }}
+                      style={{ width: `${barW}%`, background: up ? '#22B585' : '#ef5454' }}
                     />
                   </div>
                 </button>

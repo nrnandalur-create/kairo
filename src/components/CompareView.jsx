@@ -22,8 +22,8 @@ function fmtPrice(n) {
   return `$${Number(n).toFixed(2)}`
 }
 
-const SIGNAL_COLOR = { BUY: '#1D9E75', SELL: '#e24b4a', HOLD: '#d4922a' }
-const RISK_COLOR   = { LOW: '#1D9E75', HIGH: '#e24b4a', MEDIUM: '#d4922a' }
+const SIGNAL_COLOR = { BUY: '#22B585', SELL: '#ef5454', HOLD: '#e3a234' }
+const RISK_COLOR   = { LOW: '#22B585', HIGH: '#ef5454', MEDIUM: '#e3a234' }
 
 // ─── per-side state hook ──────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ function SidePanel({ ticker, loading, data, error }) {
   )
 
   if (error) return (
-    <div className="rounded-xl border border-[#e24b4a]/25 bg-[#e24b4a]/05 p-4 text-xs text-[#e24b4a]">
+    <div className="rounded-xl border border-[#ef5454]/25 bg-[#ef5454]/05 p-4 text-xs text-[#ef5454]">
       {error}
     </div>
   )
@@ -101,15 +101,15 @@ function SidePanel({ ticker, loading, data, error }) {
   const { quote, profile, metrics, rsi, macd, bb, ai } = data
   const up     = (quote.dp ?? 0) >= 0
   const sc     = ai ? SIGNAL_COLOR[ai.verdict] ?? '#d1d9d5' : null
-  const rc     = ai ? RISK_COLOR[ai.riskLevel]  ?? '#d4922a' : null
+  const rc     = ai ? RISK_COLOR[ai.riskLevel]  ?? '#e3a234' : null
 
   const rsiZone = rsi == null ? '—'
     : rsi >= 70 ? 'Overbought'
     : rsi <= 30 ? 'Oversold'
     : 'Neutral'
   const rsiColor = rsi == null ? '#4b6358'
-    : rsi >= 70 ? '#e24b4a'
-    : rsi <= 30 ? '#1D9E75'
+    : rsi >= 70 ? '#ef5454'
+    : rsi <= 30 ? '#22B585'
     : '#d1d9d5'
 
   const hi52 = metrics?.metric?.['52WeekHigh']
@@ -128,7 +128,7 @@ function SidePanel({ ticker, loading, data, error }) {
         </div>
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-black text-[var(--c-text)] tabular-nums">{fmtPrice(quote.c)}</span>
-          <span className={`text-sm font-bold tabular-nums ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
+          <span className={`text-sm font-bold tabular-nums ${up ? 'text-[#22B585]' : 'text-[#ef5454]'}`}>
             {up ? '+' : ''}{fmt(quote.dp)}%
           </span>
         </div>
@@ -168,7 +168,7 @@ function SidePanel({ ticker, loading, data, error }) {
             </div>
             <div className="flex-1 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg p-2">
               <div className="text-[9px] text-[var(--c-text-faint)] uppercase mb-1">Stop</div>
-              <div className="text-xs font-bold text-[#e24b4a]">{fmtPrice(ai.stopLoss)}</div>
+              <div className="text-xs font-bold text-[#ef5454]">{fmtPrice(ai.stopLoss)}</div>
             </div>
             <div className="flex-1 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg p-2">
               <div className="text-[9px] text-[var(--c-text-faint)] uppercase mb-1">Risk</div>
@@ -194,15 +194,15 @@ function SidePanel({ ticker, loading, data, error }) {
         <MetricRow
           label="MACD"
           value={macd ? (macd.bullish ? 'Bullish' : 'Bearish') : '—'}
-          highlight={macd ? (macd.bullish ? '#1D9E75' : '#e24b4a') : undefined}
+          highlight={macd ? (macd.bullish ? '#22B585' : '#ef5454') : undefined}
         />
         <MetricRow
           label="Bollinger %"
           value={bb ? `${bb.pct}%` : '—'}
           highlight={
             bb == null ? undefined
-              : bb.pct >= 80 ? '#e24b4a'
-              : bb.pct <= 20 ? '#1D9E75'
+              : bb.pct >= 80 ? '#ef5454'
+              : bb.pct <= 20 ? '#22B585'
               : '#d1d9d5'
           }
         />
@@ -214,7 +214,7 @@ function SidePanel({ ticker, loading, data, error }) {
             </div>
             <div className="h-1.5 bg-[var(--c-input-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#1D9E75] rounded-full"
+                className="h-full bg-[#22B585] rounded-full"
                 style={{ width: `${rangePos * 100}%` }}
               />
             </div>
@@ -256,7 +256,7 @@ export default function CompareView({ open, onClose }) {
 
   if (!open) return null
 
-  const inputCls = "flex-1 min-w-0 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#1D9E75] transition-colors uppercase"
+  const inputCls = "flex-1 min-w-0 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors uppercase"
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--c-bg)] flex flex-col" onClick={e => e.stopPropagation()}>
@@ -288,7 +288,7 @@ export default function CompareView({ open, onClose }) {
           />
           <button
             onClick={handleCompare}
-            className="shrink-0 bg-[#1D9E75] hover:bg-[#20b382] active:scale-[0.97] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+            className="shrink-0 bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.97] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
           >
             Compare
           </button>

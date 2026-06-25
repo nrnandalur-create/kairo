@@ -280,7 +280,7 @@ function ResultRow({ item, active, onSelect }) {
       data-active={active || undefined}
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-left transition-colors ${
         active
-          ? 'bg-[#1D9E75]/10 border border-[#1D9E75]/25'
+          ? 'bg-[#22B585]/10 border border-[#22B585]/25'
           : 'border border-transparent hover:bg-[var(--c-hover-bg)]'
       }`}
     >
@@ -288,7 +288,7 @@ function ResultRow({ item, active, onSelect }) {
       <span className={`shrink-0 w-9 h-9 rounded-md border flex items-center justify-center font-mono text-[10px] font-bold tabular-nums ${
         item.kind === 'section'
           ? 'border-[var(--c-border)] bg-[var(--c-input-bg)] text-[var(--c-text-faint)]'
-          : 'border-[#1D9E75]/25 bg-[#1D9E75]/5 text-[#1D9E75]'
+          : 'border-[#22B585]/25 bg-[#22B585]/5 text-[#22B585]'
       }`}>
         {item.kind === 'ticker' || item.kind === 'recent' ? item.sym
           : item.kind === 'search' ? (
@@ -304,7 +304,7 @@ function ResultRow({ item, active, onSelect }) {
       <span className="flex-1 min-w-0 flex flex-col">
         <span className="text-sm font-semibold text-[var(--c-text)] truncate">
           {item.kind === 'ticker' ? `${item.sym}`
-            : item.kind === 'search' ? <>Search for <span className="font-mono text-[#1D9E75]">{item.sym}</span></>
+            : item.kind === 'search' ? <>Search for <span className="font-mono text-[#22B585]">{item.sym}</span></>
             : item.label}
           {item.kind === 'ticker' && item.name && (
             <span className="ml-2 text-[var(--c-text-faint)] font-normal">{item.name}</span>
@@ -324,7 +324,7 @@ function ResultRow({ item, active, onSelect }) {
         <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-[#5d7868]">Look up</span>
       )}
       {active && (
-        <span className="shrink-0 font-mono text-[11px] text-[#1D9E75]">↵</span>
+        <span className="shrink-0 font-mono text-[11px] text-[#22B585]">↵</span>
       )}
     </button>
   )

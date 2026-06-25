@@ -46,7 +46,7 @@ function calcPortfolio(holdings, quotes) {
     ? 'LOW'
     : 'MEDIUM'
 
-  const riskColors = { LOW: '#1D9E75', MEDIUM: '#d4922a', HIGH: '#e24b4a' }
+  const riskColors = { LOW: '#22B585', MEDIUM: '#e3a234', HIGH: '#ef5454' }
 
   return { items: withWeight, total, todayPnL, weightedChangePct, healthScore, riskLevel, riskColor: riskColors[riskLevel] }
 }
@@ -55,9 +55,9 @@ function HoldingRow({ h }) {
   const up     = (h.changePct ?? 0) >= 0
   const signal = (h.changePct ?? 0) >= 1 ? 'Bullish' : (h.changePct ?? 0) <= -1 ? 'Bearish' : 'Neutral'
   const sigCls = signal === 'Bullish'
-    ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
+    ? 'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25'
     : signal === 'Bearish'
-    ? 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
+    ? 'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25'
     : 'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]'
 
   return (
@@ -68,13 +68,13 @@ function HoldingRow({ h }) {
         <div className="flex items-center gap-1.5 text-[10px] text-[var(--c-text-faint)]">
           <span className="tabular-nums">{Math.round(h.weight * 100)}%</span>
           <span>·</span>
-          <span className={`tabular-nums font-semibold ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
+          <span className={`tabular-nums font-semibold ${up ? 'text-[#22B585]' : 'text-[#ef5454]'}`}>
             {up ? '+' : ''}{(h.changePct ?? 0).toFixed(2)}%
           </span>
         </div>
       </div>
       <div className="h-1 flex-1 hidden sm:block bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
-        <div className="h-full bg-[#1D9E75]/40 rounded-full" style={{ width: `${Math.round(h.weight * 100)}%` }} />
+        <div className="h-full bg-[#22B585]/40 rounded-full" style={{ width: `${Math.round(h.weight * 100)}%` }} />
       </div>
       <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest shrink-0 ${sigCls}`}>
         {signal}
@@ -227,7 +227,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
             <div className="px-6 py-5 flex flex-col gap-4">
               {userId && !portfolioLoading && savedHoldings.length === 0 ? (
                 <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex items-start gap-3">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#1D9E75] shrink-0 mt-0.5">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#22B585] shrink-0 mt-0.5">
                     <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
                     <path d="M7 4.5v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
@@ -252,8 +252,8 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                           aria-invalid={!!err.ticker}
                           className={`w-24 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors uppercase ${
                             err.ticker
-                              ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                              : 'border-[var(--c-border)] focus:border-[#1D9E75]'
+                              ? 'border-[#ef5454] focus:border-[#ef5454]'
+                              : 'border-[var(--c-border)] focus:border-[#22B585]'
                           }`}
                         />
                         <input
@@ -265,8 +265,8 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                           aria-invalid={!!err.shares}
                           className={`flex-1 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors ${
                             err.shares
-                              ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                              : 'border-[var(--c-border)] focus:border-[#1D9E75]'
+                              ? 'border-[#ef5454] focus:border-[#ef5454]'
+                              : 'border-[var(--c-border)] focus:border-[#22B585]'
                           }`}
                         />
                         {holdings.length > 1 && (
@@ -274,7 +274,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                             onClick={() => remove(i)}
                             aria-label="Remove holding"
                             title="Remove this holding"
-                            className="text-[#263d2c] hover:text-[#e24b4a] transition-colors p-1 shrink-0 cursor-pointer"
+                            className="text-[#263d2c] hover:text-[#ef5454] transition-colors p-1 shrink-0 cursor-pointer"
                           >
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                               <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -283,7 +283,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                         )}
                       </div>
                       {(err.ticker || err.shares) && (
-                        <div className="flex gap-3 pl-1 text-[11px] text-[#e24b4a] leading-tight">
+                        <div className="flex gap-3 pl-1 text-[11px] text-[#ef5454] leading-tight">
                           {err.ticker && <span className="w-24 shrink-0">{err.ticker}</span>}
                           {err.shares && <span className="flex-1">{err.shares}</span>}
                         </div>
@@ -294,12 +294,12 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
               </div>
 
               {holdings.length < 10 && (
-                <button onClick={add} className="self-start text-xs text-[#1D9E75] hover:underline cursor-pointer">
+                <button onClick={add} className="self-start text-xs text-[#22B585] hover:underline cursor-pointer">
                   + Add holding
                 </button>
               )}
 
-              {error && <p className="text-xs text-[#e24b4a]">{error}</p>}
+              {error && <p className="text-xs text-[#ef5454]">{error}</p>}
 
               <button
                 onClick={analyze}
@@ -310,7 +310,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                   : !completedRows ? 'Enter at least one ticker and share count'
                   : undefined
                 }
-                className="bg-[#1D9E75] hover:bg-[#20b382] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
+                className="bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
               >
                 {loading ? 'Fetching prices…' : 'Analyze Portfolio'}
               </button>
@@ -325,7 +325,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 <div className="glass-card rounded-xl p-4 flex flex-col gap-1.5">
                   <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Total Value</span>
                   <span className="text-xl font-black tabular-nums text-[var(--c-text)]">{fmtMoney(result.total)}</span>
-                  <span className={`text-xs font-bold tabular-nums ${result.weightedChangePct >= 0 ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
+                  <span className={`text-xs font-bold tabular-nums ${result.weightedChangePct >= 0 ? 'text-[#22B585]' : 'text-[#ef5454]'}`}>
                     {result.weightedChangePct >= 0 ? '+' : ''}{result.weightedChangePct.toFixed(2)}% today
                   </span>
                 </div>
@@ -334,7 +334,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                   <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Health Score</span>
                   <span className="text-xl font-black tabular-nums text-[var(--c-text)]">{result.healthScore}<span className="text-sm text-[var(--c-text-faint)] font-normal">/100</span></span>
                   <div className="h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#1D9E75] rounded-full animate-bar" style={{ width: `${result.healthScore}%` }} />
+                    <div className="h-full bg-[#22B585] rounded-full animate-bar" style={{ width: `${result.healthScore}%` }} />
                   </div>
                 </div>
               </div>
@@ -372,7 +372,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                   {aiReport && aiReport !== 'loading' && (
                     <button
                       onClick={runAIAnalysis}
-                      className="text-[10px] text-[var(--c-text-faint)] hover:text-[#1D9E75] transition-colors"
+                      className="text-[10px] text-[var(--c-text-faint)] hover:text-[#22B585] transition-colors"
                     >
                       Refresh
                     </button>
@@ -382,9 +382,9 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 {!aiReport && aiReport !== 'loading' && (
                   <button
                     onClick={runAIAnalysis}
-                    className="flex items-center justify-center gap-2 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] hover:border-[#1D9E75]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
+                    className="flex items-center justify-center gap-2 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] hover:border-[#22B585]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
                   >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#1D9E75]">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#22B585]">
                       <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                     <span className="text-xs font-semibold text-[var(--c-text-faint)] group-hover:text-[var(--c-text)] transition-colors">
@@ -396,7 +396,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 {aiReport === 'loading' && (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 py-1">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#22B585] animate-pulse" />
                       <span className="text-xs text-[var(--c-text-faint)]">Analyzing your portfolio…</span>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -410,7 +410,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                   </div>
                 )}
 
-                {aiError && <p className="text-xs text-[#e24b4a]">{aiError}</p>}
+                {aiError && <p className="text-xs text-[#ef5454]">{aiError}</p>}
 
                 {aiReport && aiReport !== 'loading' && (
                   <PortfolioAIReport
@@ -428,7 +428,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                     <button
                       key={h.ticker}
                       onClick={() => { onClose(); onAnalyze(h.ticker) }}
-                      className="text-xs font-bold px-3 py-1.5 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150"
+                      className="text-xs font-bold px-3 py-1.5 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150"
                     >
                       {h.ticker} →
                     </button>

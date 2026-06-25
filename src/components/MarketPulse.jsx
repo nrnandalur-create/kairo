@@ -19,7 +19,7 @@ const INDEX_NAMES = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones' }
 function IndexTile({ symbol, price, changePct }) {
   const valid = changePct != null && !isNaN(changePct)
   const up    = valid && changePct >= 0
-  const color = !valid ? '#4b6358' : up ? '#1D9E75' : '#e24b4a'
+  const color = !valid ? '#4b6358' : up ? '#22B585' : '#ef5454'
   const bgBar = !valid ? '#1a2e1f' : up ? 'rgba(29,158,117,0.08)' : 'rgba(226,75,74,0.08)'
 
   return (
@@ -39,8 +39,8 @@ function IndexTile({ symbol, price, changePct }) {
 function MoverRow({ symbol, price, changePct, rank }) {
   const up       = changePct != null && changePct >= 0
   const badge    = up
-    ? 'bg-[#1D9E75]/10 border-[#1D9E75]/25 text-[#1D9E75]'
-    : 'bg-[#e24b4a]/10 border-[#e24b4a]/25 text-[#e24b4a]'
+    ? 'bg-[#22B585]/10 border-[#22B585]/25 text-[#22B585]'
+    : 'bg-[#ef5454]/10 border-[#ef5454]/25 text-[#ef5454]'
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 -mx-1 px-1 rounded-md hover:bg-[var(--c-hover-bg)] transition-colors duration-150">
@@ -129,12 +129,12 @@ export default function MarketPulse() {
   const total     = movers.length || 1
   const bullRatio = upCount / total
   const mood      = bullRatio >= 0.6 ? 'Bullish' : bullRatio <= 0.4 ? 'Bearish' : 'Neutral'
-  const moodColor = mood === 'Bullish' ? '#1D9E75' : mood === 'Bearish' ? '#e24b4a' : '#d4922a'
+  const moodColor = mood === 'Bullish' ? '#22B585' : mood === 'Bearish' ? '#ef5454' : '#e3a234'
   const moodBorder = mood === 'Bullish'
-    ? 'border-[#1D9E75]/20'
+    ? 'border-[#22B585]/20'
     : mood === 'Bearish'
-    ? 'border-[#e24b4a]/20'
-    : 'border-[#d4922a]/20'
+    ? 'border-[#ef5454]/20'
+    : 'border-[#e3a234]/20'
   const upPct   = Math.round(bullRatio * 100)
   const downPct = 100 - upPct
 
@@ -158,11 +158,11 @@ export default function MarketPulse() {
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Top Movers</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0">
             <div>
-              <p className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest mb-2">Gainers</p>
+              <p className="text-[9px] font-bold text-[#22B585] uppercase tracking-widest mb-2">Gainers</p>
               {gainers.map((m, i) => <MoverRow key={m.symbol} {...m} rank={i + 1} />)}
             </div>
             <div className="mt-4 sm:mt-0">
-              <p className="text-[9px] font-bold text-[#e24b4a] uppercase tracking-widest mb-2">Losers</p>
+              <p className="text-[9px] font-bold text-[#ef5454] uppercase tracking-widest mb-2">Losers</p>
               {losers.map((m, i) => <MoverRow key={m.symbol} {...m} rank={i + 1} />)}
             </div>
           </div>
@@ -176,12 +176,12 @@ export default function MarketPulse() {
             {upCount} of {total} tracked stocks are up today
           </p>
           <div className="flex h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#1D9E75] transition-all duration-700" style={{ width: `${upPct}%` }} />
-            <div className="bg-[#e24b4a] transition-all duration-700" style={{ width: `${downPct}%` }} />
+            <div className="bg-[#22B585] transition-all duration-700" style={{ width: `${upPct}%` }} />
+            <div className="bg-[#ef5454] transition-all duration-700" style={{ width: `${downPct}%` }} />
           </div>
           <div className="flex justify-between text-[10px] text-[var(--c-text-faint)]">
-            <span className="text-[#1D9E75]">{upPct}% up</span>
-            <span className="text-[#e24b4a]">{downPct}% down</span>
+            <span className="text-[#22B585]">{upPct}% up</span>
+            <span className="text-[#ef5454]">{downPct}% down</span>
           </div>
         </div>
 

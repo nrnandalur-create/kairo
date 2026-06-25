@@ -93,12 +93,12 @@ function SidebarItem({ item, active, onClick }) {
       title={item.label}
       className={`relative flex items-center gap-3.5 w-full pl-[18px] pr-4 py-3 transition-colors duration-150 cursor-pointer ${
         active
-          ? 'text-[#1D9E75]'
+          ? 'text-[#22B585]'
           : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-input-bg)]'
       }`}
     >
       {active && (
-        <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-[#1D9E75] rounded-r-full" />
+        <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-[#22B585] rounded-r-full" />
       )}
       <span className="shrink-0">
         <item.Icon />
@@ -115,7 +115,7 @@ function BottomItem({ item, active, onClick }) {
     <button
       onClick={onClick}
       className={`flex flex-col items-center justify-center gap-1 flex-1 py-2.5 transition-colors duration-150 cursor-pointer ${
-        active ? 'text-[#1D9E75]' : 'text-[var(--c-text-faint)] active:text-[var(--c-text)]'
+        active ? 'text-[#22B585]' : 'text-[var(--c-text-faint)] active:text-[var(--c-text)]'
       }`}
     >
       <item.Icon />

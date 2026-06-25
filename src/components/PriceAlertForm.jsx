@@ -55,7 +55,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
         {isSet && (
           <button
             onClick={handleClear}
-            className="text-[10px] text-[#e24b4a]/60 hover:text-[#e24b4a] transition-colors"
+            className="text-[10px] text-[#ef5454]/60 hover:text-[#ef5454] transition-colors"
           >
             Clear
           </button>
@@ -66,14 +66,14 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
         <div className="flex gap-4 flex-wrap">
           {existing.target && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#1D9E75] uppercase tracking-widest">▲ Target</span>
-              <span className="text-sm font-black tabular-nums text-[#1D9E75]">${Number(existing.target).toFixed(2)}</span>
+              <span className="text-[10px] font-bold text-[#22B585] uppercase tracking-widest">▲ Target</span>
+              <span className="text-sm font-black tabular-nums text-[#22B585]">${Number(existing.target).toFixed(2)}</span>
             </div>
           )}
           {existing.stop && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#e24b4a] uppercase tracking-widest">▼ Stop</span>
-              <span className="text-sm font-black tabular-nums text-[#e24b4a]">${Number(existing.stop).toFixed(2)}</span>
+              <span className="text-[10px] font-bold text-[#ef5454] uppercase tracking-widest">▼ Stop</span>
+              <span className="text-sm font-black tabular-nums text-[#ef5454]">${Number(existing.stop).toFixed(2)}</span>
             </div>
           )}
         </div>
@@ -92,11 +92,11 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             aria-invalid={!!errors.target}
             className={`w-32 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors tabular-nums ${
               errors.target
-                ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                : 'border-[var(--c-border)] focus:border-[#1D9E75]'
+                ? 'border-[#ef5454] focus:border-[#ef5454]'
+                : 'border-[var(--c-border)] focus:border-[#22B585]'
             }`}
           />
-          {errors.target && <span className="text-[11px] text-[#e24b4a] max-w-[180px] leading-tight">{errors.target}</span>}
+          {errors.target && <span className="text-[11px] text-[#ef5454] max-w-[180px] leading-tight">{errors.target}</span>}
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Stop Loss</label>
@@ -110,17 +110,17 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             aria-invalid={!!errors.stop}
             className={`w-32 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors tabular-nums ${
               errors.stop
-                ? 'border-[#e24b4a] focus:border-[#e24b4a]'
-                : 'border-[var(--c-border)] focus:border-[#e24b4a]'
+                ? 'border-[#ef5454] focus:border-[#ef5454]'
+                : 'border-[var(--c-border)] focus:border-[#ef5454]'
             }`}
           />
-          {errors.stop && <span className="text-[11px] text-[#e24b4a] max-w-[180px] leading-tight">{errors.stop}</span>}
+          {errors.stop && <span className="text-[11px] text-[#ef5454] max-w-[180px] leading-tight">{errors.stop}</span>}
         </div>
         <button
           onClick={handleSet}
           disabled={!canSubmit}
           title={!canSubmit ? (hasErrors ? 'Fix the errors above first' : 'Enter a target or stop price') : undefined}
-          className="mt-[18px] bg-[#1D9E75] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#20b382] active:scale-[0.96] text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+          className="mt-[18px] bg-[#22B585] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#2BC093] active:scale-[0.96] text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
         >
           Set Alert
         </button>

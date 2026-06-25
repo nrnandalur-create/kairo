@@ -35,7 +35,7 @@ function Choice({ label, options, value, onChange, hint }) {
               onClick={() => onChange(opt.value)}
               className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono font-semibold tracking-[0.05em] cursor-pointer transition-colors ${
                 active
-                  ? 'bg-[#1D9E75]/15 border-[#1D9E75]/50 text-[#1D9E75]'
+                  ? 'bg-[#22B585]/15 border-[#22B585]/50 text-[#22B585]'
                   : 'bg-[var(--c-input-bg)] border-[var(--c-border)] text-[var(--c-text-muted)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
               }`}
             >
@@ -107,7 +107,7 @@ export default function SettingsModal({ open, onClose }) {
                     onClick={() => prefs.set('theme', opt.value)}
                     className={`flex-1 px-3 py-1.5 rounded-md text-[11px] font-mono font-semibold tracking-[0.05em] cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5 ${
                       active
-                        ? 'bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/50'
+                        ? 'bg-[#22B585]/15 text-[#22B585] border border-[#22B585]/50'
                         : 'text-[var(--c-text-muted)] hover:text-[var(--c-text)] border border-transparent'
                     }`}
                   >
@@ -138,9 +138,9 @@ export default function SettingsModal({ open, onClose }) {
               step="0.05"
               value={cur.glassMult}
               onChange={e => prefs.set('glassMult', +e.target.value)}
-              className="w-full accent-[#1D9E75] cursor-pointer h-1 rounded-full"
+              className="w-full accent-[#22B585] cursor-pointer h-1 rounded-full"
               style={{
-                background: `linear-gradient(to right, #1D9E75 0%, #1D9E75 ${((cur.glassMult - 0.2) / 1.3) * 100}%, #1a2e1f ${((cur.glassMult - 0.2) / 1.3) * 100}%, #1a2e1f 100%)`,
+                background: `linear-gradient(to right, #22B585 0%, #22B585 ${((cur.glassMult - 0.2) / 1.3) * 100}%, #1a2e1f ${((cur.glassMult - 0.2) / 1.3) * 100}%, #1a2e1f 100%)`,
                 appearance: 'none',
                 WebkitAppearance: 'none',
               }}
@@ -176,7 +176,7 @@ export default function SettingsModal({ open, onClose }) {
           <button
             type="button"
             onClick={handleReset}
-            className="text-[11px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#d4922a] cursor-pointer transition-colors"
+            className="text-[11px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#e3a234] cursor-pointer transition-colors"
           >
             Reset to defaults
           </button>

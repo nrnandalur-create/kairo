@@ -45,9 +45,9 @@ export default function WatchlistSentiment({ tickers }) {
   const mood      = bullPct >= bearPct + 15 ? 'Bullish'
                   : bearPct >= bullPct + 15 ? 'Bearish'
                   : 'Mixed'
-  const moodColor = mood === 'Bullish' ? '#1D9E75'
-                  : mood === 'Bearish' ? '#e24b4a'
-                  : '#d4922a'
+  const moodColor = mood === 'Bullish' ? '#22B585'
+                  : mood === 'Bearish' ? '#ef5454'
+                  : '#e3a234'
 
   if (!tickers.length) return null
 
@@ -59,7 +59,7 @@ export default function WatchlistSentiment({ tickers }) {
         </span>
         {isLoading && (
           <div className="flex items-center gap-1.5">
-            <span className="w-1 h-1 rounded-full bg-[#1D9E75] animate-pulse" />
+            <span className="w-1 h-1 rounded-full bg-[#22B585] animate-pulse" />
             <span className="text-[10px] text-[var(--c-text-faint)]">{loaded}/{tickers.length}</span>
           </div>
         )}
@@ -85,14 +85,14 @@ export default function WatchlistSentiment({ tickers }) {
           </div>
 
           <div className="flex h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#1D9E75] transition-all duration-700" style={{ width: `${bullPct}%` }} />
-            <div className="bg-[#e24b4a] transition-all duration-700" style={{ width: `${bearPct}%` }} />
+            <div className="bg-[#22B585] transition-all duration-700" style={{ width: `${bullPct}%` }} />
+            <div className="bg-[#ef5454] transition-all duration-700" style={{ width: `${bearPct}%` }} />
             <div className="bg-[var(--c-chip-bg)] transition-all duration-700" style={{ width: `${neutPct}%` }} />
           </div>
 
           <div className="flex gap-4 text-[10px]">
-            <span className="text-[#1D9E75]">{bullPct}% bull</span>
-            <span className="text-[#e24b4a]">{bearPct}% bear</span>
+            <span className="text-[#22B585]">{bullPct}% bull</span>
+            <span className="text-[#ef5454]">{bearPct}% bear</span>
             <span className="text-[var(--c-text-faint)]">{neutPct}% neutral</span>
           </div>
         </>

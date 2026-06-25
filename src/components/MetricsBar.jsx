@@ -35,7 +35,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
 
   const up   = quote.dp > 0
   const down = quote.dp < 0
-  const chgColor = up ? 'text-[#1D9E75]' : down ? 'text-[#e24b4a]' : 'text-[var(--c-text-faint)]'
+  const chgColor = up ? 'text-[#22B585]' : down ? 'text-[#ef5454]' : 'text-[var(--c-text-faint)]'
   const arrow    = up ? '▲' : down ? '▼' : '◆'
   const chgStr   = quote.d != null
     ? `${up ? '+' : ''}${fmtRatio(quote.d)} (${up ? '+' : ''}${fmtRatio(quote.dp)}%)`
@@ -50,9 +50,9 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
   const macd = candles?.length ? calcMACD(candles)  : null
   const vwap = candles?.length ? calcVWAP(candles)  : null
   const rsiBadge = rsi == null ? null : rsi >= 70 ? 'Overbought' : rsi <= 30 ? 'Oversold' : 'Neutral'
-  const rsiBadgeColor = rsi == null ? '#4b6358' : rsi >= 70 ? '#e24b4a' : rsi <= 30 ? '#1D9E75' : '#4b6358'
+  const rsiBadgeColor = rsi == null ? '#4b6358' : rsi >= 70 ? '#ef5454' : rsi <= 30 ? '#22B585' : '#4b6358'
   const macdBadge      = macd ? (macd.bullish ? 'Bullish' : 'Bearish') : null
-  const macdBadgeColor = macd ? (macd.bullish ? '#1D9E75' : '#e24b4a') : '#4b6358'
+  const macdBadgeColor = macd ? (macd.bullish ? '#22B585' : '#ef5454') : '#4b6358'
 
   return (
     <div className="w-full glass-card rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">

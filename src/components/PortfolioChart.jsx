@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }) {
         ${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
       {pct != null && (
-        <div style={{ color: up ? '#1D9E75' : '#e24b4a', fontSize: 11, marginTop: 2 }}>
+        <div style={{ color: up ? '#22B585' : '#ef5454', fontSize: 11, marginTop: 2 }}>
           {up ? '+' : ''}{Number(pct).toFixed(2)}% all-time
         </div>
       )}
@@ -83,7 +83,7 @@ export default function PortfolioChart({ snapshots }) {
   const first   = data[0]?.value ?? 0
   const last    = data[data.length - 1]?.value ?? 0
   const isUp    = last >= first
-  const color   = isUp ? '#1D9E75' : '#e24b4a'
+  const color   = isUp ? '#22B585' : '#ef5454'
   const gradId  = `pg-${days}`
 
   return (

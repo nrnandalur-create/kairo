@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { AuthModal } from './AuthModal'
 
-const GREEN = '#1D9E75'
+const GREEN = '#22B585'
 const BORDER = '#1a2e1f'
 
 export function UserMenu() {
@@ -78,7 +78,7 @@ export function UserMenu() {
                 display: 'block', width: '100%', textAlign: 'left',
                 padding: '9px 14px',
                 background: 'none', border: 'none',
-                color: '#e24b4a', fontSize: 13, cursor: 'pointer',
+                color: '#ef5454', fontSize: 13, cursor: 'pointer',
               }}
             >
               Sign out

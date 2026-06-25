@@ -25,8 +25,8 @@ export default function DataTimestamp({ asOf, source, prefix = 'Updated', staleA
   const rel   = fmtRelTime(asOf, nowMs)
   const stale = (nowMs - asOf) >= stalemsEffective
 
-  const dotClass  = stale ? 'bg-[#d4922a]/85' : 'bg-[#1D9E75]/80'
-  const textClass = stale ? 'text-[#d4922a]'  : 'text-[var(--c-text-muted)]'
+  const dotClass  = stale ? 'bg-[#e3a234]/85' : 'bg-[#22B585]/80'
+  const textClass = stale ? 'text-[#e3a234]'  : 'text-[var(--c-text-muted)]'
   const srcClass  = stale ? 'text-[#a07520]'  : 'text-[#5d7868]'
   const title     = stale
     ? `Data is older than ${Math.round(stalemsEffective / 60_000)} minutes. A refresh will run when you return to the tab.`

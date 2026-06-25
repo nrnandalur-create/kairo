@@ -3,7 +3,7 @@ import InfoTooltip from './InfoTooltip'
 
 function ConfidenceRing({ confidence }) {
   const s     = typeof confidence === 'number' && !isNaN(confidence) ? Math.min(100, Math.max(0, confidence)) : 0
-  const color = s >= 65 ? '#1D9E75' : s >= 45 ? '#d4922a' : '#e24b4a'
+  const color = s >= 65 ? '#22B585' : s >= 45 ? '#e3a234' : '#ef5454'
   const circ  = 2 * Math.PI * 22
   return (
     <div className="flex items-center gap-4 shrink-0">
@@ -35,7 +35,7 @@ function Skeleton() {
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+        <div className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
         <div className="h-2.5 w-28 rounded-full shimmer" />
       </div>
       <div className="flex gap-4 items-center">
@@ -74,11 +74,11 @@ export default function AIAnalysis({ data, loading, asOf }) {
 
   const isBuy  = data.verdict === 'BUY'
   const isHold = data.verdict === 'HOLD'
-  const verdictColor  = isBuy ? '#1D9E75' : isHold ? '#d4922a' : '#e24b4a'
+  const verdictColor  = isBuy ? '#22B585' : isHold ? '#e3a234' : '#ef5454'
   const verdictLabel  = isBuy ? '▲ BUY' : isHold ? '◆ HOLD' : '▼ SELL'
-  const verdictBorder = isBuy  ? 'border-[#1D9E75]/25 text-[#1D9E75] bg-[#1D9E75]/10'
-                      : isHold ? 'border-[#d4922a]/25 text-[#d4922a] bg-[#d4922a]/10'
-                      : 'border-[#e24b4a]/25 text-[#e24b4a] bg-[#e24b4a]/10'
+  const verdictBorder = isBuy  ? 'border-[#22B585]/25 text-[#22B585] bg-[#22B585]/10'
+                      : isHold ? 'border-[#e3a234]/25 text-[#e3a234] bg-[#e3a234]/10'
+                      : 'border-[#ef5454]/25 text-[#ef5454] bg-[#ef5454]/10'
 
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-enter">
@@ -105,14 +105,14 @@ export default function AIAnalysis({ data, loading, asOf }) {
       {(data.bullCase || data.bearCase) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {data.bullCase && (
-            <div className="bg-[#1D9E75]/[0.05] border border-[#1D9E75]/15 rounded-xl p-3.5 transition-colors hover:border-[#1D9E75]/25 hover:bg-[#1D9E75]/[0.08]">
-              <p className="text-[10px] text-[#1D9E75] font-bold uppercase tracking-widest mb-2">Bull Case</p>
+            <div className="bg-[#22B585]/[0.05] border border-[#22B585]/15 rounded-xl p-3.5 transition-colors hover:border-[#22B585]/25 hover:bg-[#22B585]/[0.08]">
+              <p className="text-[10px] text-[#22B585] font-bold uppercase tracking-widest mb-2">Bull Case</p>
               <p className="text-xs text-[var(--c-text)]/60 leading-relaxed">{data.bullCase}</p>
             </div>
           )}
           {data.bearCase && (
-            <div className="bg-[#e24b4a]/[0.05] border border-[#e24b4a]/15 rounded-xl p-3.5 transition-colors hover:border-[#e24b4a]/25 hover:bg-[#e24b4a]/[0.08]">
-              <p className="text-[10px] text-[#e24b4a] font-bold uppercase tracking-widest mb-2">Bear Case</p>
+            <div className="bg-[#ef5454]/[0.05] border border-[#ef5454]/15 rounded-xl p-3.5 transition-colors hover:border-[#ef5454]/25 hover:bg-[#ef5454]/[0.08]">
+              <p className="text-[10px] text-[#ef5454] font-bold uppercase tracking-widest mb-2">Bear Case</p>
               <p className="text-xs text-[var(--c-text)]/60 leading-relaxed">{data.bearCase}</p>
             </div>
           )}
@@ -137,8 +137,8 @@ export default function AIAnalysis({ data, loading, asOf }) {
 
       {/* Trade idea */}
       {data.tradeIdea && (
-        <div className="border-l-2 border-[#1D9E75]/40 pl-4 py-0.5">
-          <p className="text-[10px] text-[#1D9E75] font-bold uppercase tracking-widest mb-1.5">Trade Idea</p>
+        <div className="border-l-2 border-[#22B585]/40 pl-4 py-0.5">
+          <p className="text-[10px] text-[#22B585] font-bold uppercase tracking-widest mb-1.5">Trade Idea</p>
           <p className="text-sm text-[var(--c-text)]/80 leading-relaxed">{data.tradeIdea}</p>
         </div>
       )}

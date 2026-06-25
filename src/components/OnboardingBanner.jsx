@@ -39,7 +39,7 @@ export default function OnboardingBanner({ onDismiss }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]" />
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Get Started</span>
         </div>
         <button
@@ -57,7 +57,7 @@ export default function OnboardingBanner({ onDismiss }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {STEPS.map((step, i) => (
           <div key={i} className="flex items-start gap-3 bg-[var(--c-bg)] rounded-xl p-3.5">
-            <div className="shrink-0 mt-0.5 text-[#1D9E75]">{step.icon}</div>
+            <div className="shrink-0 mt-0.5 text-[#22B585]">{step.icon}</div>
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] font-bold text-[#263d2c] tabular-nums">{step.num}</span>

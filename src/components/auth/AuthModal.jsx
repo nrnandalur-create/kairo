@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 const BG    = '#080c0a'
 const CARD  = '#0f1611'
 const BORDER = '#1a2e1f'
-const GREEN = '#1D9E75'
+const GREEN = '#22B585'
 const MUTED = '#4a6351'
 
 export function AuthModal({ onClose }) {
@@ -151,7 +151,7 @@ export function AuthModal({ onClose }) {
         />
 
         {error && (
-          <div style={{ background: '#1a0a0a', border: '1px solid #4a1515', borderRadius: 8, padding: '8px 12px', color: '#e24b4a', fontSize: 13 }}>
+          <div style={{ background: '#1a0a0a', border: '1px solid #4a1515', borderRadius: 8, padding: '8px 12px', color: '#ef5454', fontSize: 13 }}>
             {error}
           </div>
         )}

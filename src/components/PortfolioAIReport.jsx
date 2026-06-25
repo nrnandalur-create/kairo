@@ -1,14 +1,14 @@
 const VERDICT_CONFIG = {
-  STRONG:   { color: '#1D9E75', bg: '#1D9E75', label: 'Strong' },
-  MODERATE: { color: '#d4922a', bg: '#d4922a', label: 'Moderate' },
-  WEAK:     { color: '#e24b4a', bg: '#e24b4a', label: 'Weak'   },
+  STRONG:   { color: '#22B585', bg: '#22B585', label: 'Strong' },
+  MODERATE: { color: '#e3a234', bg: '#e3a234', label: 'Moderate' },
+  WEAK:     { color: '#ef5454', bg: '#ef5454', label: 'Weak'   },
 }
 
 const ACTION_CONFIG = {
-  ADD:  { color: '#1D9E75', bg: '#1D9E7515', border: '#1D9E7530' },
+  ADD:  { color: '#22B585', bg: '#22B58515', border: '#22B58530' },
   HOLD: { color: '#8aab97', bg: '#1a2e1f',   border: '#1a2e1f'   },
-  TRIM: { color: '#d4922a', bg: '#d4922a15', border: '#d4922a30' },
-  EXIT: { color: '#e24b4a', bg: '#e24b4a15', border: '#e24b4a30' },
+  TRIM: { color: '#e3a234', bg: '#e3a23415', border: '#e3a23430' },
+  EXIT: { color: '#ef5454', bg: '#ef545415', border: '#ef545430' },
 }
 
 function ScoreRing({ score, color }) {
@@ -59,19 +59,19 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
       {/* Strengths + Risks */}
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3 flex flex-col gap-2">
-          <span className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest">Strengths</span>
+          <span className="text-[9px] font-bold text-[#22B585] uppercase tracking-widest">Strengths</span>
           {(report.strengths ?? []).map((s, i) => (
             <div key={i} className="flex items-start gap-1.5">
-              <span className="text-[#1D9E75] text-[10px] mt-0.5 shrink-0">✓</span>
+              <span className="text-[#22B585] text-[10px] mt-0.5 shrink-0">✓</span>
               <p className="text-[11px] text-[#8aab97] leading-relaxed">{s}</p>
             </div>
           ))}
         </div>
         <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3 flex flex-col gap-2">
-          <span className="text-[9px] font-bold text-[#e24b4a] uppercase tracking-widest">Risks</span>
+          <span className="text-[9px] font-bold text-[#ef5454] uppercase tracking-widest">Risks</span>
           {(report.risks ?? []).map((r, i) => (
             <div key={i} className="flex items-start gap-1.5">
-              <span className="text-[#e24b4a] text-[10px] mt-0.5 shrink-0">✗</span>
+              <span className="text-[#ef5454] text-[10px] mt-0.5 shrink-0">✗</span>
               <p className="text-[11px] text-[#8aab97] leading-relaxed">{r}</p>
             </div>
           ))}
@@ -90,7 +90,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
                   <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
                     <button
                       onClick={() => onAnalyzeTicker?.(sig.ticker)}
-                      className="text-[11px] font-bold text-[var(--c-text)] hover:text-[#1D9E75] transition-colors w-12 text-left"
+                      className="text-[11px] font-bold text-[var(--c-text)] hover:text-[#22B585] transition-colors w-12 text-left"
                     >
                       {sig.ticker}
                     </button>
@@ -111,8 +111,8 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
 
       {/* Top recommendation */}
       {report.topRecommendation && (
-        <div className="bg-[var(--c-input-bg)] border border-[#1D9E75]/20 rounded-xl p-3 flex flex-col gap-1.5">
-          <span className="text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest">Top Recommendation</span>
+        <div className="bg-[var(--c-input-bg)] border border-[#22B585]/20 rounded-xl p-3 flex flex-col gap-1.5">
+          <span className="text-[9px] font-bold text-[#22B585] uppercase tracking-widest">Top Recommendation</span>
           <p className="text-xs text-[var(--c-text)] leading-relaxed">{report.topRecommendation}</p>
         </div>
       )}

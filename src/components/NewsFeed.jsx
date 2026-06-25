@@ -12,13 +12,13 @@ function fmtTime(ts) {
 
 const SENTIMENT = {
   positive: {
-    dot:   'bg-[#1D9E75]',
-    badge: 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
+    dot:   'bg-[#22B585]',
+    badge: 'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25',
     label: 'Positive',
   },
   negative: {
-    dot:   'bg-[#e24b4a]',
-    badge: 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
+    dot:   'bg-[#ef5454]',
+    badge: 'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25',
     label: 'Negative',
   },
   neutral: {
@@ -126,11 +126,11 @@ export default function NewsFeed({ data, loading, asOf }) {
         </span>
         <div className="flex items-center gap-2 text-[10px]">
           <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22B585] inline-block" />
             <span className="text-[var(--c-text-faint)]">{bullPct}% bull</span>
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#e24b4a] inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ef5454] inline-block" />
             <span className="text-[var(--c-text-faint)]">{bearPct}% bear</span>
           </span>
           <span className="flex items-center gap-1">
@@ -142,8 +142,8 @@ export default function NewsFeed({ data, loading, asOf }) {
 
       {/* Sentiment bar */}
       <div className="flex h-1 rounded-full overflow-hidden gap-px">
-        <div className="bg-[#1D9E75]" style={{ width: `${bullPct}%` }} />
-        <div className="bg-[#e24b4a]" style={{ width: `${bearPct}%` }} />
+        <div className="bg-[#22B585]" style={{ width: `${bullPct}%` }} />
+        <div className="bg-[#ef5454]" style={{ width: `${bearPct}%` }} />
         <div className="bg-[var(--c-chip-bg)]" style={{ width: `${neutralPct}%` }} />
       </div>
 

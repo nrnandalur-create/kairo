@@ -8,9 +8,9 @@ function fmtNum(n, dec = 2) {
 
 function StatusBadge({ label, color }) {
   const styles = {
-    green:  'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25',
-    red:    'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25',
-    amber:  'bg-[#d4922a]/10 text-[#d4922a] border-[#d4922a]/25',
+    green:  'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25',
+    red:    'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25',
+    amber:  'bg-[#e3a234]/10 text-[#e3a234] border-[#e3a234]/25',
     muted:  'bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] border-[var(--c-border)]',
   }
   return (
@@ -33,7 +33,7 @@ function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) 
         <div className="h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden mt-0.5">
           <div
             className="h-full rounded-full animate-bar"
-            style={{ width: `${Math.min(100, Math.max(0, bar))}%`, backgroundColor: barColor ?? '#1D9E75', transformOrigin: 'left' }}
+            style={{ width: `${Math.min(100, Math.max(0, bar))}%`, backgroundColor: barColor ?? '#22B585', transformOrigin: 'left' }}
           />
         </div>
       )}
@@ -98,7 +98,7 @@ export default function IndicatorsGrid({ candles, loading, asOf }) {
   const bbSub    = bb ? `$${fmtNum(bb.lower)} – $${fmtNum(bb.upper)}` : null
   const bbBadge  = bbPct == null ? null : bbPct >= 80 ? 'Near Top' : bbPct <= 20 ? 'Near Bottom' : 'Mid Band'
   const bbBColor = bbPct == null ? 'muted' : bbPct >= 80 ? 'red' : bbPct <= 20 ? 'green' : 'muted'
-  const bbBarColor = bbPct >= 80 ? '#e24b4a' : bbPct <= 20 ? '#1D9E75' : '#d4922a'
+  const bbBarColor = bbPct >= 80 ? '#ef5454' : bbPct <= 20 ? '#22B585' : '#e3a234'
 
   // Volume
   const vol = calcVolumeSignal(candles)
@@ -107,14 +107,14 @@ export default function IndicatorsGrid({ candles, loading, asOf }) {
   const volBadge = vol == null ? null : vol.ratio >= 2 ? 'High Vol' : vol.ratio >= 1.2 ? 'Above Avg' : vol.ratio <= 0.7 ? 'Low Vol' : 'Normal'
   const volBColor= vol == null ? 'muted' : vol.ratio >= 1.5 ? 'amber' : vol.ratio <= 0.7 ? 'muted' : 'muted'
   const volBarPct = vol ? Math.min(100, vol.ratio * 50) : 0
-  const volBarClr = vol?.ratio >= 1.5 ? '#d4922a' : '#4b6358'
+  const volBarClr = vol?.ratio >= 1.5 ? '#e3a234' : '#4b6358'
 
   return (
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Technical Indicators</span>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
-          { title: 'RSI (14)',     value: rsiLabel,   sub: null,       badge: rsiBadge,   badgeColor: rsiBColor, bar: rsi,       barColor: rsi >= 70 ? '#e24b4a' : rsi <= 30 ? '#1D9E75' : '#4b6358' },
+          { title: 'RSI (14)',     value: rsiLabel,   sub: null,       badge: rsiBadge,   badgeColor: rsiBColor, bar: rsi,       barColor: rsi >= 70 ? '#ef5454' : rsi <= 30 ? '#22B585' : '#4b6358' },
           { title: 'MACD',        value: macdLabel,  sub: macdSub,    badge: macdBadge,  badgeColor: macdBColor },
           { title: 'SMA 50',      value: sma50Label, sub: sma50Sub,   badge: sma50Badge, badgeColor: sma50BC },
           { title: 'SMA 200',     value: sma200Label,sub: sma200Sub,  badge: sma200Badge,badgeColor: sma200BC },

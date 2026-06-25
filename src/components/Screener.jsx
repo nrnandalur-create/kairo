@@ -75,7 +75,7 @@ function FilterChips({ def, value, onChange }) {
             onClick={() => onChange(opt.value)}
             className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer ${
               value === opt.value
-                ? 'bg-[#1D9E75] text-white border-[#1D9E75]'
+                ? 'bg-[#22B585] text-white border-[#22B585]'
                 : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
             }`}
           >
@@ -105,7 +105,7 @@ function IndicatorCell({ label, value, loading, colorFn, labelFn }) {
   )
 }
 
-const rsiColor = v => v >= 65 ? '#e24b4a' : v <= 35 ? '#1D9E75' : '#4b6358'
+const rsiColor = v => v >= 65 ? '#ef5454' : v <= 35 ? '#22B585' : '#4b6358'
 const rsiLabel = v => v >= 65 ? 'Overbought' : v <= 35 ? 'Oversold' : 'Neutral'
 const bbLabel  = v => v >= 75 ? 'Near Top' : v <= 25 ? 'Near Bottom' : 'Mid Band'
 
@@ -121,7 +121,7 @@ function StockCard({ stock, indicatorLoading, onSelect }) {
           <span className="text-sm font-bold text-[var(--c-text)]">{stock.symbol}</span>
           <span className="text-xs text-[var(--c-text-faint)] ml-1.5 truncate">{stock.name}</span>
         </div>
-        <span className={`text-xs font-bold tabular-nums shrink-0 ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
+        <span className={`text-xs font-bold tabular-nums shrink-0 ${up ? 'text-[#22B585]' : 'text-[#ef5454]'}`}>
           {up ? '+' : ''}{(stock.changePct ?? 0).toFixed(2)}%
         </span>
       </div>
@@ -264,7 +264,7 @@ export default function Screener({ open, onClose, onAnalyze }) {
           <div>
             <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Stock Screener</span>
             {isFiltered && (
-              <button onClick={reset} className="ml-3 text-[10px] text-[#1D9E75] hover:underline">
+              <button onClick={reset} className="ml-3 text-[10px] text-[#22B585] hover:underline">
                 Clear filters
               </button>
             )}
@@ -301,7 +301,7 @@ export default function Screener({ open, onClose, onAnalyze }) {
             )}
             {showIndStatus && (
               <div className="flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#1D9E75] animate-pulse" />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#22B585] animate-pulse" />
                 <p className="text-[10px] text-[var(--c-text-faint)]">
                   {techFiltered
                     ? `Loading indicators (${indProgress})…`

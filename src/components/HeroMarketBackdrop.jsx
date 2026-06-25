@@ -131,10 +131,10 @@ function LiveIndicator() {
   return (
     <div className="absolute top-2.5 right-4 flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] uppercase">
       <span className="relative flex h-1.5 w-1.5">
-        <span className="absolute inset-0 rounded-full bg-[#1D9E75] animate-live-pulse" />
-        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#1D9E75]" />
+        <span className="absolute inset-0 rounded-full bg-[#22B585] animate-live-pulse" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#22B585]" />
       </span>
-      <span className="text-[#1D9E75] font-semibold">Live</span>
+      <span className="text-[#22B585] font-semibold">Live</span>
       <span className="text-[#1a2e1f]">·</span>
       <span className="text-[var(--c-text-faint)]">NYSE 14:32 ET</span>
     </div>
@@ -155,7 +155,7 @@ function PriceAxis() {
 }
 
 function WatchlistTile({ sym, name, ex, px, vol, d, up, values, position, className = '' }) {
-  const color = up ? '#1D9E75' : '#e24b4a'
+  const color = up ? '#22B585' : '#ef5454'
   const linePath = smoothLinePath(values, TILE_STEP)
   const areaPath = smoothAreaPath(values, TILE_STEP, 50)
   const gradId   = `tile-${sym}-grad`
@@ -218,7 +218,7 @@ function TickerItem({ ex, sym, px, d, up }) {
       <span className="text-[var(--c-text-fainter)] text-[9px] font-semibold tracking-[0.15em]">{ex}</span>
       <span className="text-[var(--c-text)] font-semibold">{sym}</span>
       <span className="text-[var(--c-text-faint)] tabular-nums">{px}</span>
-      <span className={`tabular-nums ${up ? 'text-[#1D9E75]' : 'text-[#e24b4a]'}`}>
+      <span className={`tabular-nums ${up ? 'text-[#22B585]' : 'text-[#ef5454]'}`}>
         {up ? '▲' : '▼'} {d}
       </span>
       <span className="text-[#1a2e1f] px-3">·</span>
@@ -235,12 +235,12 @@ function ChartGrid() {
     >
       {[20, 40, 60, 80].map(y => (
         <line key={`h${y}`} x1="0" y1={y} x2="100" y2={y}
-              stroke="#1D9E75" strokeOpacity="0.1" strokeWidth="0.08"
+              stroke="#22B585" strokeOpacity="0.1" strokeWidth="0.08"
               strokeDasharray="0.5 1" vectorEffect="non-scaling-stroke" />
       ))}
       {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(x => (
         <line key={`v${x}`} x1={x} y1="0" x2={x} y2="100"
-              stroke="#1D9E75" strokeOpacity="0.06" strokeWidth="0.08"
+              stroke="#22B585" strokeOpacity="0.06" strokeWidth="0.08"
               strokeDasharray="0.5 1" vectorEffect="non-scaling-stroke" />
       ))}
     </svg>
@@ -257,7 +257,7 @@ export default function HeroMarketBackdrop() {
 
         {/* Glowing horizon */}
         <div
-          className="absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent opacity-70"
+          className="absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-[#22B585] to-transparent opacity-70"
           style={{ boxShadow: '0 0 14px 1px rgba(29,158,117,0.55)' }}
         />
 
@@ -266,16 +266,16 @@ export default function HeroMarketBackdrop() {
           <svg viewBox="0 0 1600 120" preserveAspectRatio="none" className="w-full h-44">
             <defs>
               <linearGradient id="grad-top" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor="#1D9E75" stopOpacity="0.42" />
-                <stop offset="55%"  stopColor="#1D9E75" stopOpacity="0.12" />
-                <stop offset="100%" stopColor="#1D9E75" stopOpacity="0"    />
+                <stop offset="0%"   stopColor="#22B585" stopOpacity="0.42" />
+                <stop offset="55%"  stopColor="#22B585" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="#22B585" stopOpacity="0"    />
               </linearGradient>
               <Glow id="sg-top" blur={3} />
             </defs>
             <path d={AREA_TOP} fill="url(#grad-top)" />
             <path
               d={LINE_TOP}
-              stroke="#1D9E75"
+              stroke="#22B585"
               strokeWidth="2"
               fill="none"
               strokeLinecap="round"
@@ -295,7 +295,7 @@ export default function HeroMarketBackdrop() {
                 y={30 - v.h}
                 width="8"
                 height={v.h}
-                fill={v.up ? '#1D9E75' : '#e24b4a'}
+                fill={v.up ? '#22B585' : '#ef5454'}
                 opacity={v.up ? 0.55 : 0.5}
                 rx="1"
               />

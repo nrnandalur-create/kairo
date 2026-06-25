@@ -99,11 +99,11 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {fetchingLive && (
-            <div className="w-3 h-3 rounded-full border border-transparent border-t-[#1D9E75] animate-spin" />
+            <div className="w-3 h-3 rounded-full border border-transparent border-t-[#22B585] animate-spin" />
           )}
           {!fetchingLive && hasLive && (
-            <span className="flex items-center gap-1 text-[9px] font-bold text-[#1D9E75] uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]" />
+            <span className="flex items-center gap-1 text-[9px] font-bold text-[#22B585] uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]" />
               Live
             </span>
           )}
@@ -129,11 +129,11 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
             <div
               key={row.label}
               className={`relative flex items-center gap-3 py-3 border-b border-[var(--c-border)] last:border-0 ${
-                row.suggested ? 'bg-[#1D9E75]/[0.04] rounded-lg' : ''
+                row.suggested ? 'bg-[#22B585]/[0.04] rounded-lg' : ''
               }`}
             >
               {row.suggested && (
-                <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-[#1D9E75] rounded-r-full" />
+                <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-[#22B585] rounded-r-full" />
               )}
 
               {/* OTM % */}
@@ -166,17 +166,17 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
               </div>
 
               {/* Max Profit */}
-              <span className="text-xs font-bold text-[#1D9E75] tabular-nums w-20 shrink-0">
+              <span className="text-xs font-bold text-[#22B585] tabular-nums w-20 shrink-0">
                 {fmtMoney(row.maxProfit)}
               </span>
 
               {/* ROI + badge */}
               <div className="flex-1 flex items-center justify-end gap-2">
-                <span className="text-xs font-bold text-[#1D9E75] tabular-nums">
+                <span className="text-xs font-bold text-[#22B585] tabular-nums">
                   {row.roi.toFixed(1)}%
                 </span>
                 {row.suggested && (
-                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#1D9E75]/10 text-[#1D9E75] border border-[#1D9E75]/25 uppercase tracking-widest shrink-0">
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#22B585]/10 text-[#22B585] border border-[#22B585]/25 uppercase tracking-widest shrink-0">
                     Suggested
                   </span>
                 )}

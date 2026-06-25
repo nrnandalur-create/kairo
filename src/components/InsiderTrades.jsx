@@ -71,8 +71,8 @@ export default function InsiderTrades({ data, loading }) {
                 <span className="text-xs text-[var(--c-text)] flex-1 min-w-0 truncate">{titleCase(t.name)}</span>
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-widest shrink-0 w-10 text-center ${
                   isBuy
-                    ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/25'
-                    : 'bg-[#e24b4a]/10 text-[#e24b4a] border-[#e24b4a]/25'
+                    ? 'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25'
+                    : 'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25'
                 }`}>
                   {isBuy ? 'Buy' : 'Sell'}
                 </span>

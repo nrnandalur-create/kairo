@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand:    #1D9E75;
-  --color-bull:     #1D9E75;
-  --color-bear:     #e24b4a;
-  --color-amber:    #d4922a;
+  --color-brand:    #22B585;
+  --color-bull:     #22B585;
+  --color-bear:     #ef5454;
+  --color-amber:    #e3a234;
   --color-bg:       #080c0a;
   --color-card:     #0f1611;
   --color-border:   #1a2e1f;
@@ -14,7 +14,7 @@
 /* ── Theme tokens ──────────────────────────────────────────────────────────── */
 /* Dark theme defaults. Light theme overrides below switch them in one place,
    so any component using `var(--c-*)` flips automatically. Brand accents
-   (#1D9E75 etc) stay the same in both themes for consistency. */
+   (#22B585 etc) stay the same in both themes for consistency. */
 :root {
   --c-bg:                #080c0a;
   --c-bg-deep:           #0a100c;
@@ -54,48 +54,46 @@
 }
 
 [data-theme="light"] {
-  /* Body — sage-tinted off-white. Pure white is too stark and loses the
-     Kairo identity; this base has clear brand character. */
-  --c-bg:                #ebf1e9;
-  --c-bg-deep:           #f4f8f2;
-  --c-card:              #fafdf7;    /* warm soft off-white — easier on the eyes than pure #ffffff */
+  /* Body — warm neutral off-white (per design brief: F6F7F3 / F7F8F5).
+     Less sage tint, more "premium paper" — Stripe / Linear-style. */
+  --c-bg:                #f6f7f3;
+  --c-bg-deep:           #f0f1ec;
+  --c-card:              #fcfcfa;    /* warm soft white — slight cream tint */
 
-  /* Borders — saturated sage tones so cards have real definition
-     against the body bg. */
-  --c-border:            #bdcbb4;
-  --c-border-strong:     #97a98c;
+  /* Borders — neutral with a hint of warmth */
+  --c-border:            #d8dcd2;
+  --c-border-strong:     #b3b9aa;
 
-  /* Text — every level dark enough to clear AA contrast. The previous
-     palette had muted/faint variants under 3:1 which read as washed out. */
-  --c-text:              #0a1c10;   /* near-black with sage tint, ~16:1 */
-  --c-text-strong:       #050f08;   /* near-black emphasis — flipped from white */
-  --c-text-muted:        #2c3e34;   /* ~9:1 */
-  --c-text-faint:        #455a4f;   /* ~6:1 — bumped from #4d6055 for AA on input bgs */
-  --c-text-fainter:      #5e7066;   /* ~4.5:1 — bumped for AA */
-  --c-chip-bg:           #dfe9d8;   /* light sage chip / track */
+  /* Text — strong contrast across the hierarchy */
+  --c-text:              #0a1c10;   /* ~17:1 against bg */
+  --c-text-strong:       #050f08;   /* emphasis */
+  --c-text-muted:        #2e3f35;   /* ~9:1 */
+  --c-text-faint:        #475a4f;   /* ~6:1 */
+  --c-text-fainter:      #607066;   /* ~4.5:1 — clears AA */
+  --c-chip-bg:           #e6e8de;   /* warm neutral chip */
 
-  /* Light-mode input surface — clearly inset against the card, never harsh.
-     Distinct from body bg so inputs read as "below" the card surface. */
-  --c-input-bg:          #f0f5ed;
-  --c-input-border:      #c5d3bd;
-  --c-input-placeholder: #8a9b91;   /* visible but recedes from typed text */
+  /* Inputs — clearly inset against the card surface */
+  --c-input-bg:          #eef0e9;
+  --c-input-border:      #cdd1c4;
+  --c-input-placeholder: #8a9b91;
 
-  /* Light hover row — slightly darker than card so hover reads as "lifted" */
-  --c-hover-bg:          #ecf2e9;
+  /* Hover row — slightly darker than card for "lift" feel */
+  --c-hover-bg:          #f0f1ec;
 
-  /* Light modal backdrop — soft sage dim, NOT dark */
-  --c-overlay:           rgba(70, 100, 80, 0.30);
+  /* Modal backdrop — soft neutral dim (not dark) */
+  --c-overlay:           rgba(90, 100, 80, 0.28);
 
   /* Glass — sage-tinted, not pure white. This is the key fix: glass
      panels over a near-white bg looked like flat translucent layers
      before. Now they read as a distinct material. */
-  --c-glass-rgb:         235, 244, 232;
-  --c-glass-card-rgb:    253, 255, 252;
-  --c-glass-border:      rgba(40, 80, 55, 0.14);
-  --c-glass-border-strong: rgba(40, 80, 55, 0.20);
+  /* Glass — neutral warm tint matching the new body, not sage. */
+  --c-glass-rgb:         246, 247, 243;
+  --c-glass-card-rgb:    252, 252, 250;
+  --c-glass-border:      rgba(20, 30, 25, 0.10);
+  --c-glass-border-strong: rgba(20, 30, 25, 0.14);
   --c-glass-highlight:   rgba(255, 255, 255, 0.65);
   /* Stronger drop-shadows so cards lift off the body bg. */
-  --c-shadow-alpha:      0.18;
+  --c-shadow-alpha:      0.16;
 }
 
 /* ── Keyframes ─────────────────────────────────────────────────────────────── */
@@ -169,14 +167,23 @@ body {
   transition: background-color 200ms ease, color 200ms ease;
 }
 
-/* Light-mode ambient gradient — more saturated than dark mode to give the
-   high-key bg real brand character. Without this the sage tint reads as
-   "off-white" rather than "Kairo green." */
+/* Light-mode ambient gradient — restrained brand wash so the warm neutral
+   reads as the dominant tone with subtle Kairo green underneath. */
 [data-theme="light"] body {
   background-image:
-    radial-gradient(ellipse 70% 60% at 18% 8%,  rgba(29,158,117,0.18), transparent 62%),
-    radial-gradient(ellipse 60% 70% at 82% 92%, rgba(29,158,117,0.14), transparent 70%),
-    radial-gradient(ellipse 45% 45% at 50% 50%, rgba(29,158,117,0.07), transparent 80%);
+    radial-gradient(ellipse 60% 55% at 20% 8%,  rgba(29,158,117,0.08), transparent 65%),
+    radial-gradient(ellipse 55% 60% at 80% 92%, rgba(29,158,117,0.06), transparent 72%);
+}
+
+/* ── Sidebar / Status bar layout sync (lg+) ────────────────────────────────── */
+/* When the sidebar nav is hovered it expands 60px → 200px. The fixed
+   status bar must shift to begin at the new sidebar edge so the two
+   regions stay independent. Uses the general sibling selector to avoid
+   adding JS for what is fundamentally a CSS layout problem. */
+@media (min-width: 1024px) {
+  nav.group:hover ~ [data-statusbar] {
+    left: 200px;
+  }
 }
 
 /* Light-mode card override — replaces the dark-mode gradient with a crisp

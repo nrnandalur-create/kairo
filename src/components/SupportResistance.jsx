@@ -14,8 +14,8 @@ function LevelRow({ price, level, isResistance }) {
   const pct      = pctAway(level, price)
   const distance = Math.abs((level - price) / price)
   const barWidth = Math.min(100, distance * 500) // scale: 20% gap = full bar
-  const color    = isResistance ? '#e24b4a' : '#1D9E75'
-  const labelColor = isResistance ? 'text-[#e24b4a]' : 'text-[#1D9E75]'
+  const color    = isResistance ? '#ef5454' : '#22B585'
+  const labelColor = isResistance ? 'text-[#ef5454]' : 'text-[#22B585]'
 
   return (
     <div className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-[var(--c-hover-bg)] transition-colors duration-150">
@@ -63,7 +63,7 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
           </span>
           <div className="flex-1 flex items-center gap-1.5">
             <div className="flex-1 h-px bg-[#263d2c]" />
-            <span className="text-[9px] font-bold text-[#1D9E75]/70 uppercase tracking-widest px-2 py-0.5 border border-[#1D9E75]/20 rounded-full bg-[#1D9E75]/5">Now</span>
+            <span className="text-[9px] font-bold text-[#22B585]/70 uppercase tracking-widest px-2 py-0.5 border border-[#22B585]/20 rounded-full bg-[#22B585]/5">Now</span>
             <div className="flex-1 h-px bg-[#263d2c]" />
           </div>
           <span className="text-[11px] text-[var(--c-text-faint)] w-12 shrink-0" />

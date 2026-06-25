@@ -26,7 +26,7 @@ export default function EmptyState({ icon, title, body, action, dense = false })
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-1 text-[11px] font-semibold tracking-wide text-[#1D9E75] hover:text-[#27c490] cursor-pointer transition-colors"
+          className="mt-1 text-[11px] font-semibold tracking-wide text-[#22B585] hover:text-[#27c490] cursor-pointer transition-colors"
         >
           {action.label} →
         </button>

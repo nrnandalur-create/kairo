@@ -15,9 +15,9 @@ function fmtPct(n) {
 function AlertBadge({ price, alertPrice, alertDirection }) {
   if (price == null || alertPrice == null || !alertDirection) return null
   if (alertDirection === 'above' && price >= alertPrice)
-    return <span className="text-[9px] font-bold text-[#1D9E75] bg-[#1D9E75]/10 border border-[#1D9E75]/25 px-1.5 py-0.5 rounded-full leading-none shrink-0">▲ ALERT</span>
+    return <span className="text-[9px] font-bold text-[#22B585] bg-[#22B585]/10 border border-[#22B585]/25 px-1.5 py-0.5 rounded-full leading-none shrink-0">▲ ALERT</span>
   if (alertDirection === 'below' && price <= alertPrice)
-    return <span className="text-[9px] font-bold text-[#e24b4a] bg-[#e24b4a]/10 border border-[#e24b4a]/25 px-1.5 py-0.5 rounded-full leading-none shrink-0">▼ ALERT</span>
+    return <span className="text-[9px] font-bold text-[#ef5454] bg-[#ef5454]/10 border border-[#ef5454]/25 px-1.5 py-0.5 rounded-full leading-none shrink-0">▼ ALERT</span>
   return null
 }
 
@@ -63,8 +63,8 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
     (alertDirection === 'below' && price <= alertPrice)
   )
 
-  const bellColor = isTriggered ? (alertDirection === 'above' ? '#1D9E75' : '#e24b4a')
-                  : hasAlert    ? '#d4922a'
+  const bellColor = isTriggered ? (alertDirection === 'above' ? '#22B585' : '#ef5454')
+                  : hasAlert    ? '#e3a234'
                   : undefined
 
   const handleSave = async e => {
@@ -106,8 +106,8 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
                 className={`flex-1 text-[10px] font-bold py-1 rounded-lg border transition-all ${
                   dir === d
                     ? d === 'above'
-                      ? 'bg-[#1D9E75]/10 border-[#1D9E75]/30 text-[#1D9E75]'
-                      : 'bg-[#e24b4a]/10 border-[#e24b4a]/30 text-[#e24b4a]'
+                      ? 'bg-[#22B585]/10 border-[#22B585]/30 text-[#22B585]'
+                      : 'bg-[#ef5454]/10 border-[#ef5454]/30 text-[#ef5454]'
                     : 'bg-transparent border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[var(--c-border-strong)]'
                 }`}
               >
@@ -126,7 +126,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.key === 'Enter' && handleSave(e)}
             placeholder={price != null ? fmtPrice(price) : 'Price'}
-            className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#1D9E75] transition-colors"
+            className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors"
           />
 
           {/* Actions */}
@@ -134,14 +134,14 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
             <button
               onClick={handleSave}
               disabled={!inputVal}
-              className="flex-1 bg-[#1D9E75] disabled:opacity-30 hover:bg-[#20b382] text-white text-[10px] font-bold py-1.5 rounded-lg transition-colors cursor-pointer disabled:cursor-default"
+              className="flex-1 bg-[#22B585] disabled:opacity-30 hover:bg-[#2BC093] text-white text-[10px] font-bold py-1.5 rounded-lg transition-colors cursor-pointer disabled:cursor-default"
             >
               Set Alert
             </button>
             {hasAlert && (
               <button
                 onClick={handleClear}
-                className="text-[10px] text-[var(--c-text-faint)] hover:text-[#e24b4a] transition-colors shrink-0"
+                className="text-[10px] text-[var(--c-text-faint)] hover:text-[#ef5454] transition-colors shrink-0"
               >
                 Clear
               </button>
@@ -190,7 +190,7 @@ function NoteInline({ symbol, note, onSave }) {
         onClick={e => e.stopPropagation()}
         maxLength={120}
         placeholder="Add a note…"
-        className="w-full text-[10px] text-[#8aab97] bg-[var(--c-input-bg)] border border-[#1D9E75]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
+        className="w-full text-[10px] text-[#8aab97] bg-[var(--c-input-bg)] border border-[#22B585]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
       />
     )
   }
@@ -228,7 +228,7 @@ function WatchlistTile({
 }) {
   const up       = changePct != null && !isNaN(changePct) && changePct >= 0
   const valid    = changePct != null && !isNaN(changePct)
-  const pctColor = valid ? (up ? '#1D9E75' : '#e24b4a') : '#4b6358'
+  const pctColor = valid ? (up ? '#22B585' : '#ef5454') : '#4b6358'
 
   return (
     <div
@@ -268,7 +268,7 @@ function WatchlistTile({
       <button
         onClick={e => { e.stopPropagation(); onRemove(symbol) }}
         aria-label={`Remove ${symbol} from watchlist`}
-        className="shrink-0 text-[#263d2c] hover:text-[#e24b4a] transition-colors duration-150 opacity-0 group-hover:opacity-100"
+        className="shrink-0 text-[#263d2c] hover:text-[#ef5454] transition-colors duration-150 opacity-0 group-hover:opacity-100"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

@@ -4,10 +4,10 @@ import { fmtETClock } from '../utils/format'
 
 // State → color tokens. Open is brand-green, after/pre is amber, closed is bear-red.
 const COLOR = {
-  open:   { dot: '#1D9E75', text: '#1D9E75', ring: 'rgba(29,158,117,0.55)' },
-  pre:    { dot: '#d4922a', text: '#d4922a', ring: 'rgba(212,146,42,0.55)' },
-  after:  { dot: '#d4922a', text: '#d4922a', ring: 'rgba(212,146,42,0.55)' },
-  closed: { dot: '#e24b4a', text: '#e24b4a', ring: 'rgba(226,75,74,0.45)'  },
+  open:   { dot: '#22B585', text: '#22B585', ring: 'rgba(29,158,117,0.55)' },
+  pre:    { dot: '#e3a234', text: '#e3a234', ring: 'rgba(212,146,42,0.55)' },
+  after:  { dot: '#e3a234', text: '#e3a234', ring: 'rgba(212,146,42,0.55)' },
+  closed: { dot: '#ef5454', text: '#ef5454', ring: 'rgba(226,75,74,0.45)'  },
 }
 
 export default function MarketStatusPill({ compact = false }) {

@@ -72,11 +72,11 @@ export default function CandleChart({ candles, synthetic }) {
     })
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor:      '#1D9E75',
-      downColor:    '#e24b4a',
+      upColor:      '#22B585',
+      downColor:    '#ef5454',
       borderVisible: false,
-      wickUpColor:  '#1D9E75',
-      wickDownColor:'#e24b4a',
+      wickUpColor:  '#22B585',
+      wickDownColor:'#ef5454',
     })
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
@@ -145,7 +145,7 @@ export default function CandleChart({ candles, synthetic }) {
                 onClick={() => setTf(label)}
                 className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all duration-150 cursor-pointer active:scale-[0.94] ${
                   tf === label
-                    ? 'bg-[#1D9E75] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
+                    ? 'bg-[#22B585] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
                     : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-card)]'
                 }`}
               >
@@ -158,8 +158,8 @@ export default function CandleChart({ candles, synthetic }) {
             onClick={() => setShowBands(v => !v)}
             className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer active:scale-[0.94] ${
               showBands
-                ? 'bg-[#1D9E75] text-white border-[#1D9E75] shadow-[0_0_8px_rgba(29,158,117,0.25)]'
-                : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#1D9E75]/50 hover:text-[#1D9E75]'
+                ? 'bg-[#22B585] text-white border-[#22B585] shadow-[0_0_8px_rgba(29,158,117,0.25)]'
+                : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#22B585]/50 hover:text-[#22B585]'
             }`}
           >
             BB
