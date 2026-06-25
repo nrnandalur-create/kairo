@@ -1,9 +1,17 @@
 import { rateLimit } from './_rateLimit.js'
 import { validateTicker } from './_validate.js'
-import yahooFinance from 'yahoo-finance2'
 
-// Suppress library notices that show up in the function logs.
-yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
+// yahoo-finance2 is heavy (~3MB with deps). Lazy-load it so the happy path
+// (Finnhub responds successfully) doesn't pay the cold-start cost. Only the
+// rare fallback path pays for module init.
+let _yahoo = null
+async function getYahoo() {
+  if (_yahoo) return _yahoo
+  const { default: yahooFinance } = await import('yahoo-finance2')
+  yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
+  _yahoo = yahooFinance
+  return yahooFinance
+}
 
 const FINNHUB_BASE = 'https://finnhub.io/api/v1'
 const AV_BASE      = 'https://www.alphavantage.co/query'
@@ -130,6 +138,7 @@ async function fetchFinnhubMarket(sym) {
 // funds, less-common ETFs, etc.). Maps Yahoo's response into the same shape
 // the rest of the app expects from Finnhub.
 async function fetchYahooMarket(sym) {
+  const yahooFinance = await getYahoo()
   // One call returns a rich superset of what Finnhub gives across three calls.
   const [quoteRaw, summary] = await Promise.all([
     yahooFinance.quote(sym),
@@ -202,7 +211,7 @@ async function fetchYahooMarket(sym) {
   let candles = []
   try {
     const bars = await yahooFinance.historical(sym, {
-      period1: new Date(since * 1000),
+      period1:  new Date(since * 1000),
       interval: '1d',
     })
     candles = bars.map(b => ({
@@ -255,17 +264,22 @@ export default async function handler(req, res) {
     return res.json({ ...finnhubData, source: 'finnhub' })
   }
 
-  // Finnhub didn't recognize the ticker (or errored) — fall back to Yahoo.
+  // Auth errors short-circuit the fallback — the user needs to see the real
+  // problem, not a generic "ticker not found" message.
+  if (finnhubErr?.message?.includes('401') || finnhubErr?.message?.includes('403')) {
+    return res.status(401).json({ error: 'Invalid Finnhub API key. Check your FINNHUB_API_KEY configuration.' })
+  }
+
+  // Finnhub didn't recognize the ticker (or had a non-auth error) — fall
+  // back to Yahoo. Time-box the fallback so a slow Yahoo doesn't drag the
+  // whole response past the function's timeout.
   try {
-    const yahooData = await fetchYahooMarket(ticker)
+    const yahooData = await Promise.race([
+      fetchYahooMarket(ticker),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Yahoo timeout')), 6000)),
+    ])
     return res.json({ ...yahooData, source: 'yahoo' })
-  } catch (yahooErr) {
-    // Both providers failed. If Finnhub errored with auth, surface that;
-    // otherwise treat as a "ticker not found" 404 so the UI shows the
-    // friendly "No data" state instead of a generic error.
-    if (finnhubErr?.message?.includes('401') || finnhubErr?.message?.includes('403')) {
-      return res.status(401).json({ error: 'Invalid Finnhub API key. Check your FINNHUB_API_KEY configuration.' })
-    }
+  } catch {
     return res.status(404).json({ error: `No data found for "${ticker}". Check the symbol and try again.` })
   }
 }

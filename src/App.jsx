@@ -149,10 +149,18 @@ export default function App() {
 
       setLoading(LOADING_NONE)
     } catch (err) {
+      const msg = err.message ?? ''
+      // The server already sends friendly per-status messages — surface them
+      // verbatim unless we recognize a specific class of failure we can phrase
+      // better than the server did.
       setError(
-        err.message.includes('401') || err.message.includes('403')
+        msg.includes('401') || msg.includes('403') || /api key/i.test(msg)
           ? 'Invalid Finnhub API key. Check your FINNHUB_API_KEY in Vercel environment variables.'
-          : 'Failed to fetch market data. Check your API key or try again.'
+          : /no data found/i.test(msg)
+          ? msg                            // server's own "No data found for X" — use as-is
+          : msg.includes('429')
+          ? 'You\'re searching too quickly. Wait a moment and try again.'
+          : msg || 'Failed to fetch market data. Please try again.'
       )
       setLoading(LOADING_NONE)
     }
