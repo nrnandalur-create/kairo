@@ -29,7 +29,7 @@ export default function OptionsScanner({ data }) {
             </span>
           )}
         </div>
-        <span className="text-[10px] text-[var(--c-text-faint)] bg-[var(--c-bg-deep)] border border-[var(--c-border)] px-2.5 py-1 rounded-lg">
+        <span className="text-[10px] text-[var(--c-text-faint)] bg-[var(--c-input-bg)] border border-[var(--c-input-border)] px-2.5 py-1 rounded-lg">
           Live options data unavailable
         </span>
       </div>

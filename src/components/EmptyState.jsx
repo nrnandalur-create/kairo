@@ -12,7 +12,7 @@ export default function EmptyState({ icon, title, body, action, dense = false })
       dense ? 'px-4 py-6' : 'px-6 py-10'
     } animate-enter`}>
       {icon && (
-        <div className="w-10 h-10 rounded-full bg-[var(--c-bg-deep)] border border-[var(--c-border)] flex items-center justify-center text-[var(--c-text-fainter)]">
+        <div className="w-10 h-10 rounded-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] flex items-center justify-center text-[var(--c-text-fainter)]">
           {icon}
         </div>
       )}

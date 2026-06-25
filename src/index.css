@@ -23,10 +23,15 @@
   --c-border-strong:     #263d2c;
   --c-text:              #d1d9d5;
   --c-text-strong:       #ffffff;   /* emphasis level — price headlines, brand title */
-  --c-text-muted:        #8a9b91;
-  --c-text-faint:        #4b6358;
-  --c-text-fainter:      #3a4f44;
+  --c-text-muted:        #a8bdb1;   /* brightened from #8a9b91 — better contrast */
+  --c-text-faint:        #5e7b6c;   /* brightened from #4b6358 — readable on dark cards */
+  --c-text-fainter:      #4a6155;   /* brightened from #3a4f44 */
   --c-chip-bg:           #1a2e1f;   /* small tag / progress track backgrounds */
+
+  /* Unified input/form surface — distinct from cards, consistent everywhere */
+  --c-input-bg:          #0a100c;
+  --c-input-border:      #1a2e1f;
+  --c-input-placeholder: #5d7068;   /* readable but not competing */
 
   /* Glass tokens — RGB triplets used by rgba() in the glass classes,
      plus border + highlight + shadow alphas. */
@@ -59,9 +64,15 @@
   --c-text:              #0a1c10;   /* near-black with sage tint, ~16:1 */
   --c-text-strong:       #050f08;   /* near-black emphasis — flipped from white */
   --c-text-muted:        #2c3e34;   /* ~9:1 */
-  --c-text-faint:        #4d6055;   /* ~5.5:1 */
-  --c-text-fainter:      #6c7e74;   /* ~3.6:1 */
+  --c-text-faint:        #455a4f;   /* ~6:1 — bumped from #4d6055 for AA on input bgs */
+  --c-text-fainter:      #5e7066;   /* ~4.5:1 — bumped for AA */
   --c-chip-bg:           #dfe9d8;   /* light sage chip / track */
+
+  /* Light-mode input surface — clearly inset against the card, never harsh.
+     Distinct from body bg so inputs read as "below" the card surface. */
+  --c-input-bg:          #f0f5ed;
+  --c-input-border:      #c5d3bd;
+  --c-input-placeholder: #8a9b91;   /* visible but recedes from typed text */
 
   /* Glass — sage-tinted, not pure white. This is the key fix: glass
      panels over a near-white bg looked like flat translucent layers

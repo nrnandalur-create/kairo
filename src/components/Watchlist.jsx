@@ -126,7 +126,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.key === 'Enter' && handleSave(e)}
             placeholder={price != null ? fmtPrice(price) : 'Price'}
-            className="w-full bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[var(--c-text)] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors"
+            className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#1D9E75] transition-colors"
           />
 
           {/* Actions */}
@@ -190,7 +190,7 @@ function NoteInline({ symbol, note, onSave }) {
         onClick={e => e.stopPropagation()}
         maxLength={120}
         placeholder="Add a note…"
-        className="w-full text-[10px] text-[#8aab97] bg-[#0a130c] border border-[#1D9E75]/40 rounded px-1.5 py-0.5 outline-none placeholder-[#4b6358] leading-tight"
+        className="w-full text-[10px] text-[#8aab97] bg-[#0a130c] border border-[#1D9E75]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
       />
     )
   }

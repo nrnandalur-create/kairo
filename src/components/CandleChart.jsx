@@ -138,7 +138,7 @@ export default function CandleChart({ candles, synthetic }) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Timeframe buttons */}
-          <div className="flex items-center gap-1 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg p-0.5">
             {TIMEFRAMES.map(({ label }) => (
               <button
                 key={label}
@@ -159,7 +159,7 @@ export default function CandleChart({ candles, synthetic }) {
             className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer active:scale-[0.94] ${
               showBands
                 ? 'bg-[#1D9E75] text-white border-[#1D9E75] shadow-[0_0_8px_rgba(29,158,117,0.25)]'
-                : 'bg-[var(--c-bg-deep)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#1D9E75]/50 hover:text-[#1D9E75]'
+                : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#1D9E75]/50 hover:text-[#1D9E75]'
             }`}
           >
             BB

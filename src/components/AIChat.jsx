@@ -37,7 +37,7 @@ function Bubble({ role, content }) {
         className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed ${
           isUser
             ? 'bg-[#1D9E75]/12 border border-[#1D9E75]/25 text-[var(--c-text)] rounded-br-md'
-            : 'bg-[var(--c-bg-deep)] border border-[var(--c-border)] text-[var(--c-text)]/90 rounded-bl-md'
+            : 'bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text)]/90 rounded-bl-md'
         }`}
       >
         {content}
@@ -49,7 +49,7 @@ function Bubble({ role, content }) {
 function ThinkingBubble() {
   return (
     <div className="flex justify-start">
-      <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
+      <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" />
         <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" style={{ animationDelay: '120ms' }} />
         <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/60 animate-pulse" style={{ animationDelay: '240ms' }} />
@@ -158,7 +158,7 @@ export default function AIChat({ ticker, context }) {
                 type="button"
                 onClick={() => send(s)}
                 disabled={loading}
-                className="px-2.5 py-1.5 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-deep)] text-[11.5px] text-[var(--c-text-muted)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                className="px-2.5 py-1.5 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)] text-[11.5px] text-[var(--c-text-muted)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {s}
               </button>
@@ -178,7 +178,7 @@ export default function AIChat({ ticker, context }) {
           placeholder={loading ? 'Thinking…' : `Ask about ${ticker}…`}
           maxLength={MAX_QUESTION}
           disabled={loading}
-          className="flex-1 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#3a4f44] outline-none focus:border-[#1D9E75] transition-colors disabled:opacity-50"
+          className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#1D9E75] transition-colors disabled:opacity-50"
         />
         <button
           type="button"

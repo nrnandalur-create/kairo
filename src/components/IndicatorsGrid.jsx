@@ -22,7 +22,7 @@ function StatusBadge({ label, color }) {
 
 function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) {
   return (
-    <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-2.5 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410]">
+    <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-2.5 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[#0c1410]">
       <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">{title}</span>
       <div className="flex items-end justify-between gap-2">
         <span className="text-xl font-black tabular-nums text-[var(--c-text)] leading-none">{value}</span>
@@ -47,7 +47,7 @@ function Skeleton() {
       <div className="h-2.5 w-36 rounded-full shimmer" />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-2.5">
+          <div key={i} className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-2.5">
             <div className="h-2 rounded-full shimmer w-3/5" />
             <div className="h-6 rounded-full shimmer w-2/5" />
           </div>

@@ -90,7 +90,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             onChange={e => setTarget(e.target.value)}
             placeholder={p ? `e.g. ${(p * 1.1).toFixed(2)}` : 'Price'}
             aria-invalid={!!errors.target}
-            className={`w-32 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
+            className={`w-32 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors tabular-nums ${
               errors.target
                 ? 'border-[#e24b4a] focus:border-[#e24b4a]'
                 : 'border-[var(--c-border)] focus:border-[#1D9E75]'
@@ -108,7 +108,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
             onChange={e => setStop(e.target.value)}
             placeholder={p ? `e.g. ${(p * 0.9).toFixed(2)}` : 'Price'}
             aria-invalid={!!errors.stop}
-            className={`w-32 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors tabular-nums ${
+            className={`w-32 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors tabular-nums ${
               errors.stop
                 ? 'border-[#e24b4a] focus:border-[#e24b4a]'
                 : 'border-[var(--c-border)] focus:border-[#e24b4a]'

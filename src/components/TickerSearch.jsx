@@ -97,7 +97,7 @@ export default function TickerSearch({ onSearch, loading }) {
           disabled={loading}
           autoComplete="off"
           spellCheck={false}
-          className="w-full bg-[#0d1510] border border-[#1e2d28] rounded-xl px-4 py-2.5 text-sm text-[var(--c-text)] placeholder-[#2e4a3a] outline-none transition-all duration-200 focus:border-[#1D9E75] focus:bg-[#0f1a12] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full bg-[#0d1510] border border-[#1e2d28] rounded-xl px-4 py-2.5 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-all duration-200 focus:border-[#1D9E75] focus:bg-[#0f1a12] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
         />
 
         {/* Dropdown */}

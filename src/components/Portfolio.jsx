@@ -226,7 +226,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
           {!result && (
             <div className="px-6 py-5 flex flex-col gap-4">
               {userId && !portfolioLoading && savedHoldings.length === 0 ? (
-                <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex items-start gap-3">
+                <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex items-start gap-3">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#1D9E75] shrink-0 mt-0.5">
                     <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
                     <path d="M7 4.5v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
@@ -250,7 +250,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                           placeholder="AAPL"
                           maxLength={5}
                           aria-invalid={!!err.ticker}
-                          className={`w-24 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors uppercase ${
+                          className={`w-24 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors uppercase ${
                             err.ticker
                               ? 'border-[#e24b4a] focus:border-[#e24b4a]'
                               : 'border-[var(--c-border)] focus:border-[#1D9E75]'
@@ -263,7 +263,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                           placeholder="Shares"
                           min="0"
                           aria-invalid={!!err.shares}
-                          className={`flex-1 bg-[var(--c-bg-deep)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[#263d2c] outline-none transition-colors ${
+                          className={`flex-1 bg-[var(--c-input-bg)] border rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-colors ${
                             err.shares
                               ? 'border-[#e24b4a] focus:border-[#e24b4a]'
                               : 'border-[var(--c-border)] focus:border-[#1D9E75]'
@@ -382,7 +382,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                 {!aiReport && aiReport !== 'loading' && (
                   <button
                     onClick={runAIAnalysis}
-                    className="flex items-center justify-center gap-2 bg-[var(--c-bg-deep)] border border-[var(--c-border)] hover:border-[#1D9E75]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
+                    className="flex items-center justify-center gap-2 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] hover:border-[#1D9E75]/40 rounded-xl px-4 py-3 transition-all duration-150 group"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#1D9E75]">
                       <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -428,7 +428,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                     <button
                       key={h.ticker}
                       onClick={() => { onClose(); onAnalyze(h.ticker) }}
-                      className="text-xs font-bold px-3 py-1.5 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150"
+                      className="text-xs font-bold px-3 py-1.5 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#1D9E75]/40 hover:text-[#1D9E75] transition-all duration-150"
                     >
                       {h.ticker} →
                     </button>

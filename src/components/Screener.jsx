@@ -76,7 +76,7 @@ function FilterChips({ def, value, onChange }) {
             className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer ${
               value === opt.value
                 ? 'bg-[#1D9E75] text-white border-[#1D9E75]'
-                : 'bg-[var(--c-bg-deep)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
+                : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
             }`}
           >
             {opt.label}
@@ -114,7 +114,7 @@ function StockCard({ stock, indicatorLoading, onSelect }) {
   return (
     <div
       onClick={() => onSelect(stock.symbol)}
-      className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--c-border-strong)] hover:bg-[#0c1410] transition-all duration-150 animate-enter"
+      className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--c-border-strong)] hover:bg-[#0c1410] transition-all duration-150 animate-enter"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -151,7 +151,7 @@ function StockCard({ stock, indicatorLoading, onSelect }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3">
       <div className="flex justify-between">
         <div className="h-3 w-20 rounded-full shimmer" />
         <div className="h-3 w-10 rounded-full shimmer" />

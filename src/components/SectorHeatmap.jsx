@@ -128,7 +128,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
                   </div>
 
                   {/* Magnitude bar */}
-                  <div className="h-[3px] bg-[var(--c-bg-deep)] rounded-full overflow-hidden">
+                  <div className="h-[3px] bg-[var(--c-input-bg)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${barW}%`, background: up ? '#1D9E75' : '#e24b4a' }}

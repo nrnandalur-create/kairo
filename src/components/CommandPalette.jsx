@@ -287,7 +287,7 @@ function ResultRow({ item, active, onSelect }) {
       {/* Leading icon: ticker mono / section glyph / search magnifier */}
       <span className={`shrink-0 w-9 h-9 rounded-md border flex items-center justify-center font-mono text-[10px] font-bold tabular-nums ${
         item.kind === 'section'
-          ? 'border-[var(--c-border)] bg-[var(--c-bg-deep)] text-[var(--c-text-faint)]'
+          ? 'border-[var(--c-border)] bg-[var(--c-input-bg)] text-[var(--c-text-faint)]'
           : 'border-[#1D9E75]/25 bg-[#1D9E75]/5 text-[#1D9E75]'
       }`}>
         {item.kind === 'ticker' || item.kind === 'recent' ? item.sym

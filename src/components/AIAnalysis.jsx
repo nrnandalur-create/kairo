@@ -63,7 +63,7 @@ export default function AIAnalysis({ data, loading, asOf }) {
         <span className="text-[9px] font-bold tracking-widest uppercase text-[var(--c-text-faint)] border border-[var(--c-border)] rounded-full px-2 py-0.5">Unavailable</span>
       </div>
       <div className="flex items-start gap-3">
-        <span className="shrink-0 w-9 h-9 rounded-full bg-[var(--c-bg-deep)] border border-[var(--c-border)] text-[var(--c-text-fainter)] flex items-center justify-center text-base">i</span>
+        <span className="shrink-0 w-9 h-9 rounded-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text-fainter)] flex items-center justify-center text-base">i</span>
         <div className="flex flex-col gap-1">
           <p className="text-sm text-[var(--c-text)]/80">AI analysis isn&apos;t available for this ticker right now.</p>
           <p className="text-xs text-[var(--c-text-faint)] leading-relaxed">Penny stocks, ADRs, and instruments with insufficient candle history are skipped. Try a major ticker (e.g. AAPL, NVDA, TSLA).</p>
@@ -121,7 +121,7 @@ export default function AIAnalysis({ data, loading, asOf }) {
 
       {/* Bollinger explanation */}
       {data.bollingerExplanation && (
-        <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-3.5 transition-colors hover:border-[var(--c-border-strong)]">
+        <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3.5 transition-colors hover:border-[var(--c-border-strong)]">
           <p className="text-[10px] text-[var(--c-text-faint)] font-bold uppercase tracking-widest mb-1.5">Bollinger Bands</p>
           <p className="text-xs text-[var(--c-text)]/60 leading-relaxed">{data.bollingerExplanation}</p>
         </div>
@@ -129,7 +129,7 @@ export default function AIAnalysis({ data, loading, asOf }) {
 
       {/* Candle pattern */}
       {data.candlePatternMeaning && (
-        <div className="bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-xl p-3.5 transition-colors hover:border-[var(--c-border-strong)]">
+        <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3.5 transition-colors hover:border-[var(--c-border-strong)]">
           <p className="text-[10px] text-[var(--c-text-faint)] font-bold uppercase tracking-widest mb-1.5">Candle Pattern</p>
           <p className="text-xs text-[var(--c-text)]/60 leading-relaxed">{data.candlePatternMeaning}</p>
         </div>

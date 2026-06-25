@@ -153,7 +153,7 @@ function SidePanel({ ticker, loading, data, error }) {
                 <span className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-wide">Confidence</span>
                 <span className="text-[10px] font-bold" style={{ color: sc }}>{ai.confidence}/100</span>
               </div>
-              <div className="h-1.5 bg-[var(--c-bg-deep)] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--c-input-bg)] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{ width: `${ai.confidence}%`, background: sc }}
@@ -212,7 +212,7 @@ function SidePanel({ ticker, loading, data, error }) {
               <span>52W Low {fmtPrice(lo52)}</span>
               <span>{fmtPrice(hi52)} 52W High</span>
             </div>
-            <div className="h-1.5 bg-[var(--c-bg-deep)] rounded-full overflow-hidden">
+            <div className="h-1.5 bg-[var(--c-input-bg)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#1D9E75] rounded-full"
                 style={{ width: `${rangePos * 100}%` }}
@@ -256,7 +256,7 @@ export default function CompareView({ open, onClose }) {
 
   if (!open) return null
 
-  const inputCls = "flex-1 min-w-0 bg-[var(--c-bg-deep)] border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[#263d2c] outline-none focus:border-[#1D9E75] transition-colors uppercase"
+  const inputCls = "flex-1 min-w-0 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#1D9E75] transition-colors uppercase"
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--c-bg)] flex flex-col" onClick={e => e.stopPropagation()}>

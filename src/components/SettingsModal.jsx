@@ -36,7 +36,7 @@ function Choice({ label, options, value, onChange, hint }) {
               className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono font-semibold tracking-[0.05em] cursor-pointer transition-colors ${
                 active
                   ? 'bg-[#1D9E75]/15 border-[#1D9E75]/50 text-[#1D9E75]'
-                  : 'bg-[var(--c-bg-deep)] border-[var(--c-border)] text-[var(--c-text-muted)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
+                  : 'bg-[var(--c-input-bg)] border-[var(--c-border)] text-[var(--c-text-muted)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
               }`}
             >
               {opt.label}
@@ -94,7 +94,7 @@ export default function SettingsModal({ open, onClose }) {
               <label className="text-[11px] font-semibold text-[var(--c-text)] uppercase tracking-[0.12em]">Appearance</label>
               <span className="text-[10.5px] text-[var(--c-text-muted)]">Light or dark</span>
             </div>
-            <div className="flex gap-1.5 p-1 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-deep)]">
+            <div className="flex gap-1.5 p-1 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)]">
               {[
                 { value: 'dark',  label: 'Dark',  icon: '☾' },
                 { value: 'light', label: 'Light', icon: '☀' },
