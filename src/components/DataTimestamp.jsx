@@ -9,19 +9,32 @@ import { fmtRelTime } from '../utils/format'
 //   <div className="text-[10px] text-[#4b6358] mt-3 ...">
 //     <DataTimestamp asOf={data.fetchedAt} source="Finnhub" />
 //   </div>
-export default function DataTimestamp({ asOf, source, prefix = 'Updated' }) {
+// `staleAfterMs` flips the dot + text to amber when the data crosses the
+// threshold. Default 10 minutes mirrors the auto-refresh window (5 min
+// interval + 1 missed cycle) — by the time the dot turns amber, the
+// system has tried and failed to refresh at least once.
+export default function DataTimestamp({ asOf, source, prefix = 'Updated', staleAfterMs = 600_000 }) {
   const now = useNow(15_000)            // re-render every 15s — granular enough for "Xs/m ago"
   if (!asOf) return null
-  const rel = fmtRelTime(asOf, now.getTime())
+  const nowMs = now.getTime()
+  const rel   = fmtRelTime(asOf, nowMs)
+  const stale = (nowMs - asOf) >= staleAfterMs
+
+  const dotClass  = stale ? 'bg-[#d4922a]/85' : 'bg-[#1D9E75]/80'
+  const textClass = stale ? 'text-[#d4922a]'  : 'text-[#6b8478]'
+  const srcClass  = stale ? 'text-[#a07520]'  : 'text-[#5d7868]'
+  const title     = stale
+    ? `Data is older than ${Math.round(staleAfterMs / 60_000)} minutes. A refresh will run when you return to the tab.`
+    : undefined
 
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] tabular-nums text-[#6b8478]">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]/80" />
+    <span className={`inline-flex items-center gap-1.5 font-mono text-[10.5px] tabular-nums ${textClass}`} title={title}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
       <span>{prefix} {rel}</span>
       {source && (
         <>
           <span className="text-[#263d2c]">·</span>
-          <span className="uppercase tracking-[0.14em] text-[#5d7868]">{source}</span>
+          <span className={`uppercase tracking-[0.14em] ${srcClass}`}>{source}</span>
         </>
       )}
     </span>

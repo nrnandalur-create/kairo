@@ -40,6 +40,7 @@ import CommandPalette from './components/CommandPalette'
 import StatusBar from './components/StatusBar'
 import Toaster from './components/Toaster'
 import { useCommandPalette } from './hooks/useCommandPalette'
+import { useAutoRefresh } from './hooks/useAutoRefresh'
 import { toast } from './utils/toast'
 
 function BookmarkButton({ saved, onToggle }) {
@@ -174,6 +175,22 @@ export default function App() {
     if (hasData) scrollTo('section-news')
     else toast.show('Search a ticker to view news')
   }
+
+  // Background refresh — re-fetch market data only (not AI / fundamentals)
+  // every 5 min while the user is on a ticker. Skips when the tab is
+  // hidden or the market is closed.
+  const refreshMarketOnly = async () => {
+    if (!ticker) return
+    try {
+      const { quote, profile, metrics, candles, synthetic, news } = await fetchMarket(ticker)
+      if (!quote || quote.c == null) return
+      setMarketData({ quote, profile, metrics, candles, synthetic, news })
+    } catch {
+      // Silent — the existing DataTimestamp will turn amber on its own
+      // once data crosses the stale threshold.
+    }
+  }
+  useAutoRefresh({ key: ticker, refresh: refreshMarketOnly, intervalMs: 300_000 })
 
   // Cmd-K command palette + jump table
   const palette = useCommandPalette()
