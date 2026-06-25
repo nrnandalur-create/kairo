@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, lazy, Suspense } from 'react'
 import ErrorBoundary from './components/ErrorBoundary'
 import KairoLogo from './components/KairoLogo'
 import TickerSearch from './components/TickerSearch'
@@ -14,8 +14,9 @@ import CoveredCallScanner from './components/CoveredCallScanner'
 import NewsFeed from './components/NewsFeed'
 import MarketPulse from './components/MarketPulse'
 import Watchlist from './components/Watchlist'
-import Screener from './components/Screener'
-import Portfolio from './components/Portfolio'
+// Heavy modals — code-split, only fetched on first open
+const Screener     = lazy(() => import('./components/Screener'))
+const Portfolio    = lazy(() => import('./components/Portfolio'))
 import PriceAlertForm from './components/PriceAlertForm'
 import { useWatchlist } from './hooks/useWatchlist'
 import { useAlerts } from './hooks/useAlerts'
@@ -32,8 +33,8 @@ import WatchlistSentiment from './components/WatchlistSentiment'
 import EarningsCalendar from './components/EarningsCalendar'
 import PriceTargets from './components/PriceTargets'
 import InsiderTrades from './components/InsiderTrades'
-import SectorHeatmap from './components/SectorHeatmap'
-import CompareView from './components/CompareView'
+const SectorHeatmap = lazy(() => import('./components/SectorHeatmap'))
+const CompareView   = lazy(() => import('./components/CompareView'))
 import HeroMarketBackdrop from './components/HeroMarketBackdrop'
 import MarketStatusPill from './components/MarketStatusPill'
 import CommandPalette from './components/CommandPalette'
@@ -42,6 +43,8 @@ import Toaster from './components/Toaster'
 import { useCommandPalette } from './hooks/useCommandPalette'
 import { useAutoRefresh } from './hooks/useAutoRefresh'
 import { toast } from './utils/toast'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -439,27 +442,28 @@ export default function App() {
         )}
       </main>
 
-      {/* ── Modals ── */}
-      <Screener
-        open={screenerOpen}
-        onClose={() => setScreenerOpen(false)}
-        onAnalyze={handleSearch}
-      />
-      <Portfolio
-        open={portfolioOpen}
-        onClose={() => setPortfolioOpen(false)}
-        onAnalyze={handleSearch}
-        userId={user?.id}
-      />
-      <SectorHeatmap
-        open={sectorsOpen}
-        onClose={() => setSectorsOpen(false)}
-        onAnalyze={handleSearch}
-      />
-      <CompareView
-        open={compareOpen}
-        onClose={() => setCompareOpen(false)}
-      />
+      {/* ── Modals (code-split via React.lazy) ── */}
+      {/* Conditional render so each modal's JS chunk is only fetched on first open. */}
+      {screenerOpen && (
+        <Suspense fallback={null}>
+          <Screener open onClose={() => setScreenerOpen(false)} onAnalyze={handleSearch} />
+        </Suspense>
+      )}
+      {portfolioOpen && (
+        <Suspense fallback={null}>
+          <Portfolio open onClose={() => setPortfolioOpen(false)} onAnalyze={handleSearch} userId={user?.id} />
+        </Suspense>
+      )}
+      {sectorsOpen && (
+        <Suspense fallback={null}>
+          <SectorHeatmap open onClose={() => setSectorsOpen(false)} onAnalyze={handleSearch} />
+        </Suspense>
+      )}
+      {compareOpen && (
+        <Suspense fallback={null}>
+          <CompareView open onClose={() => setCompareOpen(false)} />
+        </Suspense>
+      )}
 
       {/* ── Footer ── */}
       <footer className="border-t border-[#1a2e1f] mt-auto">
@@ -486,6 +490,10 @@ export default function App() {
         asOf={marketData?.fetchedAt}
         onOpenPalette={() => palette.setOpen(true)}
       />
+
+      {/* ── Telemetry ── */}
+      <Analytics />
+      <SpeedInsights />
     </div>
   )
 }
