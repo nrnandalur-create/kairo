@@ -523,7 +523,7 @@ export default function App() {
                   onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
                 />
                 <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
-                {aiData && (
+                {ticker && (
                   <MyPosition
                     ticker={ticker}
                     aiData={aiData}
