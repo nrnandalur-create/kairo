@@ -47,6 +47,7 @@ import { usePrefs } from './hooks/usePrefs'
 import { toast } from './utils/toast'
 import SettingsModal from './components/SettingsModal'
 import AboutModal from './components/AboutModal'
+import MyPosition from './components/MyPosition'
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -522,6 +523,13 @@ export default function App() {
                   onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
                 />
                 <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
+                {aiData && (
+                  <MyPosition
+                    ticker={ticker}
+                    aiData={aiData}
+                    currentPrice={marketData.quote?.c}
+                  />
+                )}
                 {aiData && <AIChat ticker={ticker} context={aiData} />}
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <div id="section-alerts">
