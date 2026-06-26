@@ -67,6 +67,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
+        stream: true,
         messages: [
           {
             role:    'system',
@@ -79,12 +80,56 @@ export default async function handler(req, res) {
 
     if (!groqRes.ok) return res.status(502).json({ error: 'AI service error' })
 
-    const json   = await groqRes.json()
-    const answer = (json.choices?.[0]?.message?.content ?? '').trim()
-    if (!answer) return res.status(502).json({ error: 'AI returned an empty answer' })
+    // Stream Groq's SSE response back to the client as plain UTF-8 chunks.
+    // The client reads the response body progressively and renders tokens
+    // as they arrive — no waiting for the full payload.
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    res.setHeader('Cache-Control', 'no-cache, no-transform')
+    res.setHeader('X-Accel-Buffering', 'no')   // disable nginx/proxy buffering
 
-    res.json({ answer })
+    const reader  = groqRes.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer    = ''
+    let wroteAny  = false
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''   // keep last partial line for next read
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed.startsWith('data:')) continue
+        const data = trimmed.slice(5).trim()
+        if (data === '[DONE]') {
+          res.end()
+          return
+        }
+        try {
+          const json  = JSON.parse(data)
+          const token = json.choices?.[0]?.delta?.content
+          if (token) {
+            res.write(token)
+            wroteAny = true
+          }
+        } catch { /* malformed line — skip */ }
+      }
+    }
+
+    if (!wroteAny) {
+      res.write('Sorry, I couldn\'t generate a response. Try rephrasing.')
+    }
+    res.end()
   } catch {
-    res.status(502).json({ error: 'AI service error' })
+    // If we haven't started streaming yet, send a JSON error. Otherwise the
+    // partial response is what the user will see — just end the stream.
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'AI service error' })
+    } else {
+      try { res.end() } catch { /* already closed */ }
+    }
   }
 }

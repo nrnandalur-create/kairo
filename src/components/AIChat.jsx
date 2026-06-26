@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchAnalyzeFollowup } from '../services/analyzeFollowup'
+import { fetchAnalyzeFollowupStream } from '../services/analyzeFollowup'
 import { toast } from '../utils/toast'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
@@ -62,11 +62,15 @@ export default function AIChat({ ticker, context }) {
   const [history, setHistory] = useState(() => loadHistory(ticker))
   const [input,   setInput]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [streaming, setStreaming] = useState(false)   // true once first token arrives
   const [lastAt,  setLastAt]  = useState(null)
   const scrollRef = useRef(null)
+  const abortRef  = useRef(null)
 
-  // Reload from localStorage when the ticker changes
+  // Reload from localStorage when the ticker changes — also abort any
+  // in-flight stream from the previous ticker.
   useEffect(() => {
+    abortRef.current?.abort()
     setHistory(loadHistory(ticker))
     setInput('')
   }, [ticker])
@@ -74,7 +78,7 @@ export default function AIChat({ ticker, context }) {
   // Auto-scroll to the latest message
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [history, loading])
+  }, [history, loading, streaming])
 
   if (!ticker) return null
 
@@ -86,27 +90,56 @@ export default function AIChat({ ticker, context }) {
       return
     }
 
-    const next = [...history, { role: 'user', content: q, ts: Date.now() }]
-    setHistory(next)
+    const withUser = [...history, { role: 'user', content: q, ts: Date.now() }]
+    // Optimistic: render the user's question + an empty assistant slot
+    // that we fill in as tokens stream back.
+    setHistory([...withUser, { role: 'assistant', content: '', ts: Date.now() }])
     setInput('')
     setLoading(true)
+    setStreaming(false)
+
+    const controller = new AbortController()
+    abortRef.current = controller
 
     try {
-      const { answer } = await fetchAnalyzeFollowup({
+      let full = ''
+      let started = false
+      await fetchAnalyzeFollowupStream({
         ticker,
         context,
-        history: next,
+        history: withUser,
         question: q,
+        signal: controller.signal,
+        onChunk: (chunk) => {
+          if (!started) { setStreaming(true); started = true }
+          full += chunk
+          // Replace the placeholder assistant message's content with the
+          // running accumulation.
+          setHistory((h) => {
+            const next = h.slice()
+            const last = next[next.length - 1]
+            if (last?.role === 'assistant') {
+              next[next.length - 1] = { ...last, content: full }
+            }
+            return next
+          })
+        },
       })
-      const withAnswer = [...next, { role: 'assistant', content: answer, ts: Date.now() }]
-      setHistory(withAnswer)
-      saveHistory(ticker, withAnswer)
+
+      const finalHistory = [...withUser, { role: 'assistant', content: full || '…', ts: Date.now() }]
+      setHistory(finalHistory)
+      saveHistory(ticker, finalHistory)
       setLastAt(Date.now())
     } catch (err) {
-      toast.error(err.message ?? 'AI follow-up failed')
-      setHistory(history)   // roll back the optimistic user message
+      // Don't toast or roll back on a user-initiated abort (e.g. switched ticker).
+      if (err.name !== 'AbortError') {
+        toast.error(err.message ?? 'AI follow-up failed')
+        setHistory(history)
+      }
     } finally {
+      abortRef.current = null
       setLoading(false)
+      setStreaming(false)
     }
   }
 
@@ -144,7 +177,7 @@ export default function AIChat({ ticker, context }) {
           className="flex flex-col gap-2.5 max-h-[420px] overflow-y-auto pr-1"
         >
           {history.map((m, i) => <Bubble key={i} {...m} />)}
-          {loading && <ThinkingBubble />}
+          {loading && !streaming && <ThinkingBubble />}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -164,7 +197,7 @@ export default function AIChat({ ticker, context }) {
               </button>
             ))}
           </div>
-          {loading && <ThinkingBubble />}
+          {loading && !streaming && <ThinkingBubble />}
         </div>
       )}
 

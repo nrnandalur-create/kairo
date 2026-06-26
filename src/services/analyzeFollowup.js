@@ -1,18 +1,52 @@
-// Follow-up Q&A on a previously-analyzed ticker.
-//   ticker:   e.g. 'AAPL'
-//   context:  the prior /api/analyze response (verdict, summary, etc.)
-//   history:  [{ role: 'user'|'assistant', content: string }]  — prior turns
-//   question: free-form user question
-export async function fetchAnalyzeFollowup({ ticker, context, history, question }) {
+// Follow-up Q&A on a previously-analyzed ticker. Streams the model's
+// response token-by-token so the UI can render as words arrive.
+//
+//   await fetchAnalyzeFollowupStream({
+//     ticker, context, history, question,
+//     onChunk: (text) => …,   // called for each token batch
+//     signal,                 // optional AbortSignal for cancel
+//   })
+//
+// Resolves to the full assembled answer (also passed back) when the stream
+// completes. Throws on transport / server errors.
+export async function fetchAnalyzeFollowupStream({ ticker, context, history, question, onChunk, signal }) {
   const res = await fetch('/api/analyze-followup', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ ticker, context, history, question }),
+    signal,
   })
 
+  // Non-streaming JSON error (4xx / 5xx before any tokens were written).
   if (!res.ok) {
-    const { error } = await res.json().catch(() => ({}))
-    throw new Error(error ?? `Follow-up failed (${res.status})`)
+    let message = `Follow-up failed (${res.status})`
+    try {
+      const json = await res.json()
+      if (json?.error) message = json.error
+    } catch { /* not JSON */ }
+    throw new Error(message)
   }
-  return res.json()  // { answer }
+
+  if (!res.body) {
+    // Older browsers / non-streaming fallback — treat the whole body as one chunk.
+    const text = await res.text()
+    onChunk?.(text)
+    return text
+  }
+
+  const reader  = res.body.getReader()
+  const decoder = new TextDecoder()
+  let answer    = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    const chunk = decoder.decode(value, { stream: true })
+    if (chunk) {
+      answer += chunk
+      onChunk?.(chunk)
+    }
+  }
+
+  return answer
 }
