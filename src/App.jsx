@@ -46,6 +46,8 @@ import { useAutoRefresh } from './hooks/useAutoRefresh'
 import { usePrefs } from './hooks/usePrefs'
 import { toast } from './utils/toast'
 import SettingsModal from './components/SettingsModal'
+import AboutModal from './components/AboutModal'
+import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
@@ -193,6 +195,7 @@ export default function App() {
   // User preferences (refresh interval + stale threshold + theme + glass)
   const userPrefs = usePrefs()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
 
   // Apply theme + translucency to <html> so the CSS vars in index.css flip.
   useEffect(() => {
@@ -342,11 +345,24 @@ export default function App() {
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
 
-            {/* Recently viewed chips */}
-            {recentTickers.length > 0 && (
+            {/* Recently viewed chips — or a "Try AAPL" CTA on first visit */}
+            {recentTickers.length > 0 ? (
               <div className="flex items-center gap-2 flex-wrap justify-center">
                 <span className="text-[9px] font-semibold text-[var(--c-text-fainter)] uppercase tracking-[0.15em]">Recent</span>
                 {recentTickers.map(sym => (
+                  <button
+                    key={sym}
+                    onClick={() => handleSearch(sym)}
+                    className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150 cursor-pointer"
+                  >
+                    {sym}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <span className="text-[9px] font-semibold text-[var(--c-text-fainter)] uppercase tracking-[0.15em]">Try</span>
+                {['AAPL', 'NVDA', 'SPY'].map(sym => (
                   <button
                     key={sym}
                     onClick={() => handleSearch(sym)}
@@ -503,9 +519,22 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-[var(--c-border)] mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[var(--c-text-fainter)] text-center">
-          Kairo is for informational purposes only and does not constitute financial advice.
-          Market data via Finnhub · Alpha Vantage. AI analysis via Groq.
+        <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[var(--c-text-fainter)] flex items-center justify-center gap-2 flex-wrap">
+          <span>Kairo is for informational purposes only and does not constitute financial advice.</span>
+          <span className="text-[var(--c-border-strong)]">·</span>
+          <span>Market data via Finnhub · Alpha Vantage. AI analysis via Groq.</span>
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            aria-label="About Kairo"
+            title="Methodology, data sources, disclaimer"
+            className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full border border-[var(--c-border-strong)] text-[var(--c-text-faint)] hover:text-[#22B585] hover:border-[#22B585]/50 transition-colors cursor-pointer"
+          >
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+              <circle cx="4" cy="1.6" r="0.85" fill="currentColor" />
+              <rect x="3.3" y="3.4" width="1.4" height="3.4" rx="0.55" fill="currentColor" />
+            </svg>
+          </button>
         </div>
       </footer>
 
@@ -529,6 +558,12 @@ export default function App() {
 
       {/* ── Settings ── */}
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {/* ── About / methodology ── */}
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
+
+      {/* ── First-visit welcome tour (auto-opens once) ── */}
+      <WelcomeTour />
 
       {/* ── Telemetry ── */}
       <Analytics />
