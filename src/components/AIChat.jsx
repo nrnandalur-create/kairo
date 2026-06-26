@@ -149,6 +149,24 @@ export default function AIChat({ ticker, context }) {
     toast.show('Chat history cleared')
   }
 
+  const retry = () => {
+    if (loading) return
+    // Find the most recent user message; its content is what we'll re-ask.
+    let lastUserIdx = -1
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].role === 'user') { lastUserIdx = i; break }
+    }
+    if (lastUserIdx < 0) return
+    const lastUser = history[lastUserIdx]
+    // Roll the history back to just before that user turn — send() will
+    // append it again and stream a fresh assistant reply in place.
+    setHistory(history.slice(0, lastUserIdx))
+    // Defer to next tick so setHistory commits before send reads history.
+    queueMicrotask(() => send(lastUser.content))
+  }
+
+  const lastIsAssistant = history.length > 0 && history[history.length - 1].role === 'assistant'
+
   return (
     <div className="w-full glass-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 animate-enter">
       {/* Header */}
@@ -178,6 +196,20 @@ export default function AIChat({ ticker, context }) {
         >
           {history.map((m, i) => <Bubble key={i} {...m} />)}
           {loading && !streaming && <ThinkingBubble />}
+          {lastIsAssistant && !loading && (
+            <button
+              type="button"
+              onClick={retry}
+              title="Regenerate the last response"
+              aria-label="Regenerate last response"
+              className="self-start inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#22B585] transition-colors cursor-pointer mt-0.5"
+            >
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2 6a4 4 0 016.83-2.83L10 4M10 1.5V4H7.5M10 6a4 4 0 01-6.83 2.83L2 8M2 10.5V8h2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Retry
+            </button>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">

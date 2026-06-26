@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { fetchMarket } from '../services/finnhub'
 import { fetchAnalysis } from '../services/analyze'
 import { calcRSI, calcMACD, calcBBPosition } from '../utils/indicators'
@@ -237,11 +237,19 @@ function SidePanel({ ticker, loading, data, error }) {
 
 // ─── main component ───────────────────────────────────────────────────────────
 
-export default function CompareView({ open, onClose }) {
-  const [leftTicker,  setLeftTicker]  = useState('')
-  const [rightTicker, setRightTicker] = useState('')
+export default function CompareView({ open, onClose, initialTickers }) {
+  const [leftTicker,  setLeftTicker]  = useState(initialTickers?.[0] ?? '')
+  const [rightTicker, setRightTicker] = useState(initialTickers?.[1] ?? '')
   const left  = useSide()
   const right = useSide()
+
+  // Auto-load whatever was pre-filled on open (e.g. via "vs SPY" chip).
+  useEffect(() => {
+    if (!open) return
+    if (initialTickers?.[0]) left.load(initialTickers[0])
+    if (initialTickers?.[1]) right.load(initialTickers[1])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialTickers?.[0], initialTickers?.[1]])
 
   const handleCompare = () => {
     const l = leftTicker.trim().toUpperCase()

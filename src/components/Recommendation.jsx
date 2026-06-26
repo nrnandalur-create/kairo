@@ -46,7 +46,7 @@ function Unavailable() {
   )
 }
 
-export default function Recommendation({ data, loading, asOf, ticker }) {
+export default function Recommendation({ data, loading, asOf, ticker, onCompare }) {
   const handleShare = async () => {
     if (!ticker) return
     const url = `${window.location.origin}/t/${ticker}`
@@ -83,6 +83,17 @@ export default function Recommendation({ data, loading, asOf, ticker }) {
           </InfoTooltip>
         </span>
         <div className="flex items-center gap-1.5">
+          {ticker && ticker !== 'SPY' && onCompare && (
+            <button
+              type="button"
+              onClick={() => onCompare([ticker, 'SPY'])}
+              title={`Compare ${ticker} against SPY`}
+              aria-label={`Compare ${ticker} to SPY`}
+              className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-[var(--c-border)] text-[10px] font-mono uppercase tracking-[0.1em] text-[var(--c-text-faint)] hover:text-[#22B585] hover:border-[#22B585]/40 transition-colors cursor-pointer"
+            >
+              vs SPY
+            </button>
+          )}
           {ticker && (
             <button
               type="button"

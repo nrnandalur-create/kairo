@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { fetchWatchlistQuotes } from '../services/watchlistQuotes'
+import { downloadCsv } from '../utils/csv'
 
 function fmtPrice(n) {
   if (n == null || isNaN(n)) return '—'
@@ -326,9 +327,36 @@ export default function Watchlist({ rows = [], onSelect, onRemove, onNoteUpdate,
     }
   })
 
+  const exportCsv = () => {
+    const headers = ['Ticker', 'Price', 'Change %', 'Note', 'Alert Price', 'Alert Direction']
+    const data = items.map(it => [
+      it.symbol,
+      it.price ?? '',
+      it.changePct == null ? '' : it.changePct.toFixed(2),
+      it.note ?? '',
+      it.alertPrice ?? '',
+      it.alertDirection ?? '',
+    ])
+    downloadCsv(`watchlist-${new Date().toISOString().slice(0, 10)}.csv`, headers, data)
+  }
+
   return (
     <div className="w-full flex flex-col gap-3 animate-enter">
-      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">My Watchlist</span>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">My Watchlist</span>
+        <button
+          type="button"
+          onClick={exportCsv}
+          title="Export watchlist as CSV"
+          aria-label="Export watchlist as CSV"
+          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--c-text-faint)] hover:text-[#22B585] transition-colors cursor-pointer"
+        >
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M6 1.5v7M6 8.5l-2.5-2.5M6 8.5L8.5 6M2 10h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          CSV
+        </button>
+      </div>
       <div className="flex flex-wrap gap-2">
         {items.map(item => (
           <WatchlistTile

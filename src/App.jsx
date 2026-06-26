@@ -95,6 +95,7 @@ export default function App() {
   const [portfolioOpen, setPortfolioOpen] = useState(false)
   const [sectorsOpen,   setSectorsOpen]   = useState(false)
   const [compareOpen,   setCompareOpen]   = useState(false)
+  const [compareSeed,   setCompareSeed]   = useState(null)
 
   const isLoading = loading.market || loading.ai
 
@@ -513,7 +514,13 @@ export default function App() {
 
               {/* Right column — AI recommendation & analysis */}
               <div className="flex flex-col gap-5">
-                <Recommendation data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} ticker={ticker} />
+                <Recommendation
+                  data={aiData}
+                  loading={loading.ai}
+                  asOf={aiData?.fetchedAt}
+                  ticker={ticker}
+                  onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
+                />
                 <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
                 {aiData && <AIChat ticker={ticker} context={aiData} />}
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
@@ -565,7 +572,7 @@ export default function App() {
       )}
       {compareOpen && (
         <Suspense fallback={null}>
-          <CompareView open onClose={() => setCompareOpen(false)} />
+          <CompareView open onClose={() => { setCompareOpen(false); setCompareSeed(null) }} initialTickers={compareSeed} />
         </Suspense>
       )}
 
