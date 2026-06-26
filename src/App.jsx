@@ -204,6 +204,29 @@ export default function App() {
     root.style.setProperty('--glass-mult', String(userPrefs.glassMult ?? 1))
   }, [userPrefs.theme, userPrefs.glassMult])
 
+  // Shareable URLs: /t/TICKER hydrates that ticker on load + sync the URL
+  // when the user navigates between tickers.
+  useEffect(() => {
+    const fromPath = () => {
+      const match = window.location.pathname.match(/^\/t\/([A-Z]{1,5}(?:\.[A-Z]{1,2})?)\/?$/i)
+      if (match) handleSearch(match[1].toUpperCase())
+    }
+    fromPath()
+    const onPop = () => fromPath()
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Push /t/TICKER into the URL when a ticker becomes active.
+  useEffect(() => {
+    if (!ticker) return
+    const desired = `/t/${ticker}`
+    if (window.location.pathname !== desired) {
+      window.history.pushState({ ticker }, '', desired)
+    }
+  }, [ticker])
+
   // Background refresh — re-fetch market data only (not AI / fundamentals).
   // Interval is configurable via Settings. Skips when the tab is hidden
   // or the market is closed.
@@ -461,7 +484,7 @@ export default function App() {
 
               {/* Right column — AI recommendation & analysis */}
               <div className="flex flex-col gap-5">
-                <Recommendation data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
+                <Recommendation data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} ticker={ticker} />
                 <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
                 {aiData && <AIChat ticker={ticker} context={aiData} />}
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />

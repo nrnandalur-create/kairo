@@ -1,5 +1,6 @@
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
+import { toast } from '../utils/toast'
 
 const CONFIG = {
   BUY:  { label: 'BUY',  color: '#22B585', bg: 'bg-[#22B585]/10', border: 'border-[#22B585]/30', bar: '#22B585', glow: 'rgba(29,158,117,0.07)' },
@@ -43,7 +44,18 @@ function Unavailable() {
   )
 }
 
-export default function Recommendation({ data, loading, asOf }) {
+export default function Recommendation({ data, loading, asOf, ticker }) {
+  const handleShare = async () => {
+    if (!ticker) return
+    const url = `${window.location.origin}/t/${ticker}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success(`Link copied: ${url}`)
+    } catch {
+      toast.error('Clipboard not available — copy manually from the address bar')
+    }
+  }
+
   if (loading) return <Skeleton />
   if (!data?.verdict) return <Unavailable />
 
@@ -68,9 +80,25 @@ export default function Recommendation({ data, loading, asOf }) {
             Verdict, confidence, entry, and stop derived from a Groq LLaMA-3.3 model conditioned on technical indicators and recent OHLC. Educational only — not financial advice.
           </InfoTooltip>
         </span>
-        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
-          {data.riskLevel ?? 'MEDIUM'} Risk
-        </span>
+        <div className="flex items-center gap-1.5">
+          {ticker && (
+            <button
+              type="button"
+              onClick={handleShare}
+              title={`Copy share link for ${ticker}`}
+              aria-label="Share analysis"
+              className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-[var(--c-border)] text-[var(--c-text-faint)] hover:text-[#22B585] hover:border-[#22B585]/40 transition-colors cursor-pointer"
+            >
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M8 2.5L9.5 1L11 2.5M9.5 1V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 4H3.5A1.5 1.5 0 002 5.5v4A1.5 1.5 0 003.5 11h5A1.5 1.5 0 0010 9.5V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
+            {data.riskLevel ?? 'MEDIUM'} Risk
+          </span>
+        </div>
       </div>
 
       {/* Verdict + confidence */}
