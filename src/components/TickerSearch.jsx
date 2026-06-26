@@ -105,7 +105,7 @@ export default function TickerSearch({ onSearch, loading }) {
 
         {/* Dropdown */}
         {(open || (fetching && value.trim().length >= 2)) && (
-          <div className="absolute top-full left-0 right-0 mt-1.5 glass-card rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.6)] z-50">
+          <div className="absolute top-full left-0 right-0 mt-1.5 glass-card rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.6)] z-50 origin-top animate-fade">
             {fetching && !results.length ? (
               <div className="flex flex-col gap-2 p-3">
                 {[1, 2, 3].map(i => (

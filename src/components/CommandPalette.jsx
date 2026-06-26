@@ -476,7 +476,7 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
-        className="glass-strong relative w-full max-w-[520px] rounded-2xl overflow-hidden animate-enter"
+        className="glass-strong relative w-full max-w-[520px] rounded-2xl overflow-hidden animate-enter origin-top"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Search input */}

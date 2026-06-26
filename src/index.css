@@ -39,6 +39,18 @@
   /* Modal backdrop dimming */
   --c-overlay:           rgba(4, 6, 5, 0.7);
 
+  /* Easing tokens — used across every UI transition. Stronger than the
+     CSS-built-ins; gives animations the "punch" that makes them feel
+     intentional. Pick:
+       --ease-out      — element entries, hover-in, snap-to states
+       --ease-in-out   — on-screen movement (drawer slide, layout shifts)
+       --ease-drawer   — iOS-style drawer + sheet curves
+       --ease-press    — short press feedback (button scale on :active) */
+  --ease-out:     cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out:  cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer:  cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-press:   cubic-bezier(0.4, 0, 0.2, 1);
+
   /* Glass tokens — RGB triplets used by rgba() in the glass classes,
      plus border + highlight + shadow alphas. */
   --c-glass-rgb:         8, 12, 10;
@@ -125,9 +137,43 @@
 /* ── Animation utilities ───────────────────────────────────────────────────── */
 
 /* Spring easing — feels physical, not mechanical */
-.animate-enter  { animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-fade   { animation: fadeIn      0.3s ease-out both; }
-.animate-bar    { animation: scaleIn     0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-enter  { animation: fadeSlideIn 0.45s var(--ease-out) both; }
+.animate-fade   { animation: fadeIn      0.25s var(--ease-out) both; }
+.animate-bar    { animation: scaleIn     0.7s  var(--ease-out) both; }
+
+/* ── Global press feedback ─────────────────────────────────────────────────── */
+/* Every enabled button gets a subtle press scale. Components that already
+   declare an explicit active:scale-* via Tailwind win on specificity since
+   their selector is identical (.utility:active vs button:active) and they
+   live later in the cascade. The transform release uses a short token-eased
+   transition so the snap-back doesn't look mechanical. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Origin-aware dropdowns / popovers — they should scale in from their
+   trigger, not from center. Two utility classes for the most common
+   anchored cases. */
+.origin-top    { transform-origin: top center; }
+.origin-bottom { transform-origin: bottom center; }
+
+/* ── Reduced-motion preference ─────────────────────────────────────────────── */
+/* Respect OS-level "Reduce motion" settings — disables entry animations and
+   snaps transitions short instead of removing them entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter, .animate-fade, .animate-bar { animation: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Stagger delays for sequential card entrances */
 .d-1  { animation-delay:  60ms; }
