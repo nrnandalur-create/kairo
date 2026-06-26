@@ -38,17 +38,19 @@ function BellIcon({ filled }) {
 }
 
 // ── Bell popover for setting / clearing alerts ─────────────────────────────────
-function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate }) {
+function AlertPopover({ symbol, alertPrice, alertDirection, emailAlerts, price, onAlertUpdate }) {
   const [open,     setOpen]    = useState(false)
   const [inputVal, setInputVal] = useState(alertPrice != null ? String(alertPrice) : '')
   const [dir,      setDir]     = useState(alertDirection ?? 'above')
+  const [email,    setEmail]   = useState(!!emailAlerts)
   const ref = useRef(null)
 
   // Sync fields when Supabase data updates
   useEffect(() => {
     setInputVal(alertPrice != null ? String(alertPrice) : '')
     setDir(alertDirection ?? 'above')
-  }, [alertPrice, alertDirection])
+    setEmail(!!emailAlerts)
+  }, [alertPrice, alertDirection, emailAlerts])
 
   // Close on outside click
   useEffect(() => {
@@ -72,14 +74,15 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
     e.stopPropagation()
     const val = parseFloat(inputVal)
     if (!inputVal || isNaN(val) || val <= 0) return
-    await onAlertUpdate(symbol, val, dir)
+    await onAlertUpdate(symbol, val, dir, email)
     setOpen(false)
   }
 
   const handleClear = async e => {
     e.stopPropagation()
-    await onAlertUpdate(symbol, null, null)
+    await onAlertUpdate(symbol, null, null, false)
     setInputVal('')
+    setEmail(false)
     setOpen(false)
   }
 
@@ -129,6 +132,18 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
             placeholder={price != null ? fmtPrice(price) : 'Price'}
             className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors"
           />
+
+          {/* Email-on-trigger toggle */}
+          <label className="flex items-center gap-2 text-[10px] text-[var(--c-text-faint)] cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={email}
+              onChange={e => { e.stopPropagation(); setEmail(e.target.checked) }}
+              onClick={e => e.stopPropagation()}
+              className="accent-[#22B585] w-3 h-3 cursor-pointer"
+            />
+            Email me when triggered
+          </label>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
@@ -224,7 +239,7 @@ function NoteInline({ symbol, note, onSave }) {
 // ── Tile ───────────────────────────────────────────────────────────────────────
 function WatchlistTile({
   symbol, note, price, changePct, loading,
-  alertPrice, alertDirection,
+  alertPrice, alertDirection, emailAlerts,
   onSelect, onRemove, onNoteUpdate, onAlertUpdate,
 }) {
   const up       = changePct != null && !isNaN(changePct) && changePct >= 0
@@ -260,6 +275,7 @@ function WatchlistTile({
           symbol={symbol}
           alertPrice={alertPrice}
           alertDirection={alertDirection}
+          emailAlerts={emailAlerts}
           price={price}
           onAlertUpdate={onAlertUpdate}
         />
@@ -322,6 +338,7 @@ export default function Watchlist({ rows = [], onSelect, onRemove, onNoteUpdate,
       note:           row.note           ?? null,
       alertPrice:     row.alert_price    ?? null,
       alertDirection: row.alert_direction ?? null,
+      emailAlerts:    row.email_alerts    ?? false,
       price:          q?.price           ?? null,
       changePct:      q?.changePct       ?? null,
     }

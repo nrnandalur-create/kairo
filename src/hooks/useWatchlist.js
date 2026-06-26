@@ -102,17 +102,24 @@ export function useWatchlist(userId) {
     return { error }
   }, [userId])
 
-  const setAlert = useCallback(async (ticker, alertPrice, alertDirection) => {
+  const setAlert = useCallback(async (ticker, alertPrice, alertDirection, emailAlerts = false) => {
     if (!userId) return
+    // Reset last_fired_at whenever the alert changes so a new threshold
+    // can fire immediately instead of inheriting the old cool-down window.
     const { error } = await supabase
       .from('watchlists')
-      .update({ alert_price: alertPrice, alert_direction: alertDirection })
+      .update({
+        alert_price:     alertPrice,
+        alert_direction: alertDirection,
+        email_alerts:    !!emailAlerts,
+        last_fired_at:   null,
+      })
       .eq('user_id', userId)
       .eq('ticker', ticker.toUpperCase())
 
     if (!error) setWatchlist(prev =>
       prev.map(w => w.ticker === ticker.toUpperCase()
-        ? { ...w, alert_price: alertPrice, alert_direction: alertDirection }
+        ? { ...w, alert_price: alertPrice, alert_direction: alertDirection, email_alerts: !!emailAlerts, last_fired_at: null }
         : w
       )
     )
