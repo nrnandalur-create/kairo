@@ -162,6 +162,39 @@ button:not(:disabled):active,
 .origin-top    { transform-origin: top center; }
 .origin-bottom { transform-origin: bottom center; }
 
+/* ── Keyboard-only focus rings ─────────────────────────────────────────────── */
+/* Mouse users don't see these (focus-visible scopes them to keyboard nav).
+   Every clickable element gets a brand-tinted ring so tab traversal is
+   completely legible without poisoning the visual baseline for mouse users. */
+:focus-visible {
+  outline: 2px solid rgba(34, 181, 133, 0.65);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+/* Inputs / textareas already use focus:border-[#22B585] as the active state;
+   suppress the outer outline to avoid double-ring. */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+}
+
+/* Skip-to-content — invisible until focused, lets keyboard users bypass
+   the sidebar and header to jump straight to the page content. */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 12px;
+  z-index: 200;
+  padding: 10px 16px;
+  background: var(--c-card);
+  color: var(--c-text);
+  border: 1px solid var(--c-border-strong);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: top 180ms var(--ease-out);
+}
+.skip-link:focus { top: 12px; }
+
 /* ── Reduced-motion preference ─────────────────────────────────────────────── */
 /* Respect OS-level "Reduce motion" settings — disables entry animations and
    snaps transitions short instead of removing them entirely. */

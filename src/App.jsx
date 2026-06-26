@@ -227,6 +227,7 @@ export default function App() {
     }
   }, [ticker])
 
+
   // Background refresh — re-fetch market data only (not AI / fundamentals).
   // Interval is configurable via Settings. Skips when the tab is hidden
   // or the market is closed.
@@ -250,6 +251,34 @@ export default function App() {
 
   // Cmd-K command palette + jump table
   const palette = useCommandPalette()
+
+  // Single-key shortcuts. Skipped when the user is typing into an input,
+  // textarea, contenteditable, or has a modifier key down. ⌘K stays as
+  // the global palette opener — these are complementary, not replacements.
+  useEffect(() => {
+    const isTyping = (el) => {
+      if (!el) return false
+      const tag = el.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable
+    }
+    const onKey = (e) => {
+      if (isTyping(document.activeElement)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      switch (e.key) {
+        case 'p': setPortfolioOpen(true); break
+        case 's': setSectorsOpen(true);   break
+        case 'c': setCompareOpen(true);   break
+        case 'r': setScreenerOpen(true);  break
+        case ',': setSettingsOpen(true);  break
+        case '?': setAboutOpen(true);     break
+        case '/': e.preventDefault(); palette.setOpen(true); break
+        default: return
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const handleJumpTo = (key) => {
     switch (key) {
       case 'screener':  setScreenerOpen(true);  break
@@ -348,7 +377,7 @@ export default function App() {
       </header>
 
       {/* ── Main ── */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
+      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
 
         {/* Landing hero */}
         {!hasData && !isLoading && (

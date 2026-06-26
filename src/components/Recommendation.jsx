@@ -3,9 +3,11 @@ import InfoTooltip from './InfoTooltip'
 import { toast } from '../utils/toast'
 
 const CONFIG = {
-  BUY:  { label: 'BUY',  color: '#22B585', bg: 'bg-[#22B585]/10', border: 'border-[#22B585]/30', bar: '#22B585', glow: 'rgba(29,158,117,0.07)' },
-  HOLD: { label: 'HOLD', color: '#e3a234', bg: 'bg-[#e3a234]/10',  border: 'border-[#e3a234]/30', bar: '#e3a234', glow: 'rgba(212,146,42,0.07)'  },
-  SELL: { label: 'SELL', color: '#ef5454', bg: 'bg-[#ef5454]/10',  border: 'border-[#ef5454]/30', bar: '#ef5454', glow: 'rgba(226,75,74,0.07)'   },
+  // glyph: secondary visual signal alongside color so the verdict reads
+  // unambiguously for color-blind users (▲ buy, ─ hold, ▼ sell).
+  BUY:  { label: 'BUY',  glyph: '▲', color: '#22B585', bg: 'bg-[#22B585]/10', border: 'border-[#22B585]/30', bar: '#22B585', glow: 'rgba(29,158,117,0.07)' },
+  HOLD: { label: 'HOLD', glyph: '─', color: '#e3a234', bg: 'bg-[#e3a234]/10',  border: 'border-[#e3a234]/30', bar: '#e3a234', glow: 'rgba(212,146,42,0.07)'  },
+  SELL: { label: 'SELL', glyph: '▼', color: '#ef5454', bg: 'bg-[#ef5454]/10',  border: 'border-[#ef5454]/30', bar: '#ef5454', glow: 'rgba(226,75,74,0.07)'   },
 }
 
 const RISK = {
@@ -103,7 +105,8 @@ export default function Recommendation({ data, loading, asOf, ticker }) {
 
       {/* Verdict + confidence */}
       <div className="relative flex items-end gap-6 flex-wrap">
-        <span className="text-7xl font-black leading-none tracking-tight" style={{ color: cfg.color }}>
+        <span className="text-7xl font-black leading-none tracking-tight flex items-center gap-3" style={{ color: cfg.color }} role="text" aria-label={`Verdict: ${cfg.label}`}>
+          <span aria-hidden="true" className="text-4xl leading-none">{cfg.glyph}</span>
           {cfg.label}
         </span>
         <div className="flex flex-col gap-2 mb-1.5">
