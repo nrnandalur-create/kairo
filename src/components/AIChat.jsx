@@ -211,7 +211,12 @@ export default function AIChat({ ticker, context }) {
           placeholder={loading ? 'Thinking…' : `Ask about ${ticker}…`}
           maxLength={MAX_QUESTION}
           disabled={loading}
-          className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors disabled:opacity-50"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
+          enterKeyHint="send"
+          inputMode="text"
+          className="flex-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-base sm:text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors disabled:opacity-50"
         />
         <button
           type="button"
