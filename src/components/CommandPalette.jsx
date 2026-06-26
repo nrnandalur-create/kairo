@@ -315,13 +315,13 @@ function ResultRow({ item, active, onSelect }) {
 
       {/* Trailing badge: exchange or hint */}
       {item.kind === 'ticker' && (
-        <span className="shrink-0 font-mono text-[10px] font-semibold tracking-[0.14em] text-[#5d7868]">{item.ex}</span>
+        <span className="shrink-0 font-mono text-[10px] font-semibold tracking-[0.14em] text-[var(--c-text-muted)]">{item.ex}</span>
       )}
       {item.kind === 'recent' && (
-        <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-[#5d7868]">Recent</span>
+        <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-[var(--c-text-muted)]">Recent</span>
       )}
       {item.kind === 'search' && (
-        <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-[#5d7868]">Look up</span>
+        <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-[var(--c-text-muted)]">Look up</span>
       )}
       {active && (
         <span className="shrink-0 font-mono text-[11px] text-[#22B585]">↵</span>
@@ -332,7 +332,7 @@ function ResultRow({ item, active, onSelect }) {
 
 function GroupHeader({ children }) {
   return (
-    <div className="px-3 pt-3 pb-1.5 text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[#5d7868]">
+    <div className="px-3 pt-3 pb-1.5 text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[var(--c-text-muted)]">
       {children}
     </div>
   )
@@ -534,7 +534,7 @@ export default function CommandPalette({ open, onClose, onSelectTicker, onJumpTo
         <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-[var(--c-border)] bg-[var(--c-bg)]/60 text-[11px] font-mono tracking-wide text-[var(--c-text-muted)]">
           <span className="flex items-center gap-2">
             <span><kbd className="text-[var(--c-text)] font-bold">↑↓</kbd> navigate</span>
-            <span className="text-[#263d2c]">·</span>
+            <span className="text-[var(--c-text-fainter)]">·</span>
             <span><kbd className="text-[var(--c-text)] font-bold">↵</kbd> select</span>
           </span>
           <span><kbd className="text-[var(--c-text)] font-bold">⌘K</kbd> toggle</span>

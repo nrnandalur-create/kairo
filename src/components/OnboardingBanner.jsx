@@ -45,7 +45,7 @@ export default function OnboardingBanner({ onDismiss }) {
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="text-[#263d2c] hover:text-[var(--c-text-faint)] transition-colors p-1 -mr-1"
+          className="text-[var(--c-text-fainter)] hover:text-[var(--c-text-faint)] transition-colors p-1 -mr-1"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -60,7 +60,7 @@ export default function OnboardingBanner({ onDismiss }) {
             <div className="shrink-0 mt-0.5 text-[#22B585]">{step.icon}</div>
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-bold text-[#263d2c] tabular-nums">{step.num}</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] tabular-nums">{step.num}</span>
                 <span className="text-xs font-semibold text-[var(--c-text)]">{step.label}</span>
               </div>
               <p className="text-[11px] text-[var(--c-text-faint)] leading-relaxed">{step.desc}</p>
@@ -72,7 +72,7 @@ export default function OnboardingBanner({ onDismiss }) {
       {/* Dismiss link */}
       <button
         onClick={onDismiss}
-        className="self-end text-[10px] text-[#263d2c] hover:text-[var(--c-text-faint)] transition-colors"
+        className="self-end text-[10px] text-[var(--c-text-fainter)] hover:text-[var(--c-text-faint)] transition-colors"
       >
         Got it, don't show again →
       </button>

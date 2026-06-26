@@ -95,7 +95,7 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
             Covered Call Scanner
           </span>
-          <p className="text-[10px] text-[#263d2c] mt-0.5">Sell calls on your long position</p>
+          <p className="text-[10px] text-[var(--c-text-fainter)] mt-0.5">Sell calls on your long position</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {fetchingLive && (
@@ -116,12 +116,12 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
 
           {/* Column headers */}
           <div className="flex items-center gap-3 pb-2 border-b border-[var(--c-border)]">
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-10 shrink-0">OTM</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-16 shrink-0">Strike</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-16 shrink-0">Expiry</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-28 shrink-0">Est. Premium</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-20 shrink-0">Max Profit</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest flex-1 text-right">ROI</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-10 shrink-0">OTM</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-16 shrink-0">Strike</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-16 shrink-0">Expiry</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-28 shrink-0">Est. Premium</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-20 shrink-0">Max Profit</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest flex-1 text-right">ROI</span>
           </div>
 
           {/* Data rows */}
@@ -155,12 +155,12 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
               <div className="w-28 shrink-0">
                 <p className="text-xs text-[var(--c-text)] tabular-nums leading-none">
                   ${row.premiumPer.toFixed(2)}<span className="text-[var(--c-text-faint)]">/sh</span>
-                  {!row.real && <span className="text-[#263d2c] ml-1 text-[9px]">(est.)</span>}
+                  {!row.real && <span className="text-[var(--c-text-fainter)] ml-1 text-[9px]">(est.)</span>}
                 </p>
                 <p className="text-[9px] text-[var(--c-text-faint)] tabular-nums mt-0.5">
                   {fmtMoney(row.premiumTotal)} total
                   {row.real && row.iv != null && (
-                    <span className="ml-1 text-[#263d2c]">IV {(row.iv * 100).toFixed(0)}%</span>
+                    <span className="ml-1 text-[var(--c-text-fainter)]">IV {(row.iv * 100).toFixed(0)}%</span>
                   )}
                 </p>
               </div>
@@ -187,7 +187,7 @@ export default function CoveredCallScanner({ currentPrice, ticker }) {
       </div>
 
       {/* Footer note */}
-      <p className="text-[10px] text-[#263d2c] leading-relaxed border-t border-[var(--c-border)] pt-3">
+      <p className="text-[10px] text-[var(--c-text-fainter)] leading-relaxed border-t border-[var(--c-border)] pt-3">
         {hasLive
           ? `Live data via Polygon.io · ${CONTRACTS} contracts (${SHARES} shares) · Midpoint of bid/ask`
           : `Based on ${CONTRACTS} contracts (${SHARES} shares). Premiums are estimates — verify with your broker.`

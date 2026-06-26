@@ -66,7 +66,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
                 {ticker}
               </span>
             )}
-            {ticker && profile?.name && <span className="text-[#263d2c]">·</span>}
+            {ticker && profile?.name && <span className="text-[var(--c-text-fainter)]">·</span>}
             {profile?.name && (
               <span className="text-sm font-semibold text-[var(--c-text)]">{profile.name}</span>
             )}

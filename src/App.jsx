@@ -299,7 +299,7 @@ export default function App() {
                       {ticker}
                     </span>
                   )}
-                  {ticker && marketData.profile?.name && <span className="text-[#263d2c]">·</span>}
+                  {ticker && marketData.profile?.name && <span className="text-[var(--c-text-fainter)]">·</span>}
                   {marketData.profile?.name && (
                     <span className="text-sm text-[var(--c-text)] font-semibold">{marketData.profile.name}</span>
                   )}
@@ -345,7 +345,7 @@ export default function App() {
             {/* Recently viewed chips */}
             {recentTickers.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap justify-center">
-                <span className="text-[9px] font-semibold text-[#263d2c] uppercase tracking-[0.15em]">Recent</span>
+                <span className="text-[9px] font-semibold text-[var(--c-text-fainter)] uppercase tracking-[0.15em]">Recent</span>
                 {recentTickers.map(sym => (
                   <button
                     key={sym}
@@ -503,7 +503,7 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-[var(--c-border)] mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[#263d2c] text-center">
+        <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[var(--c-text-fainter)] text-center">
           Kairo is for informational purposes only and does not constitute financial advice.
           Market data via Finnhub · Alpha Vantage. AI analysis via Groq.
         </div>

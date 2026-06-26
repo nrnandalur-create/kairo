@@ -149,7 +149,7 @@ function AlertPopover({ symbol, alertPrice, alertDirection, price, onAlertUpdate
           </div>
 
           {hasAlert && (
-            <p className="text-[9px] text-[#263d2c] leading-relaxed">
+            <p className="text-[9px] text-[var(--c-text-fainter)] leading-relaxed">
               Alert when {symbol} goes {alertDirection} ${fmtPrice(alertPrice)}
             </p>
           )}
@@ -190,7 +190,7 @@ function NoteInline({ symbol, note, onSave }) {
         onClick={e => e.stopPropagation()}
         maxLength={120}
         placeholder="Add a note…"
-        className="w-full text-[10px] text-[#8aab97] bg-[var(--c-input-bg)] border border-[#22B585]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
+        className="w-full text-[10px] text-[var(--c-text-muted)] bg-[var(--c-input-bg)] border border-[#22B585]/40 rounded px-1.5 py-0.5 outline-none placeholder-[var(--c-input-placeholder)] leading-tight"
       />
     )
   }
@@ -213,7 +213,7 @@ function NoteInline({ symbol, note, onSave }) {
   return (
     <button
       onClick={e => { e.stopPropagation(); setEditing(true) }}
-      className="text-[10px] text-[#263d2c] hover:text-[var(--c-text-faint)] leading-tight opacity-0 group-hover:opacity-100 transition-opacity"
+      className="text-[10px] text-[var(--c-text-fainter)] hover:text-[var(--c-text-faint)] leading-tight opacity-0 group-hover:opacity-100 transition-opacity"
     >
       + note
     </button>
@@ -268,7 +268,7 @@ function WatchlistTile({
       <button
         onClick={e => { e.stopPropagation(); onRemove(symbol) }}
         aria-label={`Remove ${symbol} from watchlist`}
-        className="shrink-0 text-[#263d2c] hover:text-[#ef5454] transition-colors duration-150 opacity-0 group-hover:opacity-100"
+        className="shrink-0 text-[var(--c-text-fainter)] hover:text-[#ef5454] transition-colors duration-150 opacity-0 group-hover:opacity-100"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -305,11 +305,11 @@ export default function Watchlist({ rows = [], onSelect, onRemove, onNoteUpdate,
     <div className="w-full flex flex-col gap-3 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">My Watchlist</span>
       <div className="glass-card rounded-xl p-6 flex flex-col items-center gap-2 text-center">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-[#263d2c] mb-1">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-[var(--c-text-fainter)] mb-1">
           <path d="M4 2.5h12a.5.5 0 01.5.5v15l-6.5-4-6.5 4V3a.5.5 0 01.5-.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
         </svg>
         <p className="text-xs font-semibold text-[var(--c-text-faint)]">Your watchlist is empty</p>
-        <p className="text-[11px] text-[#263d2c] max-w-[220px] leading-relaxed">Search for a ticker above, then click the bookmark icon to track it here.</p>
+        <p className="text-[11px] text-[var(--c-text-fainter)] max-w-[220px] leading-relaxed">Search for a ticker above, then click the bookmark icon to track it here.</p>
       </div>
     </div>
   )

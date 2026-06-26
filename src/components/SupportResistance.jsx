@@ -62,9 +62,9 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
             ${fmt(currentPrice)}
           </span>
           <div className="flex-1 flex items-center gap-1.5">
-            <div className="flex-1 h-px bg-[#263d2c]" />
+            <div className="flex-1 h-px bg-[var(--c-border-strong)]" />
             <span className="text-[9px] font-bold text-[#22B585]/70 uppercase tracking-widest px-2 py-0.5 border border-[#22B585]/20 rounded-full bg-[#22B585]/5">Now</span>
-            <div className="flex-1 h-px bg-[#263d2c]" />
+            <div className="flex-1 h-px bg-[var(--c-border-strong)]" />
           </div>
           <span className="text-[11px] text-[var(--c-text-faint)] w-12 shrink-0" />
         </div>

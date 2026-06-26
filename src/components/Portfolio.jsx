@@ -274,7 +274,7 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
                             onClick={() => remove(i)}
                             aria-label="Remove holding"
                             title="Remove this holding"
-                            className="text-[#263d2c] hover:text-[#ef5454] transition-colors p-1 shrink-0 cursor-pointer"
+                            className="text-[var(--c-text-fainter)] hover:text-[#ef5454] transition-colors p-1 shrink-0 cursor-pointer"
                           >
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                               <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

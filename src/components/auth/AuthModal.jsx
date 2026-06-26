@@ -2,11 +2,15 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-const BG    = '#080c0a'
-const CARD  = '#0f1611'
-const BORDER = '#1a2e1f'
-const GREEN = '#22B585'
-const MUTED = '#4a6351'
+// All non-brand colors reference CSS variables so the modal flips with theme.
+// Brand green stays constant in both themes.
+const INPUT_BG     = 'var(--c-input-bg)'
+const INPUT_BORDER = 'var(--c-input-border)'
+const CARD         = 'var(--c-card)'
+const BORDER       = 'var(--c-border)'
+const TEXT         = 'var(--c-text)'
+const MUTED        = 'var(--c-text-faint)'
+const GREEN        = '#22B585'
 
 export function AuthModal({ onClose }) {
   const { signIn, signUp, signInWithGoogle } = useAuth()
@@ -37,11 +41,11 @@ export function AuthModal({ onClose }) {
 
   const inputStyle = {
     width: '100%',
-    background: BG,
-    border: `1px solid ${BORDER}`,
+    background: INPUT_BG,
+    border: `1px solid ${INPUT_BORDER}`,
     borderRadius: 8,
     padding: '10px 14px',
-    color: '#e0ede5',
+    color: TEXT,
     fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box',
@@ -64,7 +68,7 @@ export function AuthModal({ onClose }) {
     <Overlay onClose={onClose}>
       <div style={{ textAlign: 'center', padding: '8px 0' }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
-        <p style={{ color: '#e0ede5', fontWeight: 500, marginBottom: 8 }}>Check your email</p>
+        <p style={{ color: TEXT, fontWeight: 500, marginBottom: 8 }}>Check your email</p>
         <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.6 }}>
           We sent a confirmation link to <strong style={{ color: GREEN }}>{email}</strong>.<br/>
           Click it to activate your account, then sign in.
@@ -79,7 +83,7 @@ export function AuthModal({ onClose }) {
   return (
     <Overlay onClose={onClose}>
       <div style={{ marginBottom: 24, textAlign: 'center' }}>
-        <div style={{ fontSize: 22, fontWeight: 600, color: '#e0ede5', letterSpacing: '-0.3px' }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: TEXT, letterSpacing: '-0.3px' }}>
           {mode === 'signin' ? 'Welcome back' : 'Create account'}
         </div>
         <div style={{ color: MUTED, fontSize: 13, marginTop: 4 }}>
@@ -108,7 +112,7 @@ export function AuthModal({ onClose }) {
           ...btnStyle,
           background: CARD,
           border: `1px solid ${BORDER}`,
-          color: '#e0ede5',
+          color: TEXT,
           marginBottom: 16,
           display: 'flex',
           alignItems: 'center',
@@ -182,7 +186,7 @@ function Overlay({ onClose, children }) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(0,0,0,0.7)',
+        background: 'var(--c-overlay)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -191,9 +195,8 @@ function Overlay({ onClose, children }) {
     >
       <div
         onClick={e => e.stopPropagation()}
+        className="glass-strong"
         style={{
-          background: '#0f1611',
-          border: '1px solid #1a2e1f',
           borderRadius: 16,
           padding: '32px 28px',
           width: '100%',

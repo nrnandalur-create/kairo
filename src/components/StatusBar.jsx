@@ -17,21 +17,21 @@ export default function StatusBar({ ticker, asOf, onOpenPalette }) {
       <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-[var(--c-text)] tabular-nums">
         {ticker ?? '—'}
       </span>
-      <span className="text-[#263d2c]">·</span>
+      <span className="text-[var(--c-text-fainter)]">·</span>
 
       {/* Sync time — same "Updated" verb used on the data cards for consistency */}
       {asOf ? (
         <DataTimestamp asOf={asOf} prefix="Updated" />
       ) : (
-        <span className="font-mono text-[10.5px] text-[#5d7868]">Awaiting data</span>
+        <span className="font-mono text-[10.5px] text-[var(--c-text-muted)]">Awaiting data</span>
       )}
 
       <div className="ml-auto flex items-center gap-3">
         {/* Data provider attribution */}
-        <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#5d7868] hidden xl:inline">
+        <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[var(--c-text-muted)] hidden xl:inline">
           Finnhub · Alpha Vantage · Groq
         </span>
-        <span className="text-[#263d2c] hidden xl:inline">·</span>
+        <span className="text-[var(--c-text-fainter)] hidden xl:inline">·</span>
 
         {/* Market status pill */}
         <MarketStatusPill compact />

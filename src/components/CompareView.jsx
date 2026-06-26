@@ -94,7 +94,7 @@ function SidePanel({ ticker, loading, data, error }) {
 
   if (!data) return (
     <div className="flex-1 flex items-center justify-center">
-      <p className="text-xs text-[#263d2c] text-center px-4">Enter a ticker and click Compare</p>
+      <p className="text-xs text-[var(--c-text-fainter)] text-center px-4">Enter a ticker and click Compare</p>
     </div>
   )
 
@@ -179,7 +179,7 @@ function SidePanel({ ticker, loading, data, error }) {
       ) : (
         <div className="glass-card rounded-xl p-4">
           <div className="text-[9px] text-[var(--c-text-faint)] uppercase tracking-widest font-semibold">AI Signal</div>
-          <div className="text-xs text-[#263d2c] mt-2">Analysis unavailable</div>
+          <div className="text-xs text-[var(--c-text-fainter)] mt-2">Analysis unavailable</div>
         </div>
       )}
 
@@ -276,7 +276,7 @@ export default function CompareView({ open, onClose }) {
             maxLength={5}
             className={inputCls}
           />
-          <span className="text-[#263d2c] text-sm font-bold shrink-0">vs</span>
+          <span className="text-[var(--c-text-fainter)] text-sm font-bold shrink-0">vs</span>
           <input
             type="text"
             value={rightTicker}

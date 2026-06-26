@@ -7,6 +7,14 @@ import {
   ColorType,
   CrosshairMode,
 } from 'lightweight-charts'
+import { usePrefs } from '../hooks/usePrefs'
+
+// Pull a computed CSS var off <html>. Used so the chart matches whatever
+// theme is active and re-themes when the user flips Settings → Light/Dark.
+function cssVar(name, fallback) {
+  if (typeof window === 'undefined') return fallback
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+}
 
 function calcBollingerBands(candles, period = 20) {
   const bands = []
@@ -36,6 +44,7 @@ export default function CandleChart({ candles, synthetic }) {
   const bandsRef     = useRef(null)
   const [showBands, setShowBands] = useState(true)
   const [tf, setTf] = useState('1M')
+  const { theme } = usePrefs()
 
   useEffect(() => {
     if (!containerRef.current || !candles?.length) return
@@ -43,23 +52,29 @@ export default function CandleChart({ candles, synthetic }) {
     const tfDays   = TIMEFRAMES.find(t => t.label === tf)?.days ?? Infinity
     const filtered = tfDays === Infinity ? candles : candles.slice(-tfDays)
 
+    // Sample current theme tokens so the chart matches the rest of the UI.
+    const textColor   = cssVar('--c-text-faint',     '#4b6358')
+    const gridColor   = cssVar('--c-card',           '#0f1611')
+    const borderColor = cssVar('--c-border',         '#1a2e1f')
+    const middleBand  = theme === 'light' ? 'rgba(20,30,25,0.18)' : 'rgba(255,255,255,0.12)'
+
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#4b6358',
+        textColor,
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: '#0f1611' },
-        horzLines: { color: '#131f17' },
+        vertLines: { color: gridColor },
+        horzLines: { color: gridColor },
       },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: {
-        borderColor: '#1a2e1f',
+        borderColor,
         scaleMargins: { top: 0.08, bottom: 0.22 },
       },
       timeScale: {
-        borderColor: '#1a2e1f',
+        borderColor,
         timeVisible: true,
         secondsVisible: false,
         fixLeftEdge: true,
@@ -91,20 +106,20 @@ export default function CandleChart({ candles, synthetic }) {
       crosshairMarkerVisible: false,
       lineWidth: 1,
     }
-    const upperBand  = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(29,158,117,0.5)',  visible: showBands })
-    const middleBand = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(255,255,255,0.12)', visible: showBands, lineStyle: 2 })
-    const lowerBand  = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(29,158,117,0.5)',  visible: showBands })
-    bandsRef.current = { upper: upperBand, middle: middleBand, lower: lowerBand }
+    const upperBand    = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(34,181,133,0.55)',  visible: showBands })
+    const middleBandS  = chart.addSeries(LineSeries, { ...lineOpts, color: middleBand, visible: showBands, lineStyle: 2 })
+    const lowerBand    = chart.addSeries(LineSeries, { ...lineOpts, color: 'rgba(34,181,133,0.55)',  visible: showBands })
+    bandsRef.current = { upper: upperBand, middle: middleBandS, lower: lowerBand }
 
     candleSeries.setData(filtered.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })))
     volumeSeries.setData(filtered.map(({ time, open, close, volume }) => ({
       time, value: volume ?? 0,
-      color: close >= open ? 'rgba(29,158,117,0.2)' : 'rgba(226,75,74,0.2)',
+      color: close >= open ? 'rgba(34,181,133,0.25)' : 'rgba(239,84,84,0.25)',
     })))
 
     const bands = calcBollingerBands(filtered)
     upperBand.setData(bands.map(b => ({ time: b.time, value: b.upper })))
-    middleBand.setData(bands.map(b => ({ time: b.time, value: b.middle })))
+    middleBandS.setData(bands.map(b => ({ time: b.time, value: b.middle })))
     lowerBand.setData(bands.map(b => ({ time: b.time, value: b.lower })))
 
     chart.timeScale().fitContent()
@@ -120,7 +135,7 @@ export default function CandleChart({ candles, synthetic }) {
       bandsRef.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles, tf])
+  }, [candles, tf, theme])
 
   useEffect(() => {
     if (!bandsRef.current) return

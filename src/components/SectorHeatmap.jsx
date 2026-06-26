@@ -75,7 +75,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Sector Heatmap</span>
             {updated && (
-              <span className="text-[10px] text-[#263d2c]">
+              <span className="text-[10px] text-[var(--c-text-fainter)]">
                 {updated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
@@ -115,7 +115,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
                         {up ? '+' : ''}{s.changePct.toFixed(2)}%
                       </span>
                     ) : (
-                      <span className="text-[10px] text-[#263d2c]">—</span>
+                      <span className="text-[10px] text-[var(--c-text-fainter)]">—</span>
                     )}
                   </div>
 
@@ -139,7 +139,7 @@ export default function SectorHeatmap({ open, onClose, onAnalyze }) {
             })}
           </div>
 
-          <p className="text-[10px] text-[#263d2c] text-center mt-5 leading-relaxed">
+          <p className="text-[10px] text-[var(--c-text-fainter)] text-center mt-5 leading-relaxed">
             Click any sector to analyze the ETF · Sorted by today's performance · Auto-refreshes every 60s
           </p>
         </div>

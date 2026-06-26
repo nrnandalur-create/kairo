@@ -80,7 +80,7 @@ export default function EarningsCalendar({ data, loading }) {
                   Est. EPS{' '}
                   <span className="text-[var(--c-text)] font-bold tabular-nums">{fmtEps(next.epsEstimate)}</span>
                   {next.epsLow != null && next.epsHigh != null && (
-                    <span className="text-[#263d2c] ml-1 tabular-nums">
+                    <span className="text-[var(--c-text-fainter)] ml-1 tabular-nums">
                       ({fmtEps(next.epsLow)} – {fmtEps(next.epsHigh)})
                     </span>
                   )}
@@ -96,7 +96,7 @@ export default function EarningsCalendar({ data, loading }) {
           {/* Recent history */}
           {recent.length > 0 && (
             <div>
-              <p className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest mb-1">Recent History</p>
+              <p className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest mb-1">Recent History</p>
               <div className="flex flex-col">
                 {recent.map(e => {
                   const hasBoth = e.epsActual != null && e.epsEstimate != null
@@ -107,7 +107,7 @@ export default function EarningsCalendar({ data, loading }) {
                       <span className="text-[10px] font-bold text-[var(--c-text-faint)] w-12 shrink-0 tabular-nums">
                         Q{e.quarter} '{String(e.year).slice(2)}
                       </span>
-                      <span className="text-[10px] text-[#263d2c] shrink-0">{fmtDateShort(e.date)}</span>
+                      <span className="text-[10px] text-[var(--c-text-fainter)] shrink-0">{fmtDateShort(e.date)}</span>
                       <div className="flex items-center gap-2 ml-auto flex-wrap justify-end">
                         {e.epsEstimate != null && (
                           <span className="text-[10px] text-[var(--c-text-faint)] tabular-nums">

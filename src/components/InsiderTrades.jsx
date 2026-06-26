@@ -55,11 +55,11 @@ export default function InsiderTrades({ data, loading }) {
         <div className="flex flex-col">
           {/* Column headers */}
           <div className="flex items-center gap-3 pb-2 mb-0.5 border-b border-[var(--c-border)]">
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest flex-1">Insider</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-10 text-center shrink-0">Type</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-12 text-right shrink-0">Shares</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-14 text-right shrink-0 hidden sm:block">Value</span>
-            <span className="text-[9px] font-bold text-[#263d2c] uppercase tracking-widest w-14 text-right shrink-0">Date</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest flex-1">Insider</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-10 text-center shrink-0">Type</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-12 text-right shrink-0">Shares</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-14 text-right shrink-0 hidden sm:block">Value</span>
+            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-14 text-right shrink-0">Date</span>
           </div>
 
           {rows.map((t, i) => {

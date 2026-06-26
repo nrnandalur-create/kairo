@@ -19,8 +19,8 @@ const INDEX_NAMES = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones' }
 function IndexTile({ symbol, price, changePct }) {
   const valid = changePct != null && !isNaN(changePct)
   const up    = valid && changePct >= 0
-  const color = !valid ? '#4b6358' : up ? '#22B585' : '#ef5454'
-  const bgBar = !valid ? '#1a2e1f' : up ? 'rgba(29,158,117,0.08)' : 'rgba(226,75,74,0.08)'
+  const color = !valid ? 'var(--c-text-faint)' : up ? '#22B585' : '#ef5454'
+  const bgBar = !valid ? 'var(--c-chip-bg)' : up ? 'rgba(34,181,133,0.10)' : 'rgba(239,84,84,0.10)'
 
   return (
     <div className="flex-1 flex flex-col gap-1.5 px-6 py-5 transition-colors duration-150 hover:bg-[var(--c-hover-bg)]" style={{ background: bgBar }}>
@@ -44,7 +44,7 @@ function MoverRow({ symbol, price, changePct, rank }) {
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0 -mx-1 px-1 rounded-md hover:bg-[var(--c-hover-bg)] transition-colors duration-150">
-      <span className="text-[10px] text-[#263d2c] tabular-nums w-4 shrink-0 text-right">{rank}</span>
+      <span className="text-[10px] text-[var(--c-text-fainter)] tabular-nums w-4 shrink-0 text-right">{rank}</span>
       <span className="text-sm font-bold text-[var(--c-text)] w-14 shrink-0">{symbol}</span>
       <span className="text-sm tabular-nums text-[var(--c-text-faint)] flex-1">${fmtPrice(price)}</span>
       <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest shrink-0 ${badge}`}>
@@ -189,7 +189,7 @@ export default function MarketPulse() {
 
       {/* Footer — data freshness */}
       <div className="flex items-center justify-between gap-2 px-1">
-        <span className="text-[10px] text-[#263d2c] inline-flex items-center">
+        <span className="text-[10px] text-[var(--c-text-fainter)] inline-flex items-center">
           Prices delayed
           <InfoTooltip side="top">
             Indices, movers, and sentiment are aggregated from Finnhub. Quotes may be 15-min delayed depending on exchange. Auto-refreshes every 60s.

@@ -94,7 +94,7 @@ export default function NewsFeed({ data, loading, asOf }) {
     <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">News Feed</span>
       <div className="py-8 flex flex-col items-center gap-2 text-center">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-[#263d2c] mb-1">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-[var(--c-text-fainter)] mb-1">
           <rect x="2" y="3" width="14" height="3" rx="1" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="2" y="8" width="9" height="2" rx="1" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="2" y="12" width="11" height="2" rx="1" stroke="currentColor" strokeWidth="1.3"/>

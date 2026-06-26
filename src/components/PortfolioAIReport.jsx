@@ -52,7 +52,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
               {cfg.label} Health
             </span>
           </div>
-          <p className="text-xs text-[#8aab97] leading-relaxed">{report.summary}</p>
+          <p className="text-xs text-[var(--c-text-muted)] leading-relaxed">{report.summary}</p>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
           {(report.strengths ?? []).map((s, i) => (
             <div key={i} className="flex items-start gap-1.5">
               <span className="text-[#22B585] text-[10px] mt-0.5 shrink-0">✓</span>
-              <p className="text-[11px] text-[#8aab97] leading-relaxed">{s}</p>
+              <p className="text-[11px] text-[var(--c-text-muted)] leading-relaxed">{s}</p>
             </div>
           ))}
         </div>
@@ -72,7 +72,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
           {(report.risks ?? []).map((r, i) => (
             <div key={i} className="flex items-start gap-1.5">
               <span className="text-[#ef5454] text-[10px] mt-0.5 shrink-0">✗</span>
-              <p className="text-[11px] text-[#8aab97] leading-relaxed">{r}</p>
+              <p className="text-[11px] text-[var(--c-text-muted)] leading-relaxed">{r}</p>
             </div>
           ))}
         </div>
@@ -121,7 +121,7 @@ export default function PortfolioAIReport({ report, onAnalyzeTicker }) {
       {report.rebalanceIdea && (
         <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3 flex flex-col gap-1.5">
           <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest">Rebalance Idea</span>
-          <p className="text-xs text-[#8aab97] leading-relaxed">{report.rebalanceIdea}</p>
+          <p className="text-xs text-[var(--c-text-muted)] leading-relaxed">{report.rebalanceIdea}</p>
         </div>
       )}
     </div>
