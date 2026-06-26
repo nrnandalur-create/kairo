@@ -96,8 +96,11 @@ export default function TickerSearch({ onSearch, loading }) {
           placeholder="Ticker or company name"
           disabled={loading}
           autoComplete="off"
+          autoCorrect="off"
           spellCheck={false}
-          className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-all duration-200 focus:border-[#22B585] focus:bg-[var(--c-input-bg)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
+          enterKeyHint="search"
+          inputMode="search"
+          className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none transition-all duration-200 focus:border-[#22B585] focus:bg-[var(--c-input-bg)] focus:shadow-[0_0_0_3px_rgba(29,158,117,0.12)] disabled:opacity-40 disabled:cursor-not-allowed"
         />
 
         {/* Dropdown */}
