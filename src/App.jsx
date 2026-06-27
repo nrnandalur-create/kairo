@@ -52,8 +52,9 @@ import AboutModal from './components/AboutModal'
 import MyPosition from './components/MyPosition'
 import VerdictMemory from './components/VerdictMemory'
 import DailyBriefCard from './components/DailyBriefCard'
-const PulseView   = lazy(() => import('./components/PulseView'))
-const JournalView = lazy(() => import('./components/JournalView'))
+const PulseView       = lazy(() => import('./components/PulseView'))
+const JournalView     = lazy(() => import('./components/JournalView'))
+const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -106,6 +107,7 @@ export default function App() {
   const [compareSeed,   setCompareSeed]   = useState(null)
   const [pulseOpen,     setPulseOpen]     = useState(false)
   const [journalOpen,   setJournalOpen]   = useState(false)
+  const [trackRecordOpen, setTrackRecordOpen] = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -319,6 +321,7 @@ export default function App() {
     switch (key) {
       case 'pulse':     setPulseOpen(true);     break
       case 'journal':   setJournalOpen(true);   break
+      case 'receipts':  setTrackRecordOpen(true); break
       case 'screener':  setScreenerOpen(true);  break
       case 'portfolio': setPortfolioOpen(true); break
       case 'sectors':   setSectorsOpen(true);   break
@@ -654,6 +657,11 @@ export default function App() {
             userId={user?.id}
             onSelectTicker={handleSearch}
           />
+        </Suspense>
+      )}
+      {trackRecordOpen && (
+        <Suspense fallback={null}>
+          <TrackRecordView open onClose={() => setTrackRecordOpen(false)} />
         </Suspense>
       )}
 
