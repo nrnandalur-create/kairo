@@ -25,6 +25,8 @@ import { UserMenu } from './components/auth/UserMenu'
 import { supabase } from './lib/supabase'
 import { fetchMarket } from './services/finnhub'
 import { fetchAnalysis } from './services/analyze'
+import { logVerdict, fetchPreviousVerdict } from './services/verdictHistory'
+import { calcRSI, calcMACD, calcBBPosition } from './utils/indicators'
 import { fetchFundamentals } from './services/fundamentals'
 import { getMockOptions, getMockNews } from './mockData'
 import Nav from './components/Nav'
@@ -48,6 +50,7 @@ import { toast } from './utils/toast'
 import SettingsModal from './components/SettingsModal'
 import AboutModal from './components/AboutModal'
 import MyPosition from './components/MyPosition'
+import VerdictMemory from './components/VerdictMemory'
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -82,6 +85,7 @@ export default function App() {
   const [loading, setLoading]   = useState(LOADING_NONE)
   const [marketData, setMarketData] = useState(null)
   const [aiData, setAiData]     = useState(null)
+  const [previousVerdict, setPreviousVerdict] = useState(null)
   const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
   const { user }       = useAuth()
@@ -149,6 +153,29 @@ export default function App() {
             riskLevel:  analysisResult.riskLevel,
           },
         }).catch(() => {})
+      }
+
+      // Log this verdict view + fetch the previous one for Verdict Memory.
+      // Both run for any signed-in user, not just watchlist members — the
+      // history fuels the Verdict Memory banner, Track Record, and Replay.
+      if (user && analysisResult?.recommendation) {
+        const indicators = {
+          rsi:  calcRSI(candles),
+          macd: calcMACD(candles)?.macdLine ?? null,
+          bb:   calcBBPosition(candles),
+        }
+        const previous = await fetchPreviousVerdict({ userId: user.id, ticker: sym })
+        setPreviousVerdict(previous)
+        logVerdict({
+          userId:      user.id,
+          ticker:      sym,
+          aiData:      analysisResult,
+          marketData:  { quote },
+          indicators,
+          profile,
+        }).catch(() => {})
+      } else {
+        setPreviousVerdict(null)
       }
 
       setLoading(LOADING_NONE)
@@ -515,6 +542,13 @@ export default function App() {
 
               {/* Right column — AI recommendation & analysis */}
               <div className="flex flex-col gap-5">
+                {previousVerdict && aiData && (
+                  <VerdictMemory
+                    previous={previousVerdict}
+                    current={aiData}
+                    currentPrice={marketData.quote?.c}
+                  />
+                )}
                 <Recommendation
                   data={aiData}
                   loading={loading.ai}
