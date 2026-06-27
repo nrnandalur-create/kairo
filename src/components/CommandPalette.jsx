@@ -252,6 +252,7 @@ const POPULAR = [
 ]
 
 const SECTIONS = [
+  { key: 'pulse',     label: 'Open The Pulse', sub: 'Live intraday watchlist dashboard', jump: 'pulse'    },
   { key: 'screener',  label: 'Open Screener',  sub: 'Filter and rank stocks',          jump: 'screener'  },
   { key: 'portfolio', label: 'Open Portfolio', sub: 'Holdings, returns, AI summary',   jump: 'portfolio' },
   { key: 'sectors',   label: 'Open Sectors',   sub: 'Sector heatmap',                  jump: 'sectors'   },

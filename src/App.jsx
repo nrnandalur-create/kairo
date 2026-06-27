@@ -52,6 +52,7 @@ import AboutModal from './components/AboutModal'
 import MyPosition from './components/MyPosition'
 import VerdictMemory from './components/VerdictMemory'
 import DailyBriefCard from './components/DailyBriefCard'
+const PulseView = lazy(() => import('./components/PulseView'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -102,6 +103,7 @@ export default function App() {
   const [sectorsOpen,   setSectorsOpen]   = useState(false)
   const [compareOpen,   setCompareOpen]   = useState(false)
   const [compareSeed,   setCompareSeed]   = useState(null)
+  const [pulseOpen,     setPulseOpen]     = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -299,6 +301,7 @@ export default function App() {
         case 's': setSectorsOpen(true);   break
         case 'c': setCompareOpen(true);   break
         case 'r': setScreenerOpen(true);  break
+        case 'u': setPulseOpen(true);     break
         case ',': setSettingsOpen(true);  break
         case '?': setAboutOpen(true);     break
         case '/': e.preventDefault(); palette.setOpen(true); break
@@ -311,6 +314,7 @@ export default function App() {
   }, [])
   const handleJumpTo = (key) => {
     switch (key) {
+      case 'pulse':     setPulseOpen(true);     break
       case 'screener':  setScreenerOpen(true);  break
       case 'portfolio': setPortfolioOpen(true); break
       case 'sectors':   setSectorsOpen(true);   break
@@ -624,6 +628,17 @@ export default function App() {
       {compareOpen && (
         <Suspense fallback={null}>
           <CompareView open onClose={() => { setCompareOpen(false); setCompareSeed(null) }} initialTickers={compareSeed} />
+        </Suspense>
+      )}
+      {pulseOpen && (
+        <Suspense fallback={null}>
+          <PulseView
+            open
+            onClose={() => setPulseOpen(false)}
+            watchlistTickers={watchlistRows.map(r => r.ticker)}
+            userId={user?.id}
+            onSelectTicker={(sym) => { setPulseOpen(false); handleSearch(sym) }}
+          />
         </Suspense>
       )}
 
