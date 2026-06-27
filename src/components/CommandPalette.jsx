@@ -255,6 +255,7 @@ const SECTIONS = [
   { key: 'pulse',     label: 'Open The Pulse', sub: 'Live intraday watchlist dashboard', jump: 'pulse'    },
   { key: 'journal',   label: 'Open Conviction Log', sub: 'Your captured theses + Kairo follow-ups', jump: 'journal' },
   { key: 'receipts',  label: 'Open Kairo Receipts', sub: 'Audited AI verdict track record',         jump: 'receipts' },
+  { key: 'discover',  label: 'Open Setup Feed',     sub: 'Today\'s AI-curated trading setups',      jump: 'discover' },
   { key: 'screener',  label: 'Open Screener',  sub: 'Filter and rank stocks',          jump: 'screener'  },
   { key: 'portfolio', label: 'Open Portfolio', sub: 'Holdings, returns, AI summary',   jump: 'portfolio' },
   { key: 'sectors',   label: 'Open Sectors',   sub: 'Sector heatmap',                  jump: 'sectors'   },

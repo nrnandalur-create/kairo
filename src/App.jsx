@@ -55,6 +55,7 @@ import DailyBriefCard from './components/DailyBriefCard'
 const PulseView       = lazy(() => import('./components/PulseView'))
 const JournalView     = lazy(() => import('./components/JournalView'))
 const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
+const DiscoverView    = lazy(() => import('./components/DiscoverView'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -108,6 +109,7 @@ export default function App() {
   const [pulseOpen,     setPulseOpen]     = useState(false)
   const [journalOpen,   setJournalOpen]   = useState(false)
   const [trackRecordOpen, setTrackRecordOpen] = useState(false)
+  const [discoverOpen,    setDiscoverOpen]    = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -307,6 +309,7 @@ export default function App() {
         case 'r': setScreenerOpen(true);  break
         case 'u': setPulseOpen(true);     break
         case 'j': setJournalOpen(true);   break
+        case 'd': setDiscoverOpen(true);  break
         case ',': setSettingsOpen(true);  break
         case '?': setAboutOpen(true);     break
         case '/': e.preventDefault(); palette.setOpen(true); break
@@ -322,6 +325,7 @@ export default function App() {
       case 'pulse':     setPulseOpen(true);     break
       case 'journal':   setJournalOpen(true);   break
       case 'receipts':  setTrackRecordOpen(true); break
+      case 'discover':  setDiscoverOpen(true);    break
       case 'screener':  setScreenerOpen(true);  break
       case 'portfolio': setPortfolioOpen(true); break
       case 'sectors':   setSectorsOpen(true);   break
@@ -662,6 +666,15 @@ export default function App() {
       {trackRecordOpen && (
         <Suspense fallback={null}>
           <TrackRecordView open onClose={() => setTrackRecordOpen(false)} />
+        </Suspense>
+      )}
+      {discoverOpen && (
+        <Suspense fallback={null}>
+          <DiscoverView
+            open
+            onClose={() => setDiscoverOpen(false)}
+            onSelectTicker={handleSearch}
+          />
         </Suspense>
       )}
 

@@ -11,6 +11,7 @@
     { "path": "/api/cron/close-wrap",   "schedule": "30 21 * * 1-5" },
     { "path": "/api/cron/smart-signals",      "schedule": "*/30 13-20 * * 1-5" },
     { "path": "/api/cron/conviction-followup","schedule": "0 14 * * 1-5" },
-    { "path": "/api/cron/evaluate-verdicts",  "schedule": "0 22 * * 1-5" }
+    { "path": "/api/cron/evaluate-verdicts",  "schedule": "0 22 * * 1-5" },
+    { "path": "/api/cron/curate-setups",      "schedule": "0 12 * * 1-5" }
   ]
 }
