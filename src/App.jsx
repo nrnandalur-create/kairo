@@ -51,6 +51,7 @@ import SettingsModal from './components/SettingsModal'
 import AboutModal from './components/AboutModal'
 import MyPosition from './components/MyPosition'
 import VerdictMemory from './components/VerdictMemory'
+import DailyBriefCard from './components/DailyBriefCard'
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -463,6 +464,14 @@ export default function App() {
             localStorage.setItem('kairo_onboarded', '1')
             setOnboarded(true)
           }} />
+        )}
+
+        {/* Daily brief cards — visible on landing for signed-in users */}
+        {!hasData && !isLoading && user && (
+          <>
+            <DailyBriefCard userId={user.id} kind="open"  onJumpToTicker={handleSearch} />
+            <DailyBriefCard userId={user.id} kind="close" onJumpToTicker={handleSearch} />
+          </>
         )}
 
         {/* Watchlist — visible on landing only, above market pulse */}
