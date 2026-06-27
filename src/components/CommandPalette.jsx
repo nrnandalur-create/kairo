@@ -257,6 +257,7 @@ const SECTIONS = [
   { key: 'receipts',  label: 'Open Kairo Receipts', sub: 'Audited AI verdict track record',         jump: 'receipts' },
   { key: 'discover',  label: 'Open Setup Feed',     sub: 'Today\'s AI-curated trading setups',      jump: 'discover' },
   { key: 'paper',     label: 'Open Paper Pit',      sub: 'Virtual trading with AI grading',         jump: 'paper'    },
+  { key: 'replay',    label: 'Open Replay',         sub: 'Your verdict history on this ticker',     jump: 'replay'   },
   { key: 'screener',  label: 'Open Screener',  sub: 'Filter and rank stocks',          jump: 'screener'  },
   { key: 'portfolio', label: 'Open Portfolio', sub: 'Holdings, returns, AI summary',   jump: 'portfolio' },
   { key: 'sectors',   label: 'Open Sectors',   sub: 'Sector heatmap',                  jump: 'sectors'   },

@@ -57,6 +57,7 @@ const JournalView     = lazy(() => import('./components/JournalView'))
 const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
 const DiscoverView    = lazy(() => import('./components/DiscoverView'))
 const PaperPitView    = lazy(() => import('./components/PaperPitView'))
+const ReplayView      = lazy(() => import('./components/ReplayView'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -112,6 +113,7 @@ export default function App() {
   const [trackRecordOpen, setTrackRecordOpen] = useState(false)
   const [discoverOpen,    setDiscoverOpen]    = useState(false)
   const [paperOpen,       setPaperOpen]       = useState(false)
+  const [replayOpen,      setReplayOpen]      = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -313,6 +315,7 @@ export default function App() {
         case 'j': setJournalOpen(true);   break
         case 'd': setDiscoverOpen(true);  break
         case 't': setPaperOpen(true);     break
+        case 'y': setReplayOpen(true);    break
         case ',': setSettingsOpen(true);  break
         case '?': setAboutOpen(true);     break
         case '/': e.preventDefault(); palette.setOpen(true); break
@@ -330,6 +333,7 @@ export default function App() {
       case 'receipts':  setTrackRecordOpen(true); break
       case 'discover':  setDiscoverOpen(true);    break
       case 'paper':     setPaperOpen(true);       break
+      case 'replay':    setReplayOpen(true);      break
       case 'screener':  setScreenerOpen(true);  break
       case 'portfolio': setPortfolioOpen(true); break
       case 'sectors':   setSectorsOpen(true);   break
@@ -691,6 +695,16 @@ export default function App() {
             currentPrice={marketData?.quote?.c}
             aiData={aiData}
             onSelectTicker={handleSearch}
+          />
+        </Suspense>
+      )}
+      {replayOpen && (
+        <Suspense fallback={null}>
+          <ReplayView
+            open
+            onClose={() => setReplayOpen(false)}
+            userId={user?.id}
+            ticker={ticker}
           />
         </Suspense>
       )}
