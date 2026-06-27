@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import InfoTooltip from './InfoTooltip'
+import { fetchLatestConviction, saveConviction } from '../services/convictionLog'
+import { toast } from '../utils/toast'
 
 // Per-ticker position state is stored locally so users see their numbers
 // the next time they pull up the same ticker on this device. Mirrors the
@@ -234,16 +236,28 @@ function Metric({ label, value, tone }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-export default function MyPosition({ ticker, aiData, currentPrice }) {
+export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
   const [costBasis, setCostBasis] = useState('')
   const [shares,    setShares]    = useState('')
+  // Conviction Log state — checked on ticker change (was there a prior thesis?)
+  // and re-evaluated whenever calcs becomes valid (offer the capture prompt).
+  const [conviction,  setConviction]  = useState(null)
+  const [thesisDraft, setThesisDraft] = useState('')
+  const [showCapture, setShowCapture] = useState(false)
 
   // Reload saved values whenever the active ticker changes.
   useEffect(() => {
     const v = loadPosition(ticker)
     setCostBasis(v.costBasis)
     setShares(v.shares)
-  }, [ticker])
+    setShowCapture(false)
+    setThesisDraft('')
+    setConviction(null)
+    // Look up any existing conviction for this ticker so we don't re-prompt.
+    if (userId && ticker) {
+      fetchLatestConviction({ userId, ticker }).then(setConviction)
+    }
+  }, [ticker, userId])
 
   // Persist on change. Debounce-light via a 300ms timer so we don't write
   // localStorage on every keystroke.
@@ -381,6 +395,69 @@ export default function MyPosition({ ticker, aiData, currentPrice }) {
       <p className="text-[14px] font-semibold leading-snug" style={{ color: summaryColor }}>
         {summaryText}
       </p>
+
+      {/* Conviction Log — capture prompt when a position just got filled.
+          Renders only for signed-in users with no prior thesis on this
+          ticker. Soft + dismissible. */}
+      {calcs.valid && userId && conviction === null && !showCapture && (
+        <button
+          type="button"
+          onClick={() => setShowCapture(true)}
+          className="text-left text-[12px] text-[var(--c-text-faint)] italic hover:text-[#22B585] transition-colors cursor-pointer self-start"
+        >
+          + Add the thesis for this position (Kairo asks back in 30 days)
+        </button>
+      )}
+      {showCapture && (
+        <div className="flex flex-col gap-2 p-3 rounded-xl border border-[#22B585]/30 bg-[#22B585]/5 animate-fade">
+          <label className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#22B585]">Why are you buying {ticker}?</label>
+          <textarea
+            value={thesisDraft}
+            onChange={(e) => setThesisDraft(e.target.value.slice(0, 280))}
+            placeholder={`e.g. Earnings should beat; Q3 guide raised; insiders buying. (${280 - thesisDraft.length} chars left)`}
+            rows={2}
+            className="w-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-[13px] text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors resize-none"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={!thesisDraft.trim()}
+              onClick={async () => {
+                const saved = await saveConviction({
+                  userId, ticker, thesis: thesisDraft,
+                  capturedVerdict:    aiVerdict,
+                  capturedConfidence: aiConfidence,
+                  capturedPrice:      currentPrice,
+                })
+                if (saved) {
+                  setConviction(saved)
+                  setThesisDraft('')
+                  setShowCapture(false)
+                  toast.success('Thesis saved to your Conviction Log')
+                } else {
+                  toast.error('Could not save thesis')
+                }
+              }}
+              className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#22B585] hover:bg-[#2BC093] disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors cursor-pointer"
+            >
+              Save thesis
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowCapture(false); setThesisDraft('') }}
+              className="text-[11px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[var(--c-text)] cursor-pointer transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {conviction && (
+        <div className="flex items-start gap-2 px-3 py-2 rounded-xl border border-[var(--c-border)] bg-[var(--c-input-bg)] text-[12.5px]">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--c-text-faint)] mt-0.5 shrink-0">Thesis</span>
+          <span className="text-[var(--c-text)] leading-relaxed flex-1">{conviction.thesis}</span>
+        </div>
+      )}
 
       {calcs.valid && (
         <>

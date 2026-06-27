@@ -52,7 +52,8 @@ import AboutModal from './components/AboutModal'
 import MyPosition from './components/MyPosition'
 import VerdictMemory from './components/VerdictMemory'
 import DailyBriefCard from './components/DailyBriefCard'
-const PulseView = lazy(() => import('./components/PulseView'))
+const PulseView   = lazy(() => import('./components/PulseView'))
+const JournalView = lazy(() => import('./components/JournalView'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -104,6 +105,7 @@ export default function App() {
   const [compareOpen,   setCompareOpen]   = useState(false)
   const [compareSeed,   setCompareSeed]   = useState(null)
   const [pulseOpen,     setPulseOpen]     = useState(false)
+  const [journalOpen,   setJournalOpen]   = useState(false)
 
   const isLoading = loading.market || loading.ai
 
@@ -302,6 +304,7 @@ export default function App() {
         case 'c': setCompareOpen(true);   break
         case 'r': setScreenerOpen(true);  break
         case 'u': setPulseOpen(true);     break
+        case 'j': setJournalOpen(true);   break
         case ',': setSettingsOpen(true);  break
         case '?': setAboutOpen(true);     break
         case '/': e.preventDefault(); palette.setOpen(true); break
@@ -315,6 +318,7 @@ export default function App() {
   const handleJumpTo = (key) => {
     switch (key) {
       case 'pulse':     setPulseOpen(true);     break
+      case 'journal':   setJournalOpen(true);   break
       case 'screener':  setScreenerOpen(true);  break
       case 'portfolio': setPortfolioOpen(true); break
       case 'sectors':   setSectorsOpen(true);   break
@@ -575,6 +579,7 @@ export default function App() {
                     ticker={ticker}
                     aiData={aiData}
                     currentPrice={marketData.quote?.c}
+                    userId={user?.id}
                   />
                 )}
                 {aiData && <AIChat ticker={ticker} context={aiData} />}
@@ -638,6 +643,16 @@ export default function App() {
             watchlistTickers={watchlistRows.map(r => r.ticker)}
             userId={user?.id}
             onSelectTicker={(sym) => { setPulseOpen(false); handleSearch(sym) }}
+          />
+        </Suspense>
+      )}
+      {journalOpen && (
+        <Suspense fallback={null}>
+          <JournalView
+            open
+            onClose={() => setJournalOpen(false)}
+            userId={user?.id}
+            onSelectTicker={handleSearch}
           />
         </Suspense>
       )}
