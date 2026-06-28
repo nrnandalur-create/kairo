@@ -1,6 +1,13 @@
+import { useEffect, useState } from 'react'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
 import { toast } from '../utils/toast'
+
+// How long to keep showing the skeleton after the request has confirmed-failed
+// before swapping in the "unavailable" card. Protects against transient blips
+// that resolve on retry, and prevents users from being misled during a slow
+// first-load when Vercel's serverless cold-start can take 5-10s.
+const ERROR_REVEAL_DELAY_MS = 4000
 
 const CONFIG = {
   // glyph: secondary visual signal alongside color so the verdict reads
@@ -20,9 +27,9 @@ function SkeletonLine({ w = 'full' }) {
   return <div className={`h-3 rounded-full shimmer w-${w}`} />
 }
 
-function Skeleton() {
+function Skeleton({ showSlowMessage }) {
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-fade">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
         <div className="h-2.5 w-40 rounded-full shimmer" />
@@ -33,20 +40,58 @@ function Skeleton() {
         <SkeletonLine w="3/5" />
         <SkeletonLine w="2/3" />
       </div>
+      {showSlowMessage && (
+        <p className="text-[12px] text-[var(--c-text-faint)] italic mt-1 animate-fade">
+          Analysis is taking longer than usual — Vercel cold-starts can add a few seconds on the first request. Hang tight.
+        </p>
+      )}
     </div>
   )
 }
 
-function Unavailable() {
+// Honest "unavailable" card — never lies about WHY analysis isn't shown.
+function Unavailable({ ticker, error }) {
+  const msg =
+    error && /timeout|timed out/i.test(error)
+      ? 'Analysis request timed out. Try refreshing in a moment — the model can be slow on cold starts.'
+      : error && /candle|data unavailable/i.test(error)
+      ? `Real candle data for ${ticker ?? 'this ticker'} is unavailable right now. Analysis runs again as soon as live OHLC returns.`
+      : error
+      ? 'Analysis temporarily unavailable. Refresh or try again shortly.'
+      : 'Analysis temporarily unavailable. Refresh or try again shortly.'
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex items-center gap-3">
-      <span className="text-[var(--c-text-faint)] text-lg">—</span>
-      <span className="text-sm text-[var(--c-text-faint)]">AI recommendation unavailable</span>
+    <div className="w-full glass-card rounded-2xl p-6 flex items-start gap-3 animate-fade">
+      <span className="shrink-0 w-9 h-9 rounded-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text-fainter)] flex items-center justify-center text-base">—</span>
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-semibold text-[var(--c-text)]">AI recommendation unavailable</span>
+        <span className="text-[12px] text-[var(--c-text-faint)] leading-relaxed">{msg}</span>
+      </div>
     </div>
   )
 }
 
-export default function Recommendation({ data, loading, asOf, ticker, onCompare }) {
+export default function Recommendation({ data, loading, error, asOf, ticker, onCompare }) {
+  // Defer revealing the error/unavailable state for ERROR_REVEAL_DELAY_MS so
+  // a slow request, a transient blip, or a fast loading→success transition
+  // doesn't flicker through the "unavailable" card.
+  const [revealError, setRevealError] = useState(false)
+  useEffect(() => {
+    if (data?.verdict || loading) { setRevealError(false); return }
+    // We're in a state where data is missing AND not loading. Wait before
+    // committing to showing the error card.
+    const id = setTimeout(() => setRevealError(true), ERROR_REVEAL_DELAY_MS)
+    return () => clearTimeout(id)
+  }, [data, loading, error])
+
+  // Show a friendly "still loading…" message if the request has been in
+  // flight for more than 3 seconds.
+  const [slowLoad, setSlowLoad] = useState(false)
+  useEffect(() => {
+    if (!loading) { setSlowLoad(false); return }
+    const id = setTimeout(() => setSlowLoad(true), 3000)
+    return () => clearTimeout(id)
+  }, [loading])
+
   const handleShare = async () => {
     if (!ticker) return
     const url = `${window.location.origin}/t/${ticker}`
@@ -58,8 +103,14 @@ export default function Recommendation({ data, loading, asOf, ticker, onCompare 
     }
   }
 
-  if (loading) return <Skeleton />
-  if (!data?.verdict) return <Unavailable />
+  // Three-state render: success > skeleton > confirmed-failure.
+  if (data?.verdict) {
+    // fall through to the normal card render below
+  } else if (loading || !revealError) {
+    return <Skeleton showSlowMessage={slowLoad} />
+  } else {
+    return <Unavailable ticker={ticker} error={error} />
+  }
 
   const rec        = data.verdict
   const cfg        = CONFIG[rec] ?? CONFIG.HOLD

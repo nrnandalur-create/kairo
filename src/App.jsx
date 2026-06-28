@@ -92,6 +92,7 @@ export default function App() {
   const [loading, setLoading]   = useState(LOADING_NONE)
   const [marketData, setMarketData] = useState(null)
   const [aiData, setAiData]     = useState(null)
+  const [aiError, setAiError]   = useState(null)
   const [previousVerdict, setPreviousVerdict] = useState(null)
   const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
@@ -121,6 +122,7 @@ export default function App() {
     setTicker(sym)
     setError(null)
     setAiData(null)
+    setAiError(null)
     setFundamentalsData(null)
     setMarketData(null)
     setLoading(LOADING_MARKET)
@@ -145,10 +147,11 @@ export default function App() {
       setLoading(LOADING_AI)
 
       let analysisResult = null
+      setAiError(null)
       await Promise.allSettled([
         fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic })
           .then(data => { analysisResult = data; setAiData(data) })
-          .catch(() => {}),
+          .catch(err => { setAiError(err?.message ?? 'Analysis request failed') }),
         fetchFundamentals(sym)
           .then(setFundamentalsData)
           .catch(() => {}),
@@ -216,6 +219,7 @@ export default function App() {
     setTicker(null)
     setMarketData(null)
     setAiData(null)
+    setAiError(null)
     setFundamentalsData(null)
     setError(null)
     setLoading(LOADING_NONE)
@@ -603,11 +607,12 @@ export default function App() {
                 <Recommendation
                   data={aiData}
                   loading={loading.ai}
+                  error={aiError}
                   asOf={aiData?.fetchedAt}
                   ticker={ticker}
                   onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
                 />
-                <AIAnalysis data={aiData} loading={loading.ai} asOf={aiData?.fetchedAt} />
+                <AIAnalysis data={aiData} loading={loading.ai} error={aiError} asOf={aiData?.fetchedAt} />
                 {ticker && (
                   <MyPosition
                     ticker={ticker}

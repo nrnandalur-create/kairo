@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
+
+const ERROR_REVEAL_DELAY_MS = 4000
 
 function ConfidenceRing({ confidence }) {
   const s     = typeof confidence === 'number' && !isNaN(confidence) ? Math.min(100, Math.max(0, confidence)) : 0
@@ -31,9 +34,9 @@ function ConfidenceRing({ confidence }) {
   )
 }
 
-function Skeleton() {
+function Skeleton({ showSlowMessage }) {
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5">
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-fade">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
         <div className="h-2.5 w-28 rounded-full shimmer" />
@@ -50,27 +53,61 @@ function Skeleton() {
         <div className="h-16 rounded-xl shimmer" />
         <div className="h-16 rounded-xl shimmer" />
       </div>
+      {showSlowMessage && (
+        <p className="text-[12px] text-[var(--c-text-faint)] italic mt-1 animate-fade">
+          Analysis loading — this can take a few seconds on first visit.
+        </p>
+      )}
     </div>
   )
 }
 
-export default function AIAnalysis({ data, loading, asOf }) {
-  if (loading) return <Skeleton />
-  if (!data) return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-3 animate-enter">
+// Honest unavailable card. The previous copy hardcoded "Penny stocks, ADRs, and
+// instruments with insufficient candle history are skipped" — which fires for
+// every analysis failure regardless of the actual cause, and is just wrong for
+// large-caps like AMD. The new copy adapts to the actual error.
+function Unavailable({ ticker, error }) {
+  const msg =
+    error && /timeout|timed out|504|gateway/i.test(error)
+      ? 'Analysis request timed out. Try refreshing — the Groq model can lag on cold starts.'
+      : error && /candle|simulated|insufficient.*history/i.test(error)
+      ? `Real candle data for ${ticker ?? 'this ticker'} is unavailable right now, so the model has nothing reliable to analyze. Analysis runs again as soon as live OHLC returns.`
+      : error
+      ? 'Analysis temporarily unavailable. Try refreshing in a moment.'
+      : 'Analysis temporarily unavailable. Try refreshing in a moment.'
+  return (
+    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-3 animate-fade">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">AI Analysis</span>
         <span className="text-[9px] font-bold tracking-widest uppercase text-[var(--c-text-faint)] border border-[var(--c-border)] rounded-full px-2 py-0.5">Unavailable</span>
       </div>
       <div className="flex items-start gap-3">
         <span className="shrink-0 w-9 h-9 rounded-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text-fainter)] flex items-center justify-center text-base">i</span>
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-[var(--c-text)]/80">AI analysis isn&apos;t available for this ticker right now.</p>
-          <p className="text-xs text-[var(--c-text-faint)] leading-relaxed">Penny stocks, ADRs, and instruments with insufficient candle history are skipped. Try a major ticker (e.g. AAPL, NVDA, TSLA).</p>
-        </div>
+        <p className="text-sm text-[var(--c-text)]/85 leading-relaxed">{msg}</p>
       </div>
     </div>
   )
+}
+
+export default function AIAnalysis({ data, loading, error, asOf }) {
+  const [revealError, setRevealError] = useState(false)
+  useEffect(() => {
+    if (data || loading) { setRevealError(false); return }
+    const id = setTimeout(() => setRevealError(true), ERROR_REVEAL_DELAY_MS)
+    return () => clearTimeout(id)
+  }, [data, loading, error])
+
+  const [slowLoad, setSlowLoad] = useState(false)
+  useEffect(() => {
+    if (!loading) { setSlowLoad(false); return }
+    const id = setTimeout(() => setSlowLoad(true), 3000)
+    return () => clearTimeout(id)
+  }, [loading])
+
+  if (!data) {
+    if (loading || !revealError) return <Skeleton showSlowMessage={slowLoad} />
+    return <Unavailable error={error} />
+  }
 
   const isBuy  = data.verdict === 'BUY'
   const isHold = data.verdict === 'HOLD'
