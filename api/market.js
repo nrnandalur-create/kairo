@@ -110,25 +110,82 @@ async function fetchYahooCandles(sym) {
   }))
 }
 
-// Tries Alpha Vantage → Finnhub candle endpoint → Yahoo historical in order,
-// returning the first source that yields real OHLC. If all three fail we
-// surface why so the UI can show an honest message — never silently fake.
+// Optional fallback — Polygon.io. Used only when POLYGON_API_KEY is set.
+// Polygon's free tier (5 calls/min, 2yr history) is the most reliable of
+// the freemium options. Format is similar to Finnhub's candle endpoint.
+async function fetchPolygonCandles(sym) {
+  const key = process.env.POLYGON_API_KEY
+  if (!key) throw new Error('POLYGON_API_KEY not set')
+  const to   = new Date().toISOString().slice(0, 10)
+  const from = new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10)
+  const url  = `https://api.polygon.io/v2/aggs/ticker/${sym}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${key}`
+  const res  = await fetch(url)
+  if (!res.ok) throw new Error(`Polygon HTTP ${res.status}`)
+  const data = await res.json()
+  if (!Array.isArray(data.results) || !data.results.length) {
+    throw new Error(`Polygon: no results (${data.status})`)
+  }
+  return data.results.map(b => ({
+    time:   Math.floor(b.t / 1000),
+    open:   b.o,
+    high:   b.h,
+    low:    b.l,
+    close:  b.c,
+    volume: b.v,
+  }))
+}
+
+// A source is rejected if its most recent candle is older than this many
+// calendar days. AV's free tier silently returns data that lags by a week
+// or more — without this check we'd trust stale data and compute RSI on
+// it. Weekends are accounted for: 4 days covers Fri → Mon, plus a holiday.
+const STALE_THRESHOLD_DAYS = 4
+function isFresh(candles) {
+  if (!candles?.length) return false
+  const lastTime = candles[candles.length - 1].time
+  const ageDays = (Date.now() / 1000 - lastTime) / 86_400
+  return ageDays <= STALE_THRESHOLD_DAYS
+}
+
+// Source priority (most reliable for FREE first):
+//   1. Yahoo Finance — most reliable free OHLC, freshest, no per-day caps
+//   2. Polygon.io   — only if POLYGON_API_KEY set; better than AV when present
+//   3. Finnhub /stock/candle — works if user is on paid Finnhub tier
+//   4. Alpha Vantage — last resort; free tier silently returns stale data
+//
+// At every step we also check freshness — even if a source returns bars,
+// if the latest one is older than ~4 days we treat the source as failed
+// and move on. This protects against AV's "responded but with stale data"
+// failure mode that previously poisoned RSI/MACD without any error path.
 async function fetchRealCandles(sym) {
   const errors = []
-  try {
-    const av = await fetchAVCandles(sym)
-    if (av?.length) return { candles: av, source: 'alphavantage' }
-  } catch (e) { errors.push(`AV: ${e.message}`) }
+  const trySource = async (label, fn) => {
+    try {
+      const c = await fn()
+      if (!isFresh(c)) {
+        const lastTime = c?.[c.length - 1]?.time
+        const ageDays = lastTime ? Math.round((Date.now() / 1000 - lastTime) / 86_400) : '?'
+        errors.push(`${label}: stale (${ageDays}d old)`)
+        return null
+      }
+      return c
+    } catch (e) {
+      errors.push(`${label}: ${e.message}`)
+      return null
+    }
+  }
 
-  try {
-    const fh = await fetchFinnhubCandles(sym)
-    if (fh?.length) return { candles: fh, source: 'finnhub' }
-  } catch (e) { errors.push(`Finnhub: ${e.message}`) }
+  const yh = await trySource('Yahoo', () => fetchYahooCandles(sym))
+  if (yh) return { candles: yh, source: 'yahoo' }
 
-  try {
-    const yh = await fetchYahooCandles(sym)
-    if (yh?.length) return { candles: yh, source: 'yahoo' }
-  } catch (e) { errors.push(`Yahoo: ${e.message}`) }
+  const pg = await trySource('Polygon', () => fetchPolygonCandles(sym))
+  if (pg) return { candles: pg, source: 'polygon' }
+
+  const fh = await trySource('Finnhub', () => fetchFinnhubCandles(sym))
+  if (fh) return { candles: fh, source: 'finnhub' }
+
+  const av = await trySource('AV', () => fetchAVCandles(sym))
+  if (av) return { candles: av, source: 'alphavantage' }
 
   return { candles: null, source: null, reason: errors.join(' · ') }
 }
