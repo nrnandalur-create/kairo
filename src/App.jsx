@@ -553,26 +553,38 @@ export default function App() {
             {/* Two-column on desktop: left = chart/indicators, right = AI */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
-              {/* Left column — chart, technical & fundamentals */}
+              {/* Left column — "the data": chart, technicals, fundamentals,
+                  and the user-set price levels they're watching. */}
               <div className="flex flex-col gap-5">
                 <ErrorBoundary>
                   <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
                 </ErrorBoundary>
                 <IndicatorsGrid candles={marketData.candles} loading={false} asOf={marketData.fetchedAt} />
+                <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <SupportResistance
                   candles={marketData.candles}
                   currentPrice={marketData.quote?.c}
                   asOf={marketData.fetchedAt}
                 />
-                <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
                 <PriceTargets
                   data={fundamentalsData?.targets}
                   currentPrice={marketData.quote?.c}
                   loading={loading.ai}
                 />
+                <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
+                <div id="section-alerts">
+                  <PriceAlertForm
+                    ticker={ticker}
+                    currentPrice={marketData.quote?.c}
+                    getAlert={alerts.getAlert}
+                    setAlert={alerts.setAlert}
+                    clearAlert={alerts.clearAlert}
+                  />
+                </div>
               </div>
 
-              {/* Right column — AI recommendation & analysis */}
+              {/* Right column — "Kairo + You": the AI's read on the ticker
+                  and how it lands against the user's actual position. */}
               <div className="flex flex-col gap-5">
                 {previousVerdict && aiData && (
                   <VerdictMemory
@@ -598,16 +610,6 @@ export default function App() {
                   />
                 )}
                 {aiData && <AIChat ticker={ticker} context={aiData} />}
-                <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
-                <div id="section-alerts">
-                  <PriceAlertForm
-                    ticker={ticker}
-                    currentPrice={marketData.quote?.c}
-                    getAlert={alerts.getAlert}
-                    setAlert={alerts.setAlert}
-                    clearAlert={alerts.clearAlert}
-                  />
-                </div>
               </div>
             </div>
 
