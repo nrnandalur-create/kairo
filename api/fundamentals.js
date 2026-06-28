@@ -1,5 +1,5 @@
-import { rateLimit } from './_rateLimit.js'
-import { validateTicker } from './_validate.js'
+import { rateLimit } from '../lib/rateLimit.js'
+import { validateTicker } from '../lib/validate.js'
 
 // Extract the `.raw` numeric value from a Yahoo Finance field object
 function raw(field) { return field?.raw ?? null }

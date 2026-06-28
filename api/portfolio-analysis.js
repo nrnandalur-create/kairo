@@ -1,4 +1,4 @@
-import { rateLimit } from './_rateLimit.js'
+import { rateLimit } from '../lib/rateLimit.js'
 
 const TECH_TICKERS = new Set([
   'AAPL','MSFT','NVDA','GOOGL','GOOG','META','AMZN','TSLA','AMD','INTC',

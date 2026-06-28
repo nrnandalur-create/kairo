@@ -1,5 +1,5 @@
-import { rateLimit } from './_rateLimit.js'
-import { validateTicker } from './_validate.js'
+import { rateLimit } from '../lib/rateLimit.js'
+import { validateTicker } from '../lib/validate.js'
 
 // Maximum question length — long enough for a real follow-up, short
 // enough to bound prompt cost / abuse surface.

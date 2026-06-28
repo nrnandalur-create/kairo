@@ -13,7 +13,7 @@ export default function WatchlistSentiment({ tickers }) {
 
     tickers.forEach(async ticker => {
       try {
-        const r = await fetch(`/api/news?ticker=${ticker}`)
+        const r = await fetch(`/api/market?ticker=${ticker}&fields=news`)
         if (r.ok) {
           const { articles } = await r.json()
           if (Array.isArray(articles) && articles.length) {

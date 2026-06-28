@@ -1,5 +1,5 @@
-import { rateLimit } from './_rateLimit.js'
-import { validateSearchQuery } from './_validate.js'
+import { rateLimit } from '../lib/rateLimit.js'
+import { validateSearchQuery } from '../lib/validate.js'
 
 export default async function handler(req, res) {
   if (!rateLimit(req, res)) return

@@ -39,7 +39,7 @@ export default function TrackRecordView({ open, onClose }) {
     if (!open) return
     setLoading(true)
     setError(null)
-    fetch('/api/track-record')
+    fetch('/api/insights?kind=track-record')
       .then(r => r.json())
       .then(setData)
       .catch(() => setError('Could not load track record'))

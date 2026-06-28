@@ -212,7 +212,7 @@ export default function Screener({ open, onClose, onAnalyze }) {
           batch.map(async ({ symbol }) => {
             if (cancelRef.current) return
             try {
-              const r = await fetch(`/api/screener-indicators?ticker=${symbol}`)
+              const r = await fetch(`/api/screener?type=indicators&ticker=${symbol}`)
               if (cancelRef.current) return
               if (r.status === 429) return   // rate-limited — skip, not cached
               if (!r.ok) return

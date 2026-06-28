@@ -1,5 +1,5 @@
-import { rateLimit } from './_rateLimit.js'
-import { validateTicker } from './_validate.js'
+import { rateLimit } from '../lib/rateLimit.js'
+import { validateTicker } from '../lib/validate.js'
 
 // yahoo-finance2 is heavy (~3MB with deps). Lazy-load it so the happy path
 // (Finnhub responds successfully) doesn't pay the cold-start cost. Only the
@@ -362,6 +362,41 @@ async function fetchYahooMarket(sym) {
   }
 }
 
+// ── News short-path (was the standalone /api/news endpoint) ─────────────────
+// Trips when ?fields=news is set on a GET. Returns only ticker headlines —
+// no quote/profile/metrics/candles fetches. Used by WatchlistSentiment to
+// score a watchlist row without paying for the full market pipeline per ticker.
+async function handleNewsOnly(ticker, res) {
+  const apiKey = process.env.FINNHUB_API_KEY
+  if (!apiKey) return res.status(500).json({ error: 'unavailable' })
+
+  const now  = new Date()
+  const from = new Date(now - 3 * 24 * 60 * 60 * 1000)
+  const fmt  = d => d.toISOString().slice(0, 10)
+
+  try {
+    const r = await fetch(
+      `https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${fmt(from)}&to=${fmt(now)}&token=${apiKey}`
+    )
+    if (!r.ok) throw new Error(`Finnhub ${r.status}`)
+    const raw = await r.json()
+    if (!Array.isArray(raw)) throw new Error('unexpected response')
+    res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=3600')
+    return res.json({
+      ticker,
+      articles: raw.slice(0, 15).map(a => ({
+        headline: a.headline ?? '',
+        datetime: a.datetime,
+        source:   a.source,
+        url:      a.url,
+      })),
+    })
+  } catch {
+    res.setHeader('Cache-Control', 's-maxage=60')
+    return res.json({ ticker, articles: [] })
+  }
+}
+
 // ── Handler ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -373,6 +408,10 @@ export default async function handler(req, res) {
 
   const ticker = validateTicker(req.query.ticker)
   if (!ticker) return res.status(400).json({ error: 'Invalid ticker. Must be 1-5 uppercase letters.' })
+
+  // News-only short-path — was the standalone /api/news endpoint before
+  // consolidation. Kept cheap (one Finnhub call) for batched watchlist use.
+  if (req.query.fields === 'news') return handleNewsOnly(ticker, res)
 
   // Try Finnhub first; if it returns no quote, fall back to Yahoo.
   let finnhubData = null

@@ -6,7 +6,7 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/cron/open-brief", "schedule": "30 13 * * 1-5" },
-    { "path": "/api/cron/close-wrap", "schedule": "30 21 * * 1-5" }
+    { "path": "/api/cron?job=open-brief", "schedule": "30 13 * * 1-5" },
+    { "path": "/api/cron?job=close-wrap", "schedule": "30 21 * * 1-5" }
   ]
 }

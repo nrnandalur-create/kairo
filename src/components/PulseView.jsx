@@ -15,7 +15,7 @@ async function fetchFutures() {
 
 async function fetchPulseNarration({ quotes, macros }) {
   try {
-    const r = await fetch('/api/pulse-narrate', {
+    const r = await fetch('/api/market-pulse?action=narrate', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ quotes, macros }),

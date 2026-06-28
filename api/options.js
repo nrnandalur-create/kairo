@@ -1,5 +1,5 @@
-import { rateLimit } from './_rateLimit.js'
-import { validateTicker } from './_validate.js'
+import { rateLimit } from '../lib/rateLimit.js'
+import { validateTicker } from '../lib/validate.js'
 
 function getNextFridays(n = 4) {
   const today = new Date()

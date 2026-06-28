@@ -16,7 +16,7 @@ export default function DiscoverView({ open, onClose, onSelectTicker }) {
   useEffect(() => {
     if (!open) return
     setLoading(true)
-    fetch('/api/setups')
+    fetch('/api/insights?kind=setups')
       .then(r => r.json())
       .then(json => { setSetups(json.setups ?? []); setDate(json.date) })
       .catch(() => {})

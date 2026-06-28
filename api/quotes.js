@@ -1,5 +1,5 @@
-import { rateLimit } from './_rateLimit.js'
-import { validateSymbolList } from './_validate.js'
+import { rateLimit } from '../lib/rateLimit.js'
+import { validateSymbolList } from '../lib/validate.js'
 
 async function fetchQuote(symbol, apiKey) {
   try {
