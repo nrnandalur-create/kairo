@@ -58,6 +58,12 @@ export default async function handler(req, res) {
 
   const prompt = buildPrompt({ ticker, context, history, question })
 
+  // Stream needs more headroom than analyze.js — wait up to 12s for first
+  // chunk so a slow Groq cold-start still streams a real answer. Beyond that
+  // we abort and let the client surface "timed out".
+  const abort = new AbortController()
+  const timeoutId = setTimeout(() => abort.abort('analyze-followup:timeout'), 12000)
+
   try {
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:  'POST',
@@ -76,9 +82,13 @@ export default async function handler(req, res) {
           { role: 'user', content: prompt },
         ],
       }),
+      signal: abort.signal,
     })
 
-    if (!groqRes.ok) return res.status(502).json({ error: 'AI service error' })
+    if (!groqRes.ok) {
+      clearTimeout(timeoutId)
+      return res.status(502).json({ error: `AI service error (${groqRes.status})` })
+    }
 
     // Stream Groq's SSE response back to the client as plain UTF-8 chunks.
     // The client reads the response body progressively and renders tokens
@@ -119,17 +129,30 @@ export default async function handler(req, res) {
       }
     }
 
+    clearTimeout(timeoutId)
     if (!wroteAny) {
       res.write('Sorry, I couldn\'t generate a response. Try rephrasing.')
     }
     res.end()
-  } catch {
+  } catch (err) {
+    clearTimeout(timeoutId)
+    const isAbort = err?.name === 'AbortError' || /abort|timeout/i.test(String(err?.message ?? ''))
     // If we haven't started streaming yet, send a JSON error. Otherwise the
     // partial response is what the user will see — just end the stream.
     if (!res.headersSent) {
-      res.status(502).json({ error: 'AI service error' })
+      const status = isAbort ? 504 : 502
+      const msg = isAbort
+        ? 'Follow-up timed out. Groq is slow right now — try again in a moment.'
+        : 'AI service error'
+      res.status(status).json({ error: msg })
     } else {
       try { res.end() } catch { /* already closed */ }
     }
   }
+}
+
+// Match analyze.js — give the function 25s of breathing room even though
+// our internal AbortController caps the upstream call at 12s.
+export const config = {
+  maxDuration: 25,
 }

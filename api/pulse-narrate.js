@@ -30,6 +30,9 @@ Market: ${mkCtx}
 
 Write ONE crisp sentence narrating what's happening across this user's watchlist right now relative to the broader market. Cite the biggest mover by name. No "as an AI". No hedging. Under 25 words.`
 
+  const abort = new AbortController()
+  const timeoutId = setTimeout(() => abort.abort('pulse-narrate:timeout'), 6000)
+
   try {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:  'POST',
@@ -39,12 +42,20 @@ Write ONE crisp sentence narrating what's happening across this user's watchlist
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.6,
       }),
+      signal: abort.signal,
     })
-    if (!r.ok) return res.status(502).json({ error: 'AI service error' })
+    clearTimeout(timeoutId)
+    if (!r.ok) return res.status(502).json({ error: `AI service error (${r.status})` })
     const json = await r.json()
     const narration = json.choices?.[0]?.message?.content?.trim()
     res.json({ narration: narration ?? '' })
-  } catch {
-    res.status(502).json({ error: 'AI service error' })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    const isAbort = err?.name === 'AbortError' || /abort|timeout/i.test(String(err?.message ?? ''))
+    res.status(isAbort ? 504 : 502).json({ error: isAbort ? 'Narration timed out' : 'AI service error' })
   }
+}
+
+export const config = {
+  maxDuration: 15,
 }

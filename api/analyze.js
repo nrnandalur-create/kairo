@@ -136,6 +136,12 @@ export default async function handler(req, res) {
 
   const prompt = buildPrompt({ ticker, quote, profile, metrics, indicators, recentCandles, noTechnicals })
 
+  // AbortController gates the Groq fetch at 8 seconds so we return a clean
+  // 504 with a useful body before Vercel's serverless function timeout (10s
+  // on the Hobby plan) kills the whole function with a 502 crash.
+  const abort = new AbortController()
+  const timeoutId = setTimeout(() => abort.abort('analyze:timeout'), 8000)
+
   try {
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -153,10 +159,13 @@ export default async function handler(req, res) {
           { role: 'user', content: prompt },
         ],
       }),
+      signal: abort.signal,
     })
 
+    clearTimeout(timeoutId)
+
     if (!groqRes.ok) {
-      return res.status(502).json({ error: 'AI analysis service error' })
+      return res.status(502).json({ error: `AI analysis upstream error (${groqRes.status})` })
     }
 
     const json = await groqRes.json()
@@ -174,7 +183,21 @@ export default async function handler(req, res) {
     }
 
     res.json(normalise(analysis))
-  } catch {
-    res.status(502).json({ error: 'AI analysis service error' })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    // The client knows how to read these specific error strings (the new
+    // <Unavailable> component picks copy based on /timeout/i and /candle/i
+    // regexes) — keep them stable.
+    if (err?.name === 'AbortError' || /abort|timeout/i.test(String(err?.message ?? ''))) {
+      return res.status(504).json({ error: 'Analysis request timed out. Groq is slow right now — try again in a moment.' })
+    }
+    return res.status(502).json({ error: 'AI analysis service error' })
   }
+}
+
+// Vercel function config — allow up to 25 seconds for the function as a
+// whole. Our internal AbortController still cuts the Groq call at 8s and
+// returns a 504; this just gives us breathing room for cold starts.
+export const config = {
+  maxDuration: 25,
 }
