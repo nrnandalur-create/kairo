@@ -7,15 +7,17 @@ function fmtCap(n) {
   return `$${n.toFixed(0)}M`
 }
 
-export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }) {
-  // Pre-compute indicators client-side so the server doesn't need the full candle array
-  const bb   = calcBBPosition(candles)
-  const rsi  = calcRSI(candles)
-  const macd = calcMACD(candles)
-
-  const recentCandles = (candles ?? []).slice(-10)
-
-  const priceChange5d = candles?.length >= 5
+export async function fetchAnalysis({ ticker, quote, profile, metrics, candles, synthetic }) {
+  // CRITICAL: when candles are synthetic (no real OHLC source available), we
+  // strip technical indicators + recent candles from the prompt entirely so
+  // the AI verdict isn't anchored to noise. We tell the model explicitly so
+  // it knows to lean on quote + fundamentals only and lower confidence.
+  const useReal       = !synthetic && candles?.length
+  const bb            = useReal ? calcBBPosition(candles) : null
+  const rsi           = useReal ? calcRSI(candles)        : null
+  const macd          = useReal ? calcMACD(candles)       : null
+  const recentCandles = useReal ? candles.slice(-10)      : []
+  const priceChange5d = useReal && candles.length >= 5
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)
     : 'N/A'
 
@@ -39,8 +41,10 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles }
           '52WeekLow':         metrics?.metric?.['52WeekLow'],
         },
       },
-      indicators: { bb, rsi, macd },
+      indicators: useReal ? { bb, rsi, macd } : null,
       recentCandles,
+      // Flag so the API can prepend a no-technicals instruction to the prompt.
+      noTechnicals: !useReal,
     }),
   })
 

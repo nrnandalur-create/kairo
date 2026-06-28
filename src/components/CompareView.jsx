@@ -44,7 +44,7 @@ function useSide() {
       const macd = calcMACD(candles)
       const bb   = calcBBPosition(candles)
 
-      const ai = await fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
+      const ai = await fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic })
         .catch(() => null)
 
       setData({ quote, profile, metrics, candles, rsi, macd, bb, ai })

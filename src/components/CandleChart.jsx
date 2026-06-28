@@ -150,6 +150,14 @@ export default function CandleChart({ candles, synthetic }) {
       <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Price Chart</span>
+          {synthetic && (
+            <span
+              title="Real OHLC data is unavailable for this ticker right now. The bars below are a stand-in for visual context only — do not trade off them."
+              className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#e3a234] border border-[#e3a234]/40 bg-[#e3a234]/10 px-2 py-0.5 rounded-full"
+            >
+              <span aria-hidden="true">⚠</span> Simulated data
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Timeframe buttons */}

@@ -58,6 +58,81 @@ async function fetchAVCandles(sym) {
     })
 }
 
+// Fallback #2 — Finnhub's own /stock/candle endpoint. Same API key as the
+// quote/profile/metrics calls; the free tier covers daily candles. Used when
+// Alpha Vantage rate-limits (25 calls/day on the free tier is the usual
+// reason). Returns the same { time, open, high, low, close, volume } shape.
+async function fetchFinnhubCandles(sym) {
+  const finnhubKey = process.env.FINNHUB_API_KEY
+  if (!finnhubKey) throw new Error('FINNHUB_API_KEY not set')
+
+  const to   = Math.floor(Date.now() / 1000)
+  const from = to - 365 * 24 * 60 * 60   // ~12 months of daily bars
+  const url  = `${FINNHUB_BASE}/stock/candle?symbol=${sym}&resolution=D&from=${from}&to=${to}&token=${finnhubKey}`
+  const res  = await fetch(url)
+  if (!res.ok) throw new Error(`Finnhub candles HTTP ${res.status}`)
+
+  const data = await res.json()
+  if (data.s !== 'ok' || !Array.isArray(data.t) || !data.t.length) {
+    throw new Error(`Finnhub candles: no data (${data.s ?? 'unknown'})`)
+  }
+  return data.t.map((time, i) => ({
+    time,
+    open:   data.o[i],
+    high:   data.h[i],
+    low:    data.l[i],
+    close:  data.c[i],
+    volume: data.v[i],
+  }))
+}
+
+// Fallback #3 — Yahoo's historical daily bars. Reuses the lazy-loaded
+// yahoo-finance2 module that the Yahoo quote fallback already imports.
+// Yahoo covers symbols Finnhub doesn't recognize (foreign listings,
+// older delisted tickers, some ETFs).
+async function fetchYahooCandles(sym) {
+  const yf = await getYahoo()
+  const since = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60
+  const bars = await yf.historical(sym, {
+    period1:  new Date(since * 1000),
+    interval: '1d',
+  })
+  if (!Array.isArray(bars) || !bars.length) {
+    throw new Error('Yahoo historical: no bars')
+  }
+  return bars.map(b => ({
+    time:   Math.floor(b.date.getTime() / 1000),
+    open:   b.open,
+    high:   b.high,
+    low:    b.low,
+    close:  b.close,
+    volume: b.volume,
+  }))
+}
+
+// Tries Alpha Vantage → Finnhub candle endpoint → Yahoo historical in order,
+// returning the first source that yields real OHLC. If all three fail we
+// surface why so the UI can show an honest message — never silently fake.
+async function fetchRealCandles(sym) {
+  const errors = []
+  try {
+    const av = await fetchAVCandles(sym)
+    if (av?.length) return { candles: av, source: 'alphavantage' }
+  } catch (e) { errors.push(`AV: ${e.message}`) }
+
+  try {
+    const fh = await fetchFinnhubCandles(sym)
+    if (fh?.length) return { candles: fh, source: 'finnhub' }
+  } catch (e) { errors.push(`Finnhub: ${e.message}`) }
+
+  try {
+    const yh = await fetchYahooCandles(sym)
+    if (yh?.length) return { candles: yh, source: 'yahoo' }
+  } catch (e) { errors.push(`Yahoo: ${e.message}`) }
+
+  return { candles: null, source: null, reason: errors.join(' · ') }
+}
+
 function makeRng(seed) {
   let s = (Math.abs(Math.round(seed * 137)) || 0x9e3779b9) >>> 0
   return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0x100000000 }
@@ -114,7 +189,7 @@ async function fetchFinnhubMarket(sym) {
 
   const [
     [quote, profile, metrics, newsRaw],
-    avResult,
+    realResult,
   ] = await Promise.all([
     Promise.all([
       fget('quote',   `${FINNHUB_BASE}/quote?symbol=${sym}&${t}`),
@@ -123,14 +198,16 @@ async function fetchFinnhubMarket(sym) {
       fget('news',    `${FINNHUB_BASE}/company-news?symbol=${sym}&from=${fmt(from)}&to=${fmt(now)}&${t}`)
         .catch(() => []),
     ]),
-    fetchAVCandles(sym).catch(() => null),
+    fetchRealCandles(sym),
   ])
 
-  const synthetic = avResult === null
-  const candles   = synthetic ? syntheticCandles(quote) : avResult
-  const news      = Array.isArray(newsRaw) ? newsRaw.slice(0, 10) : []
+  const synthetic       = !realResult.candles
+  const candles         = synthetic ? syntheticCandles(quote) : realResult.candles
+  const candlesSource   = realResult.source
+  const syntheticReason = synthetic ? realResult.reason : null
+  const news            = Array.isArray(newsRaw) ? newsRaw.slice(0, 10) : []
 
-  return { quote, profile, metrics, candles, synthetic, news }
+  return { quote, profile, metrics, candles, candlesSource, synthetic, syntheticReason, news }
 }
 
 // ── Yahoo Finance fallback ──────────────────────────────────────────────────
@@ -206,35 +283,24 @@ async function fetchYahooMarket(sym) {
   }
 
   // ── Candles ────────────────────────────────────────────────────────────────
-  // ~12 months of daily bars, mapped to the Finnhub-compatible shape.
-  const since = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60
-  let candles = []
-  try {
-    const bars = await yahooFinance.historical(sym, {
-      period1:  new Date(since * 1000),
-      interval: '1d',
-    })
-    candles = bars.map(b => ({
-      time:   Math.floor(b.date.getTime() / 1000),
-      open:   b.open,
-      high:   b.high,
-      low:    b.low,
-      close:  b.close,
-      volume: b.volume,
-    }))
-  } catch {
-    // Yahoo historical may fail for mutual funds etc — fall back to synthetic.
-    candles = syntheticCandles(quote)
-  }
-  const synthetic = candles.length === 0
-  if (synthetic) candles = syntheticCandles(quote)
+  // Same three-source priority as the Finnhub primary path: AV → Finnhub →
+  // Yahoo. Yahoo will usually succeed here (we already landed on this branch
+  // because the symbol came back through Yahoo's quote endpoint) but we still
+  // try AV first for parity. Falls to synthetic ONLY if all three error.
+  const real            = await fetchRealCandles(sym)
+  const synthetic       = !real.candles
+  const candles         = synthetic ? syntheticCandles(quote) : real.candles
+  const candlesSource   = real.source
+  const syntheticReason = synthetic ? real.reason : null
 
   return {
     quote,
     profile,
     metrics,
     candles,
+    candlesSource,
     synthetic,
+    syntheticReason,
     news: [],   // News fallback could call yahooFinance.search(sym).news in the future
   }
 }

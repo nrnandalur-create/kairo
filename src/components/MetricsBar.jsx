@@ -30,7 +30,7 @@ function pickPE(m) {
       ?? m?.peNormalizedAnnual
 }
 
-export default function MetricsBar({ ticker, quote, profile, metrics, candles, asOf }) {
+export default function MetricsBar({ ticker, quote, profile, metrics, candles, asOf, synthetic }) {
   if (!quote) return null
 
   const up   = quote.dp > 0
@@ -45,10 +45,12 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
   const hi52 = m?.['52WeekHigh']
   const lo52 = m?.['52WeekLow']
 
-  // ── Row 2: technicals computed from candles + fundamentals from Finnhub
-  const rsi  = candles?.length ? calcRSI(candles)   : null
-  const macd = candles?.length ? calcMACD(candles)  : null
-  const vwap = candles?.length ? calcVWAP(candles)  : null
+  // ── Row 2: technicals from candles. Suppress all three when synthetic
+  // so the headline strip can't show RSI/MACD/VWAP values derived from noise.
+  const realCandles = !synthetic && candles?.length
+  const rsi  = realCandles ? calcRSI(candles)   : null
+  const macd = realCandles ? calcMACD(candles)  : null
+  const vwap = realCandles ? calcVWAP(candles)  : null
   const rsiBadge = rsi == null ? null : rsi >= 70 ? 'Overbought' : rsi <= 30 ? 'Oversold' : 'Neutral'
   const rsiBadgeColor = rsi == null ? '#4b6358' : rsi >= 70 ? '#ef5454' : rsi <= 30 ? '#22B585' : '#4b6358'
   const macdBadge      = macd ? (macd.bullish ? 'Bullish' : 'Bearish') : null
@@ -73,6 +75,14 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
             {profile?.exchange && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
                 {profile.exchange}
+              </span>
+            )}
+            {synthetic && (
+              <span
+                title="Real OHLC data unavailable for this ticker right now. Technical indicators are hidden to avoid showing values computed on simulated bars."
+                className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#e3a234] border border-[#e3a234]/40 bg-[#e3a234]/10 px-2 py-0.5 rounded-full"
+              >
+                <span aria-hidden="true">⚠</span> Simulated data
               </span>
             )}
           </div>

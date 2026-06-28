@@ -8,8 +8,15 @@ function fmtCap(n) {
   return `$${n.toFixed(0)}M`
 }
 
-function buildPrompt({ ticker, quote, profile, metrics, indicators, recentCandles }) {
+function buildPrompt({ ticker, quote, profile, metrics, indicators, recentCandles, noTechnicals }) {
   const { bb, rsi, macd } = indicators ?? {}
+
+  // When real candles aren't available we strip everything indicator-derived
+  // and tell the model NOT to fabricate technical readings. The verdict still
+  // ships, just on quote + fundamentals, with appropriately lower confidence.
+  const techNote = noTechnicals
+    ? '\n\n⚠️ NO RELIABLE TECHNICAL DATA AVAILABLE for this ticker right now. Do NOT cite RSI, MACD, Bollinger Bands, or candle patterns. Base your verdict only on quote + fundamentals + 52-week range. Cap confidence at 60. State in the summary that technicals are unavailable.\n'
+    : ''
 
   const bbZone = bb
     ? bb.pct >= 80 ? `UPPER band (${bb.pct}%) — overbought warning`
@@ -42,7 +49,7 @@ function buildPrompt({ ticker, quote, profile, metrics, indicators, recentCandle
     `  ${new Date(c.time * 1000).toISOString().slice(0, 10)}: O=${c.open.toFixed(2)} H=${c.high.toFixed(2)} L=${c.low.toFixed(2)} C=${c.close.toFixed(2)} V=${(c.volume / 1e6).toFixed(1)}M`
   ).join('\n')
 
-  return `You are an institutional equity analyst. Analyze the data below with precision and return ONLY a valid JSON object — no markdown fences, no explanation, no extra text.
+  return `You are an institutional equity analyst. Analyze the data below with precision and return ONLY a valid JSON object — no markdown fences, no explanation, no extra text.${techNote}
 
 TICKER: ${ticker}
 COMPANY: ${profile?.name ?? ticker}
@@ -122,12 +129,12 @@ export default async function handler(req, res) {
   if (!ticker) return res.status(400).json({ error: 'Invalid ticker' })
 
   // Require the essential fields
-  const { quote, profile, metrics, indicators, recentCandles } = req.body ?? {}
+  const { quote, profile, metrics, indicators, recentCandles, noTechnicals } = req.body ?? {}
   if (!quote || typeof quote.c !== 'number') return res.status(400).json({ error: 'Invalid quote data' })
   if (!Array.isArray(recentCandles)) return res.status(400).json({ error: 'Invalid candle data' })
   if (recentCandles.length > 20) return res.status(400).json({ error: 'Too many candles' })
 
-  const prompt = buildPrompt({ ticker, quote, profile, metrics, indicators, recentCandles })
+  const prompt = buildPrompt({ ticker, quote, profile, metrics, indicators, recentCandles, noTechnicals })
 
   try {
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {

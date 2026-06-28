@@ -126,7 +126,7 @@ export default function App() {
     setLoading(LOADING_MARKET)
 
     try {
-      const { quote, profile, metrics, candles, synthetic, news } = await fetchMarket(sym)
+      const { quote, profile, metrics, candles, synthetic, syntheticReason, news } = await fetchMarket(sym)
 
       if (!quote || quote.c == null) {
         setError(`No data found for "${sym}". Check the ticker symbol and try again.`)
@@ -141,12 +141,12 @@ export default function App() {
         return next
       })
 
-      setMarketData({ quote, profile, metrics, candles, synthetic, news })
+      setMarketData({ quote, profile, metrics, candles, synthetic, syntheticReason, news })
       setLoading(LOADING_AI)
 
       let analysisResult = null
       await Promise.allSettled([
-        fetchAnalysis({ ticker: sym, quote, profile, metrics, candles })
+        fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic })
           .then(data => { analysisResult = data; setAiData(data) })
           .catch(() => {}),
         fetchFundamentals(sym)
@@ -276,9 +276,9 @@ export default function App() {
   const refreshMarketOnly = async () => {
     if (!ticker) return
     try {
-      const { quote, profile, metrics, candles, synthetic, news } = await fetchMarket(ticker)
+      const { quote, profile, metrics, candles, synthetic, syntheticReason, news } = await fetchMarket(ticker)
       if (!quote || quote.c == null) return
-      setMarketData({ quote, profile, metrics, candles, synthetic, news })
+      setMarketData({ quote, profile, metrics, candles, synthetic, syntheticReason, news })
     } catch {
       // Silent — the existing DataTimestamp will turn amber on its own
       // once data crosses the stale threshold.
@@ -548,6 +548,7 @@ export default function App() {
               metrics={marketData.metrics}
               candles={marketData.candles}
               asOf={marketData.fetchedAt}
+              synthetic={marketData.synthetic}
             />
 
             {/* Two-column on desktop: left = chart/indicators, right = AI */}
@@ -559,7 +560,13 @@ export default function App() {
                 <ErrorBoundary>
                   <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
                 </ErrorBoundary>
-                <IndicatorsGrid candles={marketData.candles} loading={false} asOf={marketData.fetchedAt} />
+                <IndicatorsGrid
+                  candles={marketData.candles}
+                  loading={false}
+                  asOf={marketData.fetchedAt}
+                  synthetic={marketData.synthetic}
+                  syntheticReason={marketData.syntheticReason}
+                />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <SupportResistance
                   candles={marketData.candles}
