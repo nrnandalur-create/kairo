@@ -176,9 +176,9 @@ export default function App() {
       // history fuels the Verdict Memory banner, Track Record, and Replay.
       if (user && analysisResult?.recommendation) {
         const indicators = {
-          rsi:  calcRSI(candles),
-          macd: calcMACD(candles)?.macdLine ?? null,
-          bb:   calcBBPosition(candles),
+          rsi:  calcRSI(candles, 14, quote?.c),
+          macd: calcMACD(candles, quote?.c)?.macdLine ?? null,
+          bb:   calcBBPosition(candles, 20, quote?.c),
         }
         const previous = await fetchPreviousVerdict({ userId: user.id, ticker: sym })
         setPreviousVerdict(previous)
@@ -570,6 +570,7 @@ export default function App() {
                   asOf={marketData.fetchedAt}
                   synthetic={marketData.synthetic}
                   syntheticReason={marketData.syntheticReason}
+                  currentPrice={marketData.quote?.c}
                 />
                 <CandlePatterns data={aiData?.patterns} loading={loading.ai} />
                 <SupportResistance

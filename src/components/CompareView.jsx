@@ -40,9 +40,9 @@ function useSide() {
       const { quote, profile, metrics, candles, synthetic } = await fetchMarket(sym)
       if (!quote?.c) throw new Error('No data')
 
-      const rsi  = calcRSI(candles)
-      const macd = calcMACD(candles)
-      const bb   = calcBBPosition(candles)
+      const rsi  = calcRSI(candles, 14, quote?.c)
+      const macd = calcMACD(candles, quote?.c)
+      const bb   = calcBBPosition(candles, 20, quote?.c)
 
       const ai = await fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic })
         .catch(() => null)

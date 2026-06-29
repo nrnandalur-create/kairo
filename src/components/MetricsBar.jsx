@@ -48,9 +48,11 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
   // ── Row 2: technicals from candles. Suppress all three when synthetic
   // so the headline strip can't show RSI/MACD/VWAP values derived from noise.
   const realCandles = !synthetic && candles?.length
-  const rsi  = realCandles ? calcRSI(candles)   : null
-  const macd = realCandles ? calcMACD(candles)  : null
-  const vwap = realCandles ? calcVWAP(candles)  : null
+  // Intraday-aware via the live quote — matches Finviz/TradingView, which
+  // overlay the current tick onto the most recent daily bar.
+  const rsi  = realCandles ? calcRSI(candles, 14, quote?.c)   : null
+  const macd = realCandles ? calcMACD(candles, quote?.c)      : null
+  const vwap = realCandles ? calcVWAP(candles)                : null
   const rsiBadge = rsi == null ? null : rsi >= 70 ? 'Overbought' : rsi <= 30 ? 'Oversold' : 'Neutral'
   const rsiBadgeColor = rsi == null ? '#4b6358' : rsi >= 70 ? '#ef5454' : rsi <= 30 ? '#22B585' : '#4b6358'
   const macdBadge      = macd ? (macd.bullish ? 'Bullish' : 'Bearish') : null

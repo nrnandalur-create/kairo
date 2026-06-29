@@ -6,10 +6,40 @@ function ema(values, period) {
   return e
 }
 
-// ── RSI (14-period) ───────────────────────────────────────────────────────────
-export function calcRSI(candles, period = 14) {
-  if (candles.length < period + 1) return null
-  const changes = candles.slice(1).map((c, i) => c.close - candles[i].close)
+// Build the closes array used by RSI/MACD/BB. When a live `currentPrice` is
+// supplied (and meaningfully different from the most recent daily close),
+// we treat it as the in-progress "today" bar — this is how Finviz,
+// TradingView, and Stocktwits show intraday indicator values. Without this,
+// the displayed RSI lags by one trading session and reads as "drift" vs
+// a reference site loaded at the same moment.
+//
+// Logic:
+//   - If `candles[-1].time` is from today (UTC) → replace its close
+//     (intraday tick on a day we already have a candle for).
+//   - Otherwise → append a new "today" close so the smoother gets one
+//     more iteration (typical case during a regular session before the
+//     close).
+function effectiveCloses(candles, currentPrice) {
+  const closes = candles.map(c => c.close)
+  if (currentPrice == null || !Number.isFinite(currentPrice)) return closes
+  const last = closes[closes.length - 1]
+  if (Math.abs(currentPrice - last) < 0.01) return closes
+
+  const todayDate    = new Date().toISOString().slice(0, 10)
+  const lastBarDate  = new Date(candles[candles.length - 1].time * 1000)
+    .toISOString().slice(0, 10)
+
+  if (lastBarDate === todayDate) {
+    return [...closes.slice(0, -1), currentPrice]
+  }
+  return [...closes, currentPrice]
+}
+
+// ── RSI (14-period, Wilder's RMA, intraday-aware) ─────────────────────────────
+export function calcRSI(candles, period = 14, currentPrice = null) {
+  const closes = effectiveCloses(candles, currentPrice)
+  if (closes.length < period + 1) return null
+  const changes = closes.slice(1).map((c, i) => c - closes[i])
   let avgGain = 0, avgLoss = 0
   for (let i = 0; i < period; i++) {
     if (changes[i] > 0) avgGain += changes[i]; else avgLoss += Math.abs(changes[i])
@@ -24,9 +54,9 @@ export function calcRSI(candles, period = 14) {
   return +(100 - 100 / (1 + avgGain / avgLoss)).toFixed(2)
 }
 
-// ── MACD (12/26/9) ────────────────────────────────────────────────────────────
-export function calcMACD(candles) {
-  const closes = candles.map(c => c.close)
+// ── MACD (12/26/9, intraday-aware) ────────────────────────────────────────────
+export function calcMACD(candles, currentPrice = null) {
+  const closes = effectiveCloses(candles, currentPrice)
   if (closes.length < 26) return null
   const macdPoints = []
   for (let i = 25; i < closes.length; i++) {
@@ -38,22 +68,23 @@ export function calcMACD(candles) {
 }
 
 // ── SMA ───────────────────────────────────────────────────────────────────────
-export function calcSMA(candles, period) {
-  if (candles.length < period) return null
-  return +(candles.slice(-period).reduce((s, c) => s + c.close, 0) / period).toFixed(2)
+export function calcSMA(candles, period, currentPrice = null) {
+  const closes = effectiveCloses(candles, currentPrice)
+  if (closes.length < period) return null
+  return +(closes.slice(-period).reduce((s, c) => s + c, 0) / period).toFixed(2)
 }
 
-// ── Bollinger Bands (20-period) ───────────────────────────────────────────────
-export function calcBBPosition(candles, period = 20) {
-  if (candles.length < period) return null
-  const slice  = candles.slice(-period)
-  const closes = slice.map(c => c.close)
-  const mean   = closes.reduce((a, b) => a + b, 0) / period
-  const std    = Math.sqrt(closes.reduce((s, c) => s + (c - mean) ** 2, 0) / period)
-  const upper  = mean + 2 * std
-  const lower  = mean - 2 * std
-  const price  = candles.at(-1).close
-  const pct    = +((price - lower) / (upper - lower) * 100).toFixed(0)
+// ── Bollinger Bands (20-period, intraday-aware) ───────────────────────────────
+export function calcBBPosition(candles, period = 20, currentPrice = null) {
+  const closes = effectiveCloses(candles, currentPrice)
+  if (closes.length < period) return null
+  const slice = closes.slice(-period)
+  const mean  = slice.reduce((a, b) => a + b, 0) / period
+  const std   = Math.sqrt(slice.reduce((s, c) => s + (c - mean) ** 2, 0) / period)
+  const upper = mean + 2 * std
+  const lower = mean - 2 * std
+  const price = closes[closes.length - 1]
+  const pct   = +((price - lower) / (upper - lower) * 100).toFixed(0)
   return { upper: +upper.toFixed(2), lower: +lower.toFixed(2), pct, price }
 }
 

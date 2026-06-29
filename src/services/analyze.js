@@ -13,9 +13,11 @@ export async function fetchAnalysis({ ticker, quote, profile, metrics, candles, 
   // the AI verdict isn't anchored to noise. We tell the model explicitly so
   // it knows to lean on quote + fundamentals only and lower confidence.
   const useReal       = !synthetic && candles?.length
-  const bb            = useReal ? calcBBPosition(candles) : null
-  const rsi           = useReal ? calcRSI(candles)        : null
-  const macd          = useReal ? calcMACD(candles)       : null
+  // Pass quote.c so the AI receives intraday-aware indicator values that
+  // match what the user sees on the IndicatorsGrid + MetricsBar surfaces.
+  const bb            = useReal ? calcBBPosition(candles, 20, quote?.c) : null
+  const rsi           = useReal ? calcRSI(candles, 14, quote?.c)        : null
+  const macd          = useReal ? calcMACD(candles, quote?.c)           : null
   const recentCandles = useReal ? candles.slice(-10)      : []
   const priceChange5d = useReal && candles.length >= 5
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)

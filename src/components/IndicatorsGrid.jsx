@@ -82,26 +82,26 @@ function SyntheticEmptyState({ reason }) {
   )
 }
 
-export default function IndicatorsGrid({ candles, loading, asOf, synthetic, syntheticReason }) {
+export default function IndicatorsGrid({ candles, loading, asOf, synthetic, syntheticReason, currentPrice }) {
   if (loading) return <Skeleton />
   if (!candles?.length) return null
   if (synthetic) return <SyntheticEmptyState reason={syntheticReason} />
 
-  // RSI
-  const rsi = calcRSI(candles)
+  // RSI — intraday-aware via currentPrice (matches Finviz/TradingView).
+  const rsi = calcRSI(candles, 14, currentPrice)
   const rsiLabel  = rsi == null ? '—' : fmtNum(rsi, 1)
   const rsiBadge  = rsi == null ? null : rsi >= 70 ? 'Overbought' : rsi <= 30 ? 'Oversold' : 'Neutral'
   const rsiBColor = rsi == null ? 'muted' : rsi >= 70 ? 'red' : rsi <= 30 ? 'green' : 'muted'
 
   // MACD
-  const macd = calcMACD(candles)
+  const macd = calcMACD(candles, currentPrice)
   const macdLabel  = macd ? fmtNum(macd.value, 3) : '—'
   const macdSub    = macd ? `Signal ${fmtNum(macd.signal, 3)}` : null
   const macdBadge  = macd ? (macd.bullish ? 'Bullish' : 'Bearish') : null
   const macdBColor = macd ? (macd.bullish ? 'green' : 'red') : 'muted'
 
   // SMA 50
-  const sma50  = calcSMA(candles, 50)
+  const sma50  = calcSMA(candles, 50, currentPrice)
   const price  = candles.at(-1)?.close
   const sma50Label = sma50 ? `$${fmtNum(sma50)}` : '—'
   const sma50Diff  = sma50 && price ? ((price - sma50) / sma50 * 100) : null
@@ -110,7 +110,7 @@ export default function IndicatorsGrid({ candles, loading, asOf, synthetic, synt
   const sma50BC    = sma50Diff == null ? 'muted' : sma50Diff >= 0 ? 'green' : 'red'
 
   // SMA 200
-  const sma200  = calcSMA(candles, 200)
+  const sma200  = calcSMA(candles, 200, currentPrice)
   const sma200Label = sma200 ? `$${fmtNum(sma200)}` : '—'
   const sma200Diff  = sma200 && price ? ((price - sma200) / sma200 * 100) : null
   const sma200Sub   = sma200Diff != null ? `Price ${sma200Diff >= 0 ? '+' : ''}${fmtNum(sma200Diff, 1)}% vs SMA` : null
@@ -118,7 +118,7 @@ export default function IndicatorsGrid({ candles, loading, asOf, synthetic, synt
   const sma200BC    = sma200Diff == null ? 'muted' : sma200Diff >= 0 ? 'green' : 'red'
 
   // Bollinger Band position
-  const bb    = calcBBPosition(candles)
+  const bb    = calcBBPosition(candles, 20, currentPrice)
   const bbPct = bb?.pct ?? null
   const bbLabel  = bbPct != null ? `${bbPct}%` : '—'
   const bbSub    = bb ? `$${fmtNum(bb.lower)} – $${fmtNum(bb.upper)}` : null
