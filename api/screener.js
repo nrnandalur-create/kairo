@@ -13,7 +13,9 @@ function calcRSI(closes, period = 14) {
     g = (g * (period - 1) + Math.max(ch[i], 0)) / period
     l = (l * (period - 1) + Math.max(-ch[i], 0)) / period
   }
-  return l === 0 ? 100 : Math.round(100 - 100 / (1 + g / l))
+  // 2-decimal precision (was Math.round to integer — caused up to 0.5
+  // drift from Finviz on the Screener cards).
+  return l === 0 ? 100 : +(100 - 100 / (1 + g / l)).toFixed(2)
 }
 
 function calcBBPct(closes, period = 20) {

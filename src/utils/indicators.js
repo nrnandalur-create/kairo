@@ -20,7 +20,8 @@ export function calcRSI(candles, period = 14) {
     avgLoss = (avgLoss * (period - 1) + Math.max(-changes[i], 0)) / period
   }
   if (avgLoss === 0) return 100
-  return +(100 - 100 / (1 + avgGain / avgLoss)).toFixed(1)
+  // 2-decimal precision matches Finviz / TradingView display convention.
+  return +(100 - 100 / (1 + avgGain / avgLoss)).toFixed(2)
 }
 
 // ── MACD (12/26/9) ────────────────────────────────────────────────────────────
