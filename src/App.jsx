@@ -292,7 +292,11 @@ export default function App() {
   useAutoRefresh({
     key:        userPrefs.refreshMs > 0 ? ticker : null,
     refresh:    refreshMarketOnly,
-    intervalMs: userPrefs.refreshMs || 300_000,
+    // null = adaptive (hook picks 30s during market hours, 90s pre/after).
+    // 0 = user disabled refresh entirely. Otherwise honor the override.
+    intervalMs: userPrefs.refreshMs === 0 ? Infinity
+              : userPrefs.refreshMs == null ? undefined
+              : userPrefs.refreshMs,
   })
 
   // Cmd-K command palette + jump table

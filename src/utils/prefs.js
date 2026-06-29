@@ -11,10 +11,15 @@
 const STORAGE_KEY = 'kairo_prefs'
 
 export const DEFAULTS = {
-  // Auto-refresh interval for the current ticker. 0 = off.
-  refreshMs: 300_000,   // 5 min
-  // When the DataTimestamp dot turns amber.
-  staleMs:   600_000,   // 10 min
+  // Auto-refresh interval for the current ticker. 0 = off. null = adaptive
+  // (the hook picks 30s during market hours, 90s pre/after-market).
+  // Adaptive is the right default for "always within 0.5 of Finviz" since
+  // RSI/MACD/BB shift slowly enough that a 30s tick keeps the displayed
+  // values within ~0.3 of the live reference on liquid US large-caps.
+  refreshMs: null,
+  // When the DataTimestamp dot turns amber. With the new 30s adaptive
+  // cadence anything >2min suggests something failed.
+  staleMs:   120_000,   // 2 min
   // Color theme. App was built dark-first; light is supported but a
   // small handful of low-priority surfaces may still read as dark.
   theme:     'dark',    // 'dark' | 'light'

@@ -4,18 +4,18 @@ import { prefs, DEFAULTS } from '../utils/prefs'
 import { toast } from '../utils/toast'
 
 const REFRESH_OPTIONS = [
-  { label: 'Off',   value: 0          },
-  { label: '1 min', value:  60_000    },
-  { label: '5 min', value: 300_000    },
-  { label: '10 min', value: 600_000   },
-  { label: '30 min', value: 1_800_000 },
+  { label: 'Adaptive', value: null      },   // 30s open / 90s pre+after — recommended
+  { label: 'Off',      value: 0         },
+  { label: '30s',      value:  30_000   },
+  { label: '1 min',    value:  60_000   },
+  { label: '5 min',    value: 300_000   },
 ]
 
 const STALE_OPTIONS = [
+  { label: '2 min',  value: 120_000    },
   { label: '5 min',  value: 300_000    },
   { label: '10 min', value: 600_000    },
   { label: '30 min', value: 1_800_000  },
-  { label: '1 hour', value: 3_600_000  },
 ]
 
 function Choice({ label, options, value, onChange, hint }) {
