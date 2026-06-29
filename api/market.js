@@ -8,7 +8,15 @@ let _yahoo = null
 async function getYahoo() {
   if (_yahoo) return _yahoo
   const { default: yahooFinance } = await import('yahoo-finance2')
-  yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
+  // suppressNotices was removed in yahoo-finance2 v3.x. Without this guard,
+  // a "not a function" throw here knocked Yahoo out of the fallback chain
+  // entirely, causing every request past Polygon's 5/min free-tier limit to
+  // fall to synthetic data. Now: best-effort suppression, but proceed either way.
+  try {
+    if (typeof yahooFinance.suppressNotices === 'function') {
+      yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
+    }
+  } catch { /* notice suppression is cosmetic */ }
   _yahoo = yahooFinance
   return yahooFinance
 }
@@ -92,22 +100,35 @@ async function fetchFinnhubCandles(sym) {
 // older delisted tickers, some ETFs).
 async function fetchYahooCandles(sym) {
   const yf = await getYahoo()
-  const since = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60
-  const bars = await yf.historical(sym, {
-    period1:  new Date(since * 1000),
-    interval: '1d',
-  })
-  if (!Array.isArray(bars) || !bars.length) {
-    throw new Error('Yahoo historical: no bars')
+  const since = new Date(Date.now() - 365 * 86_400_000)
+
+  // yahoo-finance2 v3 deprecated `historical()` in favor of `chart()`; in
+  // very recent releases `historical()` is removed entirely. Try chart()
+  // first (modern API), fall back to historical() for older installs.
+  // Both accept the same { period1, interval } options.
+  let bars = null
+  if (typeof yf.chart === 'function') {
+    try {
+      const r = await yf.chart(sym, { period1: since, interval: '1d' })
+      bars = r?.quotes ?? null
+    } catch { /* try the legacy method next */ }
   }
-  return bars.map(b => ({
-    time:   Math.floor(b.date.getTime() / 1000),
-    open:   b.open,
-    high:   b.high,
-    low:    b.low,
-    close:  b.close,
-    volume: b.volume,
-  }))
+  if (!bars && typeof yf.historical === 'function') {
+    bars = await yf.historical(sym, { period1: since, interval: '1d' })
+  }
+  if (!Array.isArray(bars) || !bars.length) {
+    throw new Error('Yahoo: no bars returned')
+  }
+  return bars
+    .filter(b => b && b.date && b.close != null)
+    .map(b => ({
+      time:   Math.floor(new Date(b.date).getTime() / 1000),
+      open:   b.open,
+      high:   b.high,
+      low:    b.low,
+      close:  b.close,
+      volume: b.volume,
+    }))
 }
 
 // Optional fallback — Polygon.io. Used only when POLYGON_API_KEY is set.
