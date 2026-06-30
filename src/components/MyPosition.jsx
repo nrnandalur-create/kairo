@@ -9,28 +9,29 @@ import { toast } from '../utils/toast'
 const STORAGE_PREFIX = 'kairo_position_'
 
 function loadPosition(ticker) {
-  if (!ticker || typeof window === 'undefined') return { costBasis: '', shares: '' }
+  if (!ticker || typeof window === 'undefined') return { costBasis: '', shares: '', costMode: 'avg' }
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + ticker)
-    if (!raw) return { costBasis: '', shares: '' }
+    if (!raw) return { costBasis: '', shares: '', costMode: 'avg' }
     const v = JSON.parse(raw)
     return {
       costBasis: v.costBasis != null ? String(v.costBasis) : '',
       shares:    v.shares    != null ? String(v.shares)    : '',
+      costMode:  v.costMode === 'total' ? 'total' : 'avg',
     }
   } catch {
-    return { costBasis: '', shares: '' }
+    return { costBasis: '', shares: '', costMode: 'avg' }
   }
 }
 
-function savePosition(ticker, { costBasis, shares }) {
+function savePosition(ticker, { costBasis, shares, costMode }) {
   if (!ticker || typeof window === 'undefined') return
   try {
     if (!costBasis && !shares) {
       localStorage.removeItem(STORAGE_PREFIX + ticker)
       return
     }
-    localStorage.setItem(STORAGE_PREFIX + ticker, JSON.stringify({ costBasis, shares }))
+    localStorage.setItem(STORAGE_PREFIX + ticker, JSON.stringify({ costBasis, shares, costMode }))
   } catch { /* private mode etc */ }
 }
 
@@ -237,8 +238,9 @@ function Metric({ label, value, tone }) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
-  const [costBasis, setCostBasis] = useState('')
+  const [costBasis, setCostBasis] = useState('')   // raw value the user typed
   const [shares,    setShares]    = useState('')
+  const [costMode,  setCostMode]  = useState('avg')  // 'avg' = per-share | 'total' = total $
   // Conviction Log state — checked on ticker change (was there a prior thesis?)
   // and re-evaluated whenever calcs becomes valid (offer the capture prompt).
   const [conviction,  setConviction]  = useState(null)
@@ -250,6 +252,7 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
     const v = loadPosition(ticker)
     setCostBasis(v.costBasis)
     setShares(v.shares)
+    setCostMode(v.costMode)
     setShowCapture(false)
     setThesisDraft('')
     setConviction(null)
@@ -263,16 +266,47 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
   // localStorage on every keystroke.
   useEffect(() => {
     if (!ticker) return
-    const t = setTimeout(() => savePosition(ticker, { costBasis, shares }), 300)
+    const t = setTimeout(() => savePosition(ticker, { costBasis, shares, costMode }), 300)
     return () => clearTimeout(t)
-  }, [ticker, costBasis, shares])
+  }, [ticker, costBasis, shares, costMode])
 
-  // Live-derived numbers — recompute every render.
+  // Switch between 'avg' and 'total' modes. If both fields are populated we
+  // auto-convert the cost field so the user's effective basis doesn't change
+  // when they flip the toggle (10 shares × $500 → $5000 total ↔ $500 / share).
+  const switchCostMode = (next) => {
+    if (next === costMode) return
+    const v  = parseFloat(costBasis)
+    const sh = parseFloat(shares)
+    if (Number.isFinite(v) && v > 0 && Number.isFinite(sh) && sh > 0) {
+      const converted = next === 'total' ? v * sh : v / sh
+      setCostBasis(converted.toFixed(2))
+    }
+    setCostMode(next)
+  }
+
+  // The single canonical "per-share cost" derived from whatever the user typed.
+  // Avg mode  → use input directly.
+  // Total mode → divide by shares (requires shares to be populated to be meaningful).
+  const perShareCost = useMemo(() => {
+    const v  = parseFloat(costBasis)
+    const sh = parseFloat(shares)
+    if (!Number.isFinite(v) || v <= 0) return null
+    if (costMode === 'total') {
+      if (!Number.isFinite(sh) || sh <= 0) return null
+      return v / sh
+    }
+    return v
+  }, [costBasis, shares, costMode])
+
+  // Live-derived numbers — all downstream math runs off perShareCost so the
+  // toggle is invisible to every calculation below this point.
   const calcs = useMemo(() => {
-    const cb = parseFloat(costBasis)
     const sh = parseFloat(shares)
     const px = currentPrice
-    const valid = Number.isFinite(cb) && cb > 0 && Number.isFinite(sh) && sh > 0 && Number.isFinite(px) && px > 0
+    const cb = perShareCost
+    const valid = Number.isFinite(cb) && cb > 0
+               && Number.isFinite(sh) && sh > 0
+               && Number.isFinite(px) && px > 0
     if (!valid) return { valid: false }
     const totalCost   = cb * sh
     const value       = px * sh
@@ -282,7 +316,7 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
     const breakeven   = cb
     const distFromBE  = px - breakeven
     return { valid: true, totalCost, value, gainDollars, gainPct, perShare, breakeven, distFromBE }
-  }, [costBasis, shares, currentPrice])
+  }, [perShareCost, shares, currentPrice])
 
   const aiVerdict    = aiData?.recommendation
   const aiConfidence = aiData?.confidence
@@ -353,7 +387,32 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
       {/* Inputs */}
       <div className="flex items-end gap-3 flex-wrap">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest" htmlFor={`mp-cb-${ticker}`}>Avg Cost Basis</label>
+          {/* Label row holds the mode toggle so it's visible inline with the input. */}
+          <div className="flex items-center gap-2">
+            <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest" htmlFor={`mp-cb-${ticker}`}>
+              {costMode === 'total' ? 'Total Paid' : 'Avg Cost / Share'}
+            </label>
+            <div className="inline-flex border border-[var(--c-input-border)] bg-[var(--c-input-bg)] rounded-md p-0.5">
+              {[
+                { v: 'avg',   l: '$/sh'  },
+                { v: 'total', l: 'Total' },
+              ].map(opt => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => switchCostMode(opt.v)}
+                  title={opt.v === 'avg' ? 'Enter average price per share' : 'Enter total dollars paid across all shares'}
+                  className={`text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
+                    costMode === opt.v
+                      ? 'bg-[#22B585]/15 text-[#22B585]'
+                      : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)]'
+                  }`}
+                >
+                  {opt.l}
+                </button>
+              ))}
+            </div>
+          </div>
           <input
             id={`mp-cb-${ticker}`}
             type="number"
@@ -361,10 +420,27 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
             step="0.01"
             value={costBasis}
             onChange={e => setCostBasis(e.target.value)}
-            placeholder={currentPrice ? `e.g. ${currentPrice.toFixed(2)}` : 'Price/share'}
+            placeholder={
+              costMode === 'total'
+                ? (currentPrice && parseFloat(shares) > 0
+                    ? `e.g. ${(currentPrice * parseFloat(shares)).toFixed(2)}`
+                    : 'Total $')
+                : (currentPrice ? `e.g. ${currentPrice.toFixed(2)}` : 'Per share')
+            }
             inputMode="decimal"
-            className="w-32 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors tabular-nums"
+            className={`${costMode === 'total' ? 'w-36' : 'w-32'} bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors tabular-nums`}
           />
+          {/* Derived value shown below so the user knows what mode resolves to. */}
+          {perShareCost != null && costMode === 'total' && (
+            <span className="text-[10px] font-mono text-[var(--c-text-fainter)] tabular-nums">
+              = ${perShareCost.toFixed(2)} / share
+            </span>
+          )}
+          {perShareCost != null && costMode === 'avg' && parseFloat(shares) > 0 && (
+            <span className="text-[10px] font-mono text-[var(--c-text-fainter)] tabular-nums">
+              = ${(perShareCost * parseFloat(shares)).toFixed(2)} total
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest" htmlFor={`mp-sh-${ticker}`}>Shares</label>
@@ -383,7 +459,7 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
         {calcs.valid && (
           <button
             type="button"
-            onClick={() => { setCostBasis(''); setShares('') }}
+            onClick={() => { setCostBasis(''); setShares(''); setCostMode('avg') }}
             className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[#ef5454] transition-colors cursor-pointer mb-2.5"
           >
             Clear
