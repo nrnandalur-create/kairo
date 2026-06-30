@@ -89,7 +89,10 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
             )}
           </div>
           <div className="flex items-baseline gap-3">
-            <span className="text-4xl sm:text-5xl font-black text-[var(--c-text-strong)] tabular-nums tracking-tight">
+            {/* Editorial-hero price: substantially larger than the surrounding
+                cells, set in tabular-nums + tight tracking. The single largest
+                number on the page; everything else reads as supporting data. */}
+            <span className="text-5xl sm:text-6xl font-black text-[var(--c-text-strong)] tabular-nums tracking-[-0.02em] leading-none">
               {fmtPrice(quote.c)}
             </span>
             <span className={`text-base font-bold tabular-nums ${chgColor}`}>
@@ -99,8 +102,17 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px bg-[var(--c-chip-bg)]" />
+      {/* Hairline rule — tinted in the change color. Replaces the old neutral
+          divider so the bar's emotional state (up / flat / down) carries
+          through into the page rhythm without any new chrome. */}
+      <div
+        className="h-px"
+        style={{
+          background: `linear-gradient(90deg,
+            ${up ? 'rgba(34,181,133,0.35)' : down ? 'rgba(239,84,84,0.35)' : 'var(--c-border)'},
+            transparent 75%)`,
+        }}
+      />
 
       {/* Row 1 — market overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">

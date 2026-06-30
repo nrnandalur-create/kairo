@@ -118,7 +118,14 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
   const riskClass  = RISK[data.riskLevel] ?? RISK.MEDIUM
 
   return (
-    <div className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter overflow-hidden`}>
+    <div
+      className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter overflow-hidden`}
+      // 3px solid verdict-color rule on the left edge — turns the most
+      // important card on the page into a real visual anchor without
+      // adding any chrome.  The other 3 sides keep the existing subtle
+      // tinted border for shape.
+      style={{ borderLeft: `3px solid ${cfg.color}` }}
+    >
       {/* Ambient verdict glow */}
       <div
         className="absolute -top-8 -left-8 w-48 h-48 rounded-full blur-3xl pointer-events-none"

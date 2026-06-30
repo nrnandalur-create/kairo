@@ -51,6 +51,7 @@ import SettingsModal from './components/SettingsModal'
 import AboutModal from './components/AboutModal'
 import MyPosition from './components/MyPosition'
 import VerdictMemory from './components/VerdictMemory'
+import StickyTickerBar from './components/StickyTickerBar'
 import DailyBriefCard from './components/DailyBriefCard'
 const PulseView       = lazy(() => import('./components/PulseView'))
 const JournalView     = lazy(() => import('./components/JournalView'))
@@ -362,6 +363,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-text)] flex flex-col lg:pl-[60px] pb-16 lg:pb-9">
+
+      {/* Sticky context rail — slides down on scroll past the MetricsBar.
+          Pure presentational; renders nothing when no ticker is loaded. */}
+      {hasData && (
+        <StickyTickerBar
+          ticker={ticker}
+          quote={marketData?.quote}
+          profile={marketData?.profile}
+          candles={marketData?.candles}
+          synthetic={marketData?.synthetic}
+          onJumpToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        />
+      )}
 
       <Nav
         activeKey={activeNav}
