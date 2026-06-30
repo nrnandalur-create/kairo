@@ -94,6 +94,7 @@ export default function App() {
   const [aiData, setAiData]     = useState(null)
   const [aiError, setAiError]   = useState(null)
   const [previousVerdict, setPreviousVerdict] = useState(null)
+  const [bottomTab, setBottomTab] = useState('news')  // tabbed bottom shelf: news | insider | options | covered-calls
   const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
   const { user }       = useAuth()
@@ -582,12 +583,17 @@ export default function App() {
                   currentPrice={marketData.quote?.c}
                   asOf={marketData.fetchedAt}
                 />
-                <PriceTargets
-                  data={fundamentalsData?.targets}
-                  currentPrice={marketData.quote?.c}
-                  loading={loading.ai}
-                />
-                <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
+                {/* Future-facing pair — analyst targets + next earnings.
+                    Both compact; share a row at sm+ so they don't each
+                    occupy a full-width slot. */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <PriceTargets
+                    data={fundamentalsData?.targets}
+                    currentPrice={marketData.quote?.c}
+                    loading={loading.ai}
+                  />
+                  <EarningsCalendar data={fundamentalsData?.earnings} loading={loading.ai} />
+                </div>
                 <div id="section-alerts">
                   <PriceAlertForm
                     ticker={ticker}
@@ -630,18 +636,41 @@ export default function App() {
               </div>
             </div>
 
-            {/* Full width — Insider transactions */}
-            <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai} />
-
-            {/* Full width — Options scanner */}
-            <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />
-
-            {/* Full width — Covered call scanner */}
-            <CoveredCallScanner currentPrice={marketData.quote?.c} ticker={ticker} />
-
-            {/* Full width — News feed */}
-            <div id="section-news">
-              <NewsFeed data={marketData.news} loading={loading.ai} asOf={marketData.fetchedAt} />
+            {/* Bottom shelf — was four stacked full-width cards (~2000px
+                of vertical scroll); now a tabbed surface so the user can
+                browse in place. Only the active tab mounts (saves render
+                cost on the heavier options/covered-calls tabs). */}
+            <div id="section-news" className="w-full flex flex-col gap-3 animate-enter">
+              <div className="flex items-center gap-1 border-b border-[var(--c-border)] overflow-x-auto">
+                {[
+                  { id: 'news',          label: 'News'          },
+                  { id: 'insider',       label: 'Insider'       },
+                  { id: 'options',       label: 'Options'       },
+                  { id: 'covered-calls', label: 'Covered Calls' },
+                ].map(t => {
+                  const active = bottomTab === t.id
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setBottomTab(t.id)}
+                      className={`px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.16em] transition-colors border-b-2 -mb-px shrink-0 cursor-pointer ${
+                        active
+                          ? 'text-[#22B585] border-[#22B585]'
+                          : 'text-[var(--c-text-faint)] border-transparent hover:text-[var(--c-text)]'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <div>
+                {bottomTab === 'news'          && <NewsFeed data={marketData.news} loading={loading.ai} asOf={marketData.fetchedAt} />}
+                {bottomTab === 'insider'       && <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai} />}
+                {bottomTab === 'options'       && <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />}
+                {bottomTab === 'covered-calls' && <CoveredCallScanner currentPrice={marketData.quote?.c} ticker={ticker} />}
+              </div>
             </div>
           </ErrorBoundary>
         )}
