@@ -439,7 +439,7 @@ export default function App() {
       </header>
 
       {/* ── Main ── */}
-      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
+      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-3 sm:gap-4">
 
         {/* Landing hero */}
         {!hasData && !isLoading && (
@@ -561,11 +561,11 @@ export default function App() {
             />
 
             {/* Two-column on desktop: left = chart/indicators, right = AI */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
 
               {/* Left column — "the data": chart, technicals, fundamentals,
                   and the user-set price levels they're watching. */}
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <ErrorBoundary>
                   <CandleChart candles={marketData.candles} synthetic={marketData.synthetic} />
                 </ErrorBoundary>
@@ -586,7 +586,7 @@ export default function App() {
                 {/* Future-facing pair — analyst targets + next earnings.
                     Both compact; share a row at sm+ so they don't each
                     occupy a full-width slot. */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <PriceTargets
                     data={fundamentalsData?.targets}
                     currentPrice={marketData.quote?.c}
@@ -607,7 +607,7 @@ export default function App() {
 
               {/* Right column — "Kairo + You": the AI's read on the ticker
                   and how it lands against the user's actual position. */}
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 {previousVerdict && aiData && (
                   <VerdictMemory
                     previous={previousVerdict}
