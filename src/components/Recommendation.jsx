@@ -201,19 +201,27 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
         <p className="text-sm text-[var(--c-text)]/80 leading-relaxed">{data.summary}</p>
       )}
 
-      {/* Entry / Stop grid */}
+      {/* Entry / Stop grid — each column now includes the verdict model's
+          one-sentence reasoning under the number, so the user sees WHY the
+          level was chosen, not just what the level is. */}
       {(data.entryPrice || data.stopLoss) && (
         <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[var(--c-border)]">
           {data.entryPrice && (
             <div className="flex flex-col gap-1">
               <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Entry</p>
               <p className="text-base font-bold text-[var(--c-text)] tabular-nums">${Number(data.entryPrice).toFixed(2)}</p>
+              {data.entryReason && (
+                <p className="text-[11px] text-[var(--c-text-faint)] leading-snug">{data.entryReason}</p>
+              )}
             </div>
           )}
           {data.stopLoss && (
             <div className="flex flex-col gap-1">
               <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Stop Loss</p>
               <p className="text-base font-bold tabular-nums" style={{ color: '#ef5454' }}>${Number(data.stopLoss).toFixed(2)}</p>
+              {data.stopReason && (
+                <p className="text-[11px] text-[var(--c-text-faint)] leading-snug">{data.stopReason}</p>
+              )}
             </div>
           )}
         </div>

@@ -24,7 +24,7 @@ import { useAuth } from './hooks/useAuth'
 import { UserMenu } from './components/auth/UserMenu'
 import { supabase } from './lib/supabase'
 import { fetchMarket } from './services/finnhub'
-import { fetchAnalysis } from './services/analyze'
+import { fetchVerdict, fetchDetailedAnalysis } from './services/analyze'
 import { logVerdict, fetchPreviousVerdict } from './services/verdictHistory'
 import { calcRSI, calcMACD, calcBBPosition } from './utils/indicators'
 import { fetchFundamentals } from './services/fundamentals'
@@ -103,6 +103,10 @@ export default function App() {
   const [marketData, setMarketData] = useState(null)
   const [aiData, setAiData]     = useState(null)
   const [aiError, setAiError]   = useState(null)
+  // Detailed AI Analysis — a separate Groq call with its own prompt.
+  // Feeds the AIAnalysis panel independently of the verdict card.
+  const [analysisData,  setAnalysisData]  = useState(null)
+  const [analysisError, setAnalysisError] = useState(null)
   const [previousVerdict, setPreviousVerdict] = useState(null)
   const [bottomTab, setBottomTab] = useState('news')  // tabbed bottom shelf: news | insider | options | covered-calls
   const [fundamentalsData, setFundamentalsData] = useState(null)
@@ -154,6 +158,8 @@ export default function App() {
     setError(null)
     setAiData(null)
     setAiError(null)
+    setAnalysisData(null)
+    setAnalysisError(null)
     setFundamentalsData(null)
     setMarketData(null)
     setLoading(LOADING_MARKET)
@@ -163,11 +169,21 @@ export default function App() {
     const now    = Date.now()
     if (cached?.market && (now - cached.marketAt) < MARKET_TTL_MS) {
       setMarketData(cached.market)
+      // Hydrate whichever of the two AI panels we have fresh cache for.
+      // Each is cached independently so a stale verdict doesn't force
+      // a re-fetch of a still-fresh detailed analysis (and vice-versa).
       if (cached.ai && (now - cached.aiAt) < ANALYSIS_TTL_MS) {
         setAiData(cached.ai)
+      }
+      if (cached.analysis && (now - cached.analysisAt) < ANALYSIS_TTL_MS) {
+        setAnalysisData(cached.analysis)
+      }
+      if (
+        cached.ai       && (now - cached.aiAt)       < ANALYSIS_TTL_MS &&
+        cached.analysis && (now - cached.analysisAt) < ANALYSIS_TTL_MS
+      ) {
         setFundamentalsData(cached.fundamentals ?? null)
         setLoading(LOADING_NONE)
-        // Recently viewed — still update ordering
         setRecentTickers(prev => {
           const next = [sym, ...prev.filter(t => t !== sym)].slice(0, 5)
           localStorage.setItem('kairo_recent', JSON.stringify(next))
@@ -175,8 +191,8 @@ export default function App() {
         })
         return
       }
-      // Have market cache but no fresh AI — skip the market refetch and
-      // continue straight to the AI + fundamentals block.
+      // Have market cache but at least one AI call needs refreshing —
+      // fall through into the AI-fetch block.
     }
 
     try {
@@ -214,8 +230,11 @@ export default function App() {
 
       let analysisResult = null
       setAiError(null)
+      setAnalysisError(null)
+      const marketCtx = { ticker: sym, quote, profile, metrics, candles, synthetic }
       await Promise.allSettled([
-        fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic }, { signal })
+        // 1. Punchy verdict — feeds the Recommendation panel.
+        fetchVerdict(marketCtx, { signal })
           .then(data => {
             if (!isCurrent()) return
             analysisResult = data
@@ -227,6 +246,20 @@ export default function App() {
             // Silent on user-initiated aborts; visible on real failures.
             if (err?.name === 'AbortError' || !isCurrent()) return
             setAiError(err?.message ?? 'Analysis request failed')
+          }),
+        // 2. Detailed indicator breakdown — feeds the AI Analysis panel.
+        //    Independent of the verdict call; cached separately so a
+        //    verdict re-fetch doesn't force this to reload (and vice-versa).
+        fetchDetailedAnalysis(marketCtx, { signal })
+          .then(data => {
+            if (!isCurrent()) return
+            setAnalysisData(data)
+            const prev = cacheRef.current.get(sym) ?? {}
+            cacheRef.current.set(sym, { ...prev, analysis: data, analysisAt: Date.now() })
+          })
+          .catch(err => {
+            if (err?.name === 'AbortError' || !isCurrent()) return
+            setAnalysisError(err?.message ?? 'Detailed analysis failed')
           }),
         fetchFundamentals(sym, { signal })
           .then(data => {
@@ -304,6 +337,8 @@ export default function App() {
     setMarketData(null)
     setAiData(null)
     setAiError(null)
+    setAnalysisData(null)
+    setAnalysisError(null)
     setFundamentalsData(null)
     setError(null)
     setLoading(LOADING_NONE)
@@ -734,7 +769,14 @@ export default function App() {
                   ticker={ticker}
                   onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
                 />
-                <AIAnalysis data={aiData} loading={loading.ai} error={aiError} asOf={aiData?.fetchedAt} />
+                <AIAnalysis
+                  data={analysisData}
+                  loading={loading.ai}
+                  error={analysisError}
+                  asOf={analysisData?.fetchedAt}
+                  verdict={aiData?.verdict}
+                  confidence={aiData?.confidence}
+                />
                 {ticker && (
                   <MyPosition
                     ticker={ticker}
