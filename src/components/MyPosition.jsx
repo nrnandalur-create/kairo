@@ -364,7 +364,7 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
                      : 'var(--c-text)'
 
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-5 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">

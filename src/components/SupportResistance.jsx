@@ -47,7 +47,7 @@ export default function SupportResistance({ candles, currentPrice, asOf }) {
   if (!resistance.length && !support.length) return null
 
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-5 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Support &amp; Resistance</span>
 
       <div className="flex flex-col gap-1">

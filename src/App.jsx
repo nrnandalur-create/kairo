@@ -764,13 +764,22 @@ export default function App() {
                       key={t.id}
                       type="button"
                       onClick={() => setBottomTab(t.id)}
-                      className={`px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.16em] transition-colors border-b-2 -mb-px shrink-0 cursor-pointer ${
+                      className={`relative px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.16em] transition-colors shrink-0 cursor-pointer ${
                         active
-                          ? 'text-[#22B585] border-[#22B585]'
-                          : 'text-[var(--c-text-faint)] border-transparent hover:text-[var(--c-text)]'
+                          ? 'text-[#22B585]'
+                          : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)]'
                       }`}
                     >
                       {t.label}
+                      {/* Solid 3px green indicator with rounded top edges —
+                          replaces the thin border-b-2 so the active tab
+                          reads as a real underline, not a border artifact. */}
+                      {active && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-2 right-2 -bottom-px h-[3px] bg-[#22B585] rounded-t-full"
+                        />
+                      )}
                     </button>
                   )
                 })}

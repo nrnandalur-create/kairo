@@ -96,7 +96,7 @@ function SentimentPill({ sentiment }) {
 
 function EmptyState({ ticker }) {
   return (
-    <div className="border border-[var(--c-border)] bg-[var(--c-input-bg)] rounded-xl p-6 flex flex-col items-center gap-2 text-center">
+    <div className="border border-[var(--c-border)] bg-[var(--c-input-bg)] rounded-xl p-4 sm:p-5 flex flex-col items-center gap-2 text-center">
       <span className="text-[var(--c-text-fainter)] text-lg leading-none">◇</span>
       <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
         No insider transactions
@@ -116,7 +116,7 @@ export default function InsiderTrades({ data, loading, ticker }) {
   const sentiment    = Array.isArray(data) ? null : data?.sentiment
 
   return (
-    <div className="w-full glass-card rounded-2xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
           Insider Transactions

@@ -36,7 +36,7 @@ function ConfidenceRing({ confidence }) {
 
 function Skeleton({ showSlowMessage }) {
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-fade">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-5 animate-fade">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
         <div className="h-2.5 w-28 rounded-full shimmer" />
@@ -76,7 +76,7 @@ function Unavailable({ ticker, error }) {
       ? 'Analysis temporarily unavailable. Try refreshing in a moment.'
       : 'Analysis temporarily unavailable. Try refreshing in a moment.'
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-3 animate-fade">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-fade">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">AI Analysis</span>
         <span className="text-[9px] font-bold tracking-widest uppercase text-[var(--c-text-faint)] border border-[var(--c-border)] rounded-full px-2 py-0.5">Unavailable</span>
@@ -118,7 +118,7 @@ export default function AIAnalysis({ data, loading, error, asOf }) {
                       : 'border-[#ef5454]/25 text-[#ef5454] bg-[#ef5454]/10'
 
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-5 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">

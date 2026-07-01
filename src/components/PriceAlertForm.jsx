@@ -49,7 +49,7 @@ export default function PriceAlertForm({ ticker, currentPrice, getAlert, setAler
   const p     = currentPrice
 
   return (
-    <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Price Alerts</span>
         {isSet && (

@@ -146,8 +146,8 @@ export default function CandleChart({ candles, synthetic }) {
   }, [showBands])
 
   return (
-    <div className="w-full glass-card rounded-2xl overflow-hidden animate-enter">
-      <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
+    <div className="w-full glass-card rounded-xl overflow-hidden animate-enter">
+      <div className="px-4 sm:px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Price Chart</span>
           {synthetic && (
@@ -159,31 +159,34 @@ export default function CandleChart({ candles, synthetic }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Timeframe buttons */}
-          <div className="flex items-center gap-1 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg p-0.5">
-            {TIMEFRAMES.map(({ label }) => (
-              <button
-                key={label}
-                onClick={() => setTf(label)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all duration-150 cursor-pointer active:scale-[0.94] ${
-                  tf === label
-                    ? 'bg-[#22B585] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
-                    : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-card)]'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {/* BB toggle */}
+        {/* Unified control bar — TF pills and BB toggle live in the same
+            capsule so they read as one segmented control instead of two
+            differently-sized groups floating next to each other. */}
+        <div className="flex items-center gap-0.5 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg p-0.5">
+          {TIMEFRAMES.map(({ label }) => (
+            <button
+              key={label}
+              onClick={() => setTf(label)}
+              className={`text-[11px] font-semibold px-2.5 h-7 rounded-md transition-all duration-150 cursor-pointer active:scale-[0.94] ${
+                tf === label
+                  ? 'bg-[#22B585] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
+                  : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-card)]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          {/* Divider between the timeframe cluster and the toggle */}
+          <span aria-hidden="true" className="mx-1 h-4 w-px bg-[var(--c-border)]" />
           <button
             onClick={() => setShowBands(v => !v)}
             disabled={!candles?.length}
-            className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer active:scale-[0.94] disabled:opacity-40 disabled:cursor-not-allowed ${
+            aria-pressed={showBands}
+            title={showBands ? 'Hide Bollinger Bands' : 'Show Bollinger Bands'}
+            className={`text-[11px] font-semibold px-2.5 h-7 rounded-md transition-all duration-150 cursor-pointer active:scale-[0.94] disabled:opacity-40 disabled:cursor-not-allowed ${
               showBands
-                ? 'bg-[#22B585] text-white border-[#22B585] shadow-[0_0_8px_rgba(29,158,117,0.25)]'
-                : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#22B585]/50 hover:text-[#22B585]'
+                ? 'bg-[#22B585] text-white shadow-[0_0_8px_rgba(29,158,117,0.3)]'
+                : 'text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-card)]'
             }`}
           >
             BB

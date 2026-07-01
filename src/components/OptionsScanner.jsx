@@ -37,7 +37,7 @@ function TypeBadge({ type }) {
 
 function Skeleton() {
   return (
-    <div className="w-full glass-card rounded-2xl p-4 sm:p-6 flex flex-col gap-4 animate-fade">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-fade">
       <div className="h-3 w-32 rounded-full shimmer" />
       {[1, 2, 3, 4, 5, 6].map(i => (
         <div key={i} className="h-8 rounded-lg shimmer" />
@@ -48,11 +48,11 @@ function Skeleton() {
 
 function EmptyState({ ticker, reason }) {
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-3 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
         Options Chain{ticker && <span className="text-[var(--c-text-fainter)] font-normal ml-1.5">· {ticker}</span>}
       </span>
-      <div className="border border-[var(--c-border)] bg-[var(--c-input-bg)] rounded-xl p-6 flex flex-col items-center gap-2 text-center">
+      <div className="border border-[var(--c-border)] bg-[var(--c-input-bg)] rounded-xl p-4 sm:p-5 flex flex-col items-center gap-2 text-center">
         <span className="text-[var(--c-text-fainter)] text-lg leading-none">◇</span>
         <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
           Options data unavailable
@@ -105,7 +105,7 @@ export default function OptionsScanner({ ticker, currentPrice }) {
   const putCount     = chain.filter(c => c.type === 'put').length
 
   return (
-    <div className="w-full glass-card rounded-2xl p-4 sm:p-6 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">

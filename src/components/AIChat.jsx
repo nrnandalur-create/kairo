@@ -168,7 +168,7 @@ export default function AIChat({ ticker, context }) {
   const lastIsAssistant = history.length > 0 && history[history.length - 1].role === 'assistant'
 
   return (
-    <div className="w-full glass-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">

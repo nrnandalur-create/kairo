@@ -29,7 +29,7 @@ function SkeletonLine({ w = 'full' }) {
 
 function Skeleton({ showSlowMessage }) {
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-5 animate-fade">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-5 animate-fade">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
         <div className="h-2.5 w-40 rounded-full shimmer" />
@@ -60,7 +60,7 @@ function Unavailable({ ticker, error }) {
       ? 'Analysis temporarily unavailable. Refresh or try again shortly.'
       : 'Analysis temporarily unavailable. Refresh or try again shortly.'
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex items-start gap-3 animate-fade">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex items-start gap-3 animate-fade">
       <span className="shrink-0 w-9 h-9 rounded-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text-fainter)] flex items-center justify-center text-base">—</span>
       <div className="flex flex-col gap-1">
         <span className="text-sm font-semibold text-[var(--c-text)]">AI recommendation unavailable</span>
@@ -119,7 +119,7 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
 
   return (
     <div
-      className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5 animate-enter overflow-hidden`}
+      className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-xl p-4 sm:p-5 flex flex-col gap-4 sm:gap-5 animate-enter overflow-hidden`}
       // 3px solid verdict-color rule on the left edge — turns the most
       // important card on the page into a real visual anchor without
       // adding any chrome.  The other 3 sides keep the existing subtle

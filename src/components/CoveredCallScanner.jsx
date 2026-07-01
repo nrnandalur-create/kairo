@@ -207,7 +207,7 @@ export default function CoveredCallScanner({ ticker, currentPrice, candles, prof
   })
 
   return (
-    <div className="w-full glass-card rounded-2xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-2 flex-wrap">

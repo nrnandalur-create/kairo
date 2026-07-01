@@ -66,7 +66,7 @@ function NewsCard({ item }) {
 
 function NewsSkeleton() {
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="h-2.5 w-20 rounded-full shimmer" />
         <div className="h-2.5 w-32 rounded-full shimmer" />
@@ -91,7 +91,7 @@ export default function NewsFeed({ data, loading, asOf }) {
   if (loading) return <NewsSkeleton />
 
   if (!data?.length) return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">News Feed</span>
       <div className="py-8 flex flex-col items-center gap-2 text-center">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-[var(--c-text-fainter)] mb-1">
@@ -115,7 +115,7 @@ export default function NewsFeed({ data, loading, asOf }) {
   const neutralPct = 100 - bullPct - bearPct
 
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
