@@ -31,11 +31,12 @@ function findBestMatch(contracts, targetStrike, targetExpiry) {
 }
 
 // ── Full options-chain path ─────────────────────────────────────────────────
-// Used by the OptionsScanner tab. One paginated call to Polygon's
-// /v3/snapshot/options/{ticker} endpoint returns the full chain with
-// live open interest, volume, greeks, and IV in a single response —
-// much cheaper (1 request) and more accurate (real OI) than the
-// previous approach of listing contracts then snapshotting them.
+// Uses Polygon's contracts + per-contract snapshot endpoints — the same
+// pair the covered-call path uses because they work on the free tier.
+// Bugfix from the first version: previously the nearest-strike sort
+// collapsed onto ONE strike with many weekly + daily expiries. Now we
+// dedupe by strike first (keeping the shortest-dated contract per
+// unique strike), so 12 sampled contracts cover 12 different strikes.
 async function fetchOptionsChain({ ticker, price, key, res }) {
   const fridays  = getNextFridays(6)
   const today    = fridays[0]
@@ -44,37 +45,68 @@ async function fetchOptionsChain({ ticker, price, key, res }) {
   const minStrike = price * 0.70
   const maxStrike = price * 1.30
 
-  // Pull up to 250 snapshots at a time — Polygon caps free tier here.
-  // One call is enough for most tickers; if a very active ticker like
-  // SPY has more, we still get the ~250 most relevant.
-  const url = `https://api.polygon.io/v3/snapshot/options/${ticker}` +
-    `?expiration_date.gte=${today}&expiration_date.lte=${sixWeeks}` +
-    `&strike_price.gte=${minStrike.toFixed(2)}&strike_price.lte=${maxStrike.toFixed(2)}` +
-    `&limit=250&apiKey=${key}`
-
-  let snapshots = []
-  try {
-    const r = await fetch(url)
-    if (r.ok) {
+  const fetchSide = async (side) => {
+    const url = `https://api.polygon.io/v3/reference/options/contracts` +
+      `?underlying_ticker=${ticker}&contract_type=${side}` +
+      `&expiration_date.gte=${today}&expiration_date.lte=${sixWeeks}` +
+      `&strike_price.gte=${minStrike.toFixed(2)}&strike_price.lte=${maxStrike.toFixed(2)}` +
+      `&limit=250&apiKey=${key}`
+    try {
+      const r = await fetch(url)
+      if (!r.ok) return []
       const d = await r.json()
-      snapshots = d.results ?? []
+      return d.results ?? []
+    } catch {
+      return []
     }
-  } catch {}
+  }
 
-  if (!snapshots.length) {
+  const [calls, puts] = await Promise.all([fetchSide('call'), fetchSide('put')])
+
+  if (!calls.length && !puts.length) {
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     return res.json({ chain: [], underlyingPrice: price })
   }
 
-  // Normalize each snapshot into our chain shape. Skip contracts with
-  // zero open interest AND zero volume — they're dead listings that
-  // add noise without insight.
-  const normalized = snapshots
-    .map(s => {
-      const d   = s.details ?? {}
-      const lq  = s.last_quote ?? {}
-      const day = s.day ?? {}
-      const gr  = s.greeks ?? {}
+  // Dedupe by strike — for each unique strike, keep the contract with
+  // the SHORTEST expiry (fresh weeklies are usually the most-traded).
+  // This prevents 12 same-strike duplicates from crowding out the sample.
+  const dedupeByStrike = (contracts) => {
+    const bestByStrike = new Map()
+    for (const c of contracts) {
+      const key = c.strike_price
+      const prev = bestByStrike.get(key)
+      if (!prev || c.expiration_date < prev.expiration_date) bestByStrike.set(key, c)
+    }
+    return Array.from(bestByStrike.values())
+  }
+
+  const uniqCalls = dedupeByStrike(calls)
+    .sort((a, b) => Math.abs(a.strike_price - price) - Math.abs(b.strike_price - price))
+    .slice(0, 10)
+  const uniqPuts = dedupeByStrike(puts)
+    .sort((a, b) => Math.abs(a.strike_price - price) - Math.abs(b.strike_price - price))
+    .slice(0, 10)
+
+  const sample = [...uniqCalls, ...uniqPuts]
+
+  // Snapshot each sampled contract to get real OI/volume/IV/premium.
+  // 20 parallel snapshot calls is under Polygon free-tier limits.
+  const snapshots = await Promise.allSettled(
+    sample.map(c =>
+      fetch(`https://api.polygon.io/v3/snapshot/options/${ticker}/${encodeURIComponent(c.ticker)}?apiKey=${key}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+    )
+  )
+
+  const chain = sample
+    .map((c, i) => {
+      const result = snapshots[i]
+      const snap = result.status === 'fulfilled' ? result.value?.results : null
+      const lq  = snap?.last_quote ?? {}
+      const day = snap?.day ?? {}
+      const gr  = snap?.greeks ?? {}
 
       let premium = null
       if (lq.bid != null && lq.ask != null && lq.ask > 0) {
@@ -83,45 +115,34 @@ async function fetchOptionsChain({ ticker, price, key, res }) {
         premium = +day.close.toFixed(2)
       }
 
-      const openInterest = s.open_interest ?? 0
+      const openInterest = snap?.open_interest ?? 0
       const volume       = day.volume ?? 0
       const volOiRatio   = openInterest > 0 ? volume / openInterest : 0
-      // Standard institutional heuristic for unusual activity.
       const unusual = openInterest >= 50 && (
         volOiRatio >= 0.6 ||
         (volume >= 2000 && volOiRatio >= 0.3)
       )
 
       return {
-        type:         d.contract_type ?? null,
-        strike:       d.strike_price ?? null,
-        expiry:       d.expiration_date ?? null,
-        ticker:       d.ticker ?? null,
+        type:         c.contract_type,
+        strike:       c.strike_price,
+        expiry:       c.expiration_date,
+        ticker:       c.ticker,
         premium,
         bid:          lq.bid ?? null,
         ask:          lq.ask ?? null,
         openInterest,
         volume,
-        iv:           s.implied_volatility ?? gr.implied_volatility ?? null,
+        iv:           snap?.implied_volatility ?? gr.implied_volatility ?? null,
         delta:        gr.delta ?? null,
         volOiRatio:   +volOiRatio.toFixed(2),
         unusual,
       }
     })
-    .filter(c => c.type && c.strike != null && (c.openInterest > 0 || c.volume > 0))
-
-  // Return the most liquid 8 calls + 8 puts, each pool sorted by
-  // open interest descending — that's the shape traders actually
-  // look at (biggest bets first, both directions).
-  const calls = normalized.filter(c => c.type === 'call')
-    .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
-    .slice(0, 8)
-  const puts = normalized.filter(c => c.type === 'put')
-    .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
-    .slice(0, 8)
-
-  // Interleave so the table alternates types, biggest-OI first.
-  const chain = [...calls, ...puts]
+    // Keep contracts that have SOME activity, else premium data. If OI and
+    // vol are both zero AND premium is null, the contract is effectively
+    // dead — better to hide it than render a row of dashes.
+    .filter(c => c.openInterest > 0 || c.volume > 0 || c.premium != null)
     .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
 
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
