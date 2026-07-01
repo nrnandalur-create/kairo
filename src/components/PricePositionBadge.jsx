@@ -58,33 +58,51 @@ function RangeText({ pct, tooltip }) {
   )
 }
 
+// Sanity check for Finnhub's occasional share-class mix-up: BRK.B (~$500)
+// returns the BRK.A ($685K+) 52W range from /stock/metric. When the price
+// falls outside 2x the reported range in either direction, treat the 52W
+// data as unusable and fall through to the ATH-only path.
+function is52WPlausible(currentPrice, hi52, lo52) {
+  if (hi52 == null || lo52 == null || hi52 <= lo52) return false
+  if (lo52 <= 0) return false
+  if (currentPrice < lo52 * 0.5) return false
+  if (currentPrice > hi52 * 2)   return false
+  return true
+}
+
 export default function PricePositionBadge({ currentPrice, hi52, lo52, ath, atl, athDate, atlDate }) {
   if (currentPrice == null || !Number.isFinite(currentPrice)) return null
 
-  // The 52W range must be usable to show anything at all — without it,
-  // the position pct is meaningless and the ATH/ATL edges are less useful
-  // out of context. We render nothing rather than a partial state.
-  if (hi52 == null || lo52 == null || hi52 <= lo52) return null
+  const has52W  = is52WPlausible(currentPrice, hi52, lo52)
+  const hasAth  = ath != null && Number.isFinite(ath) && ath > 0
+  const hasAtl  = atl != null && Number.isFinite(atl) && atl > 0
 
-  const nearAth = within(currentPrice, ath, NEAR_ATH_ATL_PCT)
-  const nearAtl = within(currentPrice, atl, NEAR_ATH_ATL_PCT)
-  const near52H = within(currentPrice, hi52, NEAR_52W_PCT)
-  const near52L = within(currentPrice, lo52, NEAR_52W_PCT)
+  // Nothing usable at all → don't render. Better silence than misinformation.
+  if (!has52W && !hasAth && !hasAtl) return null
 
-  // Percentage of the way up the 52-week range.
-  // (current - lo52) / (hi52 - lo52) * 100, clamped 0-100.
-  const posPct = Math.max(0, Math.min(100,
-    Math.round((currentPrice - lo52) / (hi52 - lo52) * 100)
-  ))
+  const nearAth = hasAth && within(currentPrice, ath, NEAR_ATH_ATL_PCT)
+  const nearAtl = hasAtl && within(currentPrice, atl, NEAR_ATH_ATL_PCT)
+  const near52H = has52W && within(currentPrice, hi52, NEAR_52W_PCT)
+  const near52L = has52W && within(currentPrice, lo52, NEAR_52W_PCT)
 
-  const rangeLine = `52W Range: ${fmtPrice(lo52)} — ${fmtPrice(hi52)} | Current: ${posPct}% of range`
-  const athLine   = ath != null
-    ? ` | ATH: ${fmtPrice(ath)}${athDate ? ` (${athDate})` : ''}`
-    : ''
-  const atlLine   = atl != null
-    ? ` | ATL: ${fmtPrice(atl)}${atlDate ? ` (${atlDate})` : ''}`
-    : ''
-  const tooltip = rangeLine + athLine + atlLine
+  // Position % is only meaningful when 52W is usable.
+  const posPct = has52W
+    ? Math.max(0, Math.min(100, Math.round((currentPrice - lo52) / (hi52 - lo52) * 100)))
+    : null
+
+  // Build the tooltip from whichever pieces we have — never lie about missing
+  // data by defaulting to "—" inside otherwise-precise dollar strings.
+  const parts = []
+  if (has52W) {
+    parts.push(`52W Range: ${fmtPrice(lo52)} — ${fmtPrice(hi52)} | Current: ${posPct}% of range`)
+  }
+  if (hasAth) {
+    parts.push(`ATH: ${fmtPrice(ath)}${athDate ? ` (${athDate})` : ''}`)
+  }
+  if (hasAtl) {
+    parts.push(`ATL: ${fmtPrice(atl)}${atlDate ? ` (${atlDate})` : ''}`)
+  }
+  const tooltip = parts.join(' | ')
 
   // Strictest-first: ATH beats 52W HIGH which beats NORMAL. Same on the low side.
   if (nearAth) {
@@ -99,6 +117,12 @@ export default function PricePositionBadge({ currentPrice, hi52, lo52, ath, atl,
   if (near52L) {
     return <Badge color="#ef5454" label="52W LOW"  arrow="▼" tooltip={tooltip} />
   }
+
+  // Position % requires a real 52W range. When Finnhub gave us the wrong
+  // share-class range (BRK.B → BRK.A quirk), suppress the misleading pct
+  // rather than showing "0% of range" or "100% of range" for something
+  // that's neither.
+  if (posPct == null) return null
 
   return <RangeText pct={posPct} tooltip={tooltip} />
 }
