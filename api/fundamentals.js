@@ -35,15 +35,29 @@ export default async function handler(req, res) {
   if (!ticker) return res.status(400).json({ error: 'Invalid ticker' })
 
   const finnhubKey = process.env.FINNHUB_API_KEY
+  const polygonKey = process.env.POLYGON_API_KEY
 
   // Yahoo Finance: all needed modules in one request (no API key required)
   const yfUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}` +
     `?modules=financialData%2CrecommendationTrend%2CcalendarEvents%2CearningsHistory`
 
-  const [yfRes, insRes] = await Promise.allSettled([
+  // Long-range monthly bars for the ATH/ATL price-position badge. Polygon
+  // caps free-tier history at 2 years; if that returns empty or errors we
+  // fall through to Yahoo which has decades. Both endpoints are called
+  // in parallel with the existing Yahoo/Finnhub work so the overall
+  // fundamentals response latency is unchanged.
+  const today = new Date().toISOString().split('T')[0]
+  const polyUrl = polygonKey
+    ? `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/month/1970-01-01/${today}?adjusted=true&sort=asc&limit=1000&apiKey=${polygonKey}`
+    : null
+
+  const [yfRes, insRes, polyRes] = await Promise.allSettled([
     fetch(yfUrl, { headers: YF_HEADERS }),
     finnhubKey
       ? fetch(`https://finnhub.io/api/v1/stock/insider-transactions?symbol=${ticker}&token=${finnhubKey}`)
+      : Promise.resolve(null),
+    polyUrl
+      ? fetch(polyUrl)
       : Promise.resolve(null),
   ])
 
@@ -207,6 +221,64 @@ export default async function handler(req, res) {
     } catch { /* keep insider null so UI shows empty state */ }
   }
 
+  // ── Price range (ATH / ATL) ──────────────────────────────────────────────
+  // Computed from the widest history we can get. Polygon-first (matches the
+  // spec) with a Yahoo fallback for the deeper history free tier can't reach.
+  let priceRange = null
+  const findExtremes = (bars, getHigh, getLow, getTime) => {
+    let hi = -Infinity, lo = Infinity, hiT = null, loT = null
+    for (const b of bars) {
+      const h = getHigh(b), l = getLow(b), t = getTime(b)
+      if (h != null && h > hi) { hi = h; hiT = t }
+      if (l != null && l > 0 && l < lo) { lo = l; loT = t }
+    }
+    if (!Number.isFinite(hi) || !Number.isFinite(lo)) return null
+    return { ath: +hi.toFixed(2), atl: +lo.toFixed(2), athDate: hiT, atlDate: loT }
+  }
+
+  // Polygon path (respects the user's explicit "Polygon aggregate endpoint" ask)
+  if (polyRes.status === 'fulfilled' && polyRes.value?.ok) {
+    try {
+      const d = await polyRes.value.json()
+      const bars = Array.isArray(d.results) ? d.results : []
+      if (bars.length) {
+        priceRange = findExtremes(
+          bars,
+          b => b.h,
+          b => b.l,
+          b => b.t ? new Date(b.t).toISOString().split('T')[0] : null,
+        )
+      }
+    } catch { /* fall through to Yahoo */ }
+  }
+
+  // Yahoo fallback — decades of monthly bars, no API key required. Only
+  // fires when Polygon returned nothing or errored. Kept behind a dynamic
+  // import so the happy Polygon path doesn't pay the module init cost.
+  if (!priceRange) {
+    try {
+      const { default: yahooFinance } = await import('yahoo-finance2')
+      try {
+        if (typeof yahooFinance.suppressNotices === 'function') {
+          yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
+        }
+      } catch {}
+      const chart = await yahooFinance.chart(ticker, {
+        period1:  new Date('1970-01-01'),
+        interval: '1mo',
+      }).catch(() => null)
+      const bars = chart?.quotes ?? []
+      if (bars.length) {
+        priceRange = findExtremes(
+          bars,
+          b => b.high ?? b.close,
+          b => b.low  ?? b.close,
+          b => b.date ? new Date(b.date).toISOString().split('T')[0] : null,
+        )
+      }
+    } catch { /* keep priceRange null so the UI falls back to 52W-only badge */ }
+  }
+
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200')
-  res.json({ earnings, targets, insider })
+  res.json({ earnings, targets, insider, priceRange })
 }

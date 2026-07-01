@@ -668,6 +668,7 @@ export default function App() {
               candles={marketData.candles}
               asOf={marketData.fetchedAt}
               synthetic={marketData.synthetic}
+              fundamentalsData={fundamentalsData}
             />
 
             {/* Two-column on desktop: left = chart/indicators, right = AI */}

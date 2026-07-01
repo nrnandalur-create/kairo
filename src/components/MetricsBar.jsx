@@ -1,4 +1,5 @@
 import DataTimestamp from './DataTimestamp'
+import PricePositionBadge from './PricePositionBadge'
 import { fmtCap, fmtPrice, fmtPct, fmtRatio } from '../utils/format'
 import { calcRSI, calcMACD, calcVWAP } from '../utils/indicators'
 
@@ -30,7 +31,7 @@ function pickPE(m) {
       ?? m?.peNormalizedAnnual
 }
 
-export default function MetricsBar({ ticker, quote, profile, metrics, candles, asOf, synthetic }) {
+export default function MetricsBar({ ticker, quote, profile, metrics, candles, asOf, synthetic, fundamentalsData }) {
   if (!quote) return null
 
   const up   = quote.dp > 0
@@ -100,6 +101,17 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
             <span className={`text-sm sm:text-base font-bold tabular-nums ${chgColor}`}>
               {arrow} {chgStr}
             </span>
+            {/* Price-position indicator — inline addition; existing price
+                span and change chip above stay exactly as they were. */}
+            <PricePositionBadge
+              currentPrice={quote.c}
+              hi52={hi52}
+              lo52={lo52}
+              ath={fundamentalsData?.priceRange?.ath}
+              atl={fundamentalsData?.priceRange?.atl}
+              athDate={fundamentalsData?.priceRange?.athDate}
+              atlDate={fundamentalsData?.priceRange?.atlDate}
+            />
           </div>
         </div>
       </div>
