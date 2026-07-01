@@ -38,14 +38,20 @@ function titleCase(str) {
   return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
+// Column template used by BOTH the header and every row so alignment
+// stays pixel-perfect on narrow screens (mobile scrolls this row group
+// horizontally as one block).
+const ROW_TEMPLATE = 'grid-cols-[minmax(160px,2fr)_64px_72px_72px_84px_64px]'
+
 function SkeletonRow() {
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
+    <div className={`grid ${ROW_TEMPLATE} items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0`}>
       <div className="h-3 w-full rounded-full shimmer" />
       <div className="h-5 w-10 rounded-full shimmer" />
-      <div className="h-3 w-10 rounded-full shimmer" />
-      <div className="h-3 w-12 rounded-full shimmer hidden sm:block" />
       <div className="h-3 w-12 rounded-full shimmer" />
+      <div className="h-3 w-12 rounded-full shimmer" />
+      <div className="h-3 w-14 rounded-full shimmer" />
+      <div className="h-3 w-10 rounded-full shimmer" />
     </div>
   )
 }
@@ -134,11 +140,13 @@ export default function InsiderTrades({ data, loading, ticker }) {
           {sentiment && <SentimentPill sentiment={sentiment} />}
 
           <div className="overflow-x-auto -mx-4 sm:-mx-5 px-4 sm:px-5">
-            <div className="min-w-[560px]">
-              {/* Column headers */}
-              <div className="grid grid-cols-[minmax(140px,1.4fr)_minmax(90px,1fr)_60px_70px_70px_80px_60px] items-center gap-3 pb-2 mb-0.5 border-b border-[var(--c-border)]">
+            <div className="min-w-[480px]">
+              {/* Column headers — Title omitted because Finnhub's insider-
+                  transactions endpoint doesn't include role/position for
+                  most tickers. Better to widen the Name column than to
+                  render a column of dashes. */}
+              <div className={`grid ${ROW_TEMPLATE} items-center gap-3 pb-2 mb-0.5 border-b border-[var(--c-border)]`}>
                 <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest">Insider</span>
-                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest">Title</span>
                 <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-center">Type</span>
                 <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-right">Shares</span>
                 <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-right">Price</span>
@@ -151,13 +159,10 @@ export default function InsiderTrades({ data, loading, ticker }) {
                 return (
                   <div
                     key={i}
-                    className="grid grid-cols-[minmax(140px,1.4fr)_minmax(90px,1fr)_60px_70px_70px_80px_60px] items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0"
+                    className={`grid ${ROW_TEMPLATE} items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0`}
                   >
                     <span className="text-xs text-[var(--c-text)] truncate" title={titleCase(t.name)}>
                       {titleCase(t.name)}
-                    </span>
-                    <span className="text-[11px] text-[var(--c-text-faint)] truncate" title={t.title ?? ''}>
-                      {t.title ?? '—'}
                     </span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-widest text-center ${
                       isBuy

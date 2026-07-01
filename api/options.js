@@ -31,106 +31,98 @@ function findBestMatch(contracts, targetStrike, targetExpiry) {
 }
 
 // ── Full options-chain path ─────────────────────────────────────────────────
-// Used by the OptionsScanner tab. Pulls a wider strike band and both puts
-// and calls, sorts by open interest, and flags contracts where today's
-// volume exceeds a threshold fraction of OI (classic "unusual activity"
-// heuristic used by most options-flow scanners).
+// Used by the OptionsScanner tab. One paginated call to Polygon's
+// /v3/snapshot/options/{ticker} endpoint returns the full chain with
+// live open interest, volume, greeks, and IV in a single response —
+// much cheaper (1 request) and more accurate (real OI) than the
+// previous approach of listing contracts then snapshotting them.
 async function fetchOptionsChain({ ticker, price, key, res }) {
   const fridays  = getNextFridays(6)
   const today    = fridays[0]
   const sixWeeks = fridays[5]
 
-  // Broader strike band than the covered-call path — capture both bearish
-  // puts under the price and bullish calls above it.
   const minStrike = price * 0.70
   const maxStrike = price * 1.30
 
-  const fetchSide = async (side) => {
-    const url = `https://api.polygon.io/v3/reference/options/contracts` +
-      `?underlying_ticker=${ticker}&contract_type=${side}` +
-      `&expiration_date.gte=${today}&expiration_date.lte=${sixWeeks}` +
-      `&strike_price.gte=${minStrike.toFixed(2)}&strike_price.lte=${maxStrike.toFixed(2)}` +
-      `&limit=250&apiKey=${key}`
-    try {
-      const r = await fetch(url)
-      if (!r.ok) return []
+  // Pull up to 250 snapshots at a time — Polygon caps free tier here.
+  // One call is enough for most tickers; if a very active ticker like
+  // SPY has more, we still get the ~250 most relevant.
+  const url = `https://api.polygon.io/v3/snapshot/options/${ticker}` +
+    `?expiration_date.gte=${today}&expiration_date.lte=${sixWeeks}` +
+    `&strike_price.gte=${minStrike.toFixed(2)}&strike_price.lte=${maxStrike.toFixed(2)}` +
+    `&limit=250&apiKey=${key}`
+
+  let snapshots = []
+  try {
+    const r = await fetch(url)
+    if (r.ok) {
       const d = await r.json()
-      return d.results ?? []
-    } catch {
-      return []
+      snapshots = d.results ?? []
     }
-  }
+  } catch {}
 
-  const [calls, puts] = await Promise.all([fetchSide('call'), fetchSide('put')])
-  const all = [...calls, ...puts]
-
-  if (!all.length) {
+  if (!snapshots.length) {
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     return res.json({ chain: [], underlyingPrice: price })
   }
 
-  // Snapshot each contract in bounded parallelism — Polygon's per-contract
-  // snapshot endpoint returns the interesting fields (OI, volume, IV, greeks,
-  // last quote). Cap at 24 contracts total (12 calls + 12 puts) so we stay
-  // well under Polygon free-tier rate limits.
-  const sampleContracts = [
-    ...calls
-      .sort((a, b) => Math.abs(a.strike_price - price) - Math.abs(b.strike_price - price))
-      .slice(0, 12),
-    ...puts
-      .sort((a, b) => Math.abs(a.strike_price - price) - Math.abs(b.strike_price - price))
-      .slice(0, 12),
-  ]
+  // Normalize each snapshot into our chain shape. Skip contracts with
+  // zero open interest AND zero volume — they're dead listings that
+  // add noise without insight.
+  const normalized = snapshots
+    .map(s => {
+      const d   = s.details ?? {}
+      const lq  = s.last_quote ?? {}
+      const day = s.day ?? {}
+      const gr  = s.greeks ?? {}
 
-  const snapshots = await Promise.allSettled(
-    sampleContracts.map(c =>
-      fetch(`https://api.polygon.io/v3/snapshot/options/${ticker}/${encodeURIComponent(c.ticker)}?apiKey=${key}`)
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null)
-    )
-  )
+      let premium = null
+      if (lq.bid != null && lq.ask != null && lq.ask > 0) {
+        premium = +(((lq.bid + lq.ask) / 2)).toFixed(2)
+      } else if (day.close != null && day.close > 0) {
+        premium = +day.close.toFixed(2)
+      }
 
-  const chain = sampleContracts.map((c, i) => {
-    const result = snapshots[i]
-    const snap = result.status === 'fulfilled' ? result.value?.results : null
-    const lq   = snap?.last_quote ?? {}
-    const day  = snap?.day ?? {}
-    const gr   = snap?.greeks ?? {}
+      const openInterest = s.open_interest ?? 0
+      const volume       = day.volume ?? 0
+      const volOiRatio   = openInterest > 0 ? volume / openInterest : 0
+      // Standard institutional heuristic for unusual activity.
+      const unusual = openInterest >= 50 && (
+        volOiRatio >= 0.6 ||
+        (volume >= 2000 && volOiRatio >= 0.3)
+      )
 
-    let premium = null
-    if (lq.bid != null && lq.ask != null && lq.ask > 0) {
-      premium = +(((lq.bid + lq.ask) / 2)).toFixed(2)
-    } else if (day.close != null) {
-      premium = +day.close.toFixed(2)
-    }
+      return {
+        type:         d.contract_type ?? null,
+        strike:       d.strike_price ?? null,
+        expiry:       d.expiration_date ?? null,
+        ticker:       d.ticker ?? null,
+        premium,
+        bid:          lq.bid ?? null,
+        ask:          lq.ask ?? null,
+        openInterest,
+        volume,
+        iv:           s.implied_volatility ?? gr.implied_volatility ?? null,
+        delta:        gr.delta ?? null,
+        volOiRatio:   +volOiRatio.toFixed(2),
+        unusual,
+      }
+    })
+    .filter(c => c.type && c.strike != null && (c.openInterest > 0 || c.volume > 0))
 
-    const openInterest = snap?.open_interest ?? 0
-    const volume       = day.volume ?? 0
-    // Unusual activity: volume > 60% of OI is a common institutional
-    // threshold. High absolute volume (>1000) also flags it in case
-    // OI hasn't updated for a fresh contract.
-    const volOiRatio = openInterest > 0 ? volume / openInterest : 0
-    const unusual = openInterest >= 50 && (volOiRatio >= 0.6 || (volume >= 2000 && volOiRatio >= 0.3))
+  // Return the most liquid 8 calls + 8 puts, each pool sorted by
+  // open interest descending — that's the shape traders actually
+  // look at (biggest bets first, both directions).
+  const calls = normalized.filter(c => c.type === 'call')
+    .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
+    .slice(0, 8)
+  const puts = normalized.filter(c => c.type === 'put')
+    .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
+    .slice(0, 8)
 
-    return {
-      type:         c.contract_type,       // 'call' | 'put'
-      strike:       c.strike_price,
-      expiry:       c.expiration_date,
-      ticker:       c.ticker,
-      premium,
-      bid:          lq.bid ?? null,
-      ask:          lq.ask ?? null,
-      openInterest,
-      volume,
-      iv:           snap?.implied_volatility ?? gr.implied_volatility ?? null,
-      delta:        gr.delta ?? null,
-      volOiRatio:   +volOiRatio.toFixed(2),
-      unusual,
-    }
-  })
-
-  // Sort by open interest so the most liquid contracts surface first.
-  chain.sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
+  // Interleave so the table alternates types, biggest-OI first.
+  const chain = [...calls, ...puts]
+    .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
 
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
   return res.json({ chain, underlyingPrice: price, ticker })
