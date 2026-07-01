@@ -265,6 +265,28 @@ body {
   }
 }
 
+/* ── Sticky header / StickyTickerBar hand-off ──────────────────────────────── */
+/* Both the app header (`position: sticky; top: 0`) and the StickyTickerBar
+   (`position: fixed; top: 0`) anchor to the same top edge. Without this
+   rule the taller header (~67px on mobile, ~57px desktop) pokes out below
+   the shorter sticky bar (~41px). StickyTickerBar toggles the data attr
+   below on scroll past ~280px; the header slides up out of view whenever
+   it does. Transform is layout-neutral so the MetricsBar below doesn't
+   shift. */
+html[data-scrolled-past-metrics="true"] header {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 280ms var(--ease-out),
+    opacity   200ms var(--ease-out);
+}
+html header {
+  transition:
+    transform 280ms var(--ease-out),
+    opacity   200ms var(--ease-out);
+}
+
 /* Light-mode card override — replaces the dark-mode gradient with a crisp
    white card + a layered ambient shadow so cards genuinely lift off the
    sage body. The .glass-card class's blur and var-driven alpha still

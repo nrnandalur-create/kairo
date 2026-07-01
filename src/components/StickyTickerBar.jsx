@@ -30,6 +30,17 @@ export default function StickyTickerBar({
     }
   }, [ticker, quote])
 
+  // Sync a global data attribute so the sticky header can hide itself when
+  // this rail is on screen — otherwise the rail sits on TOP of the header
+  // (both anchored top: 0) and ~26px of header pokes out below (mobile) or
+  // ~16px (desktop). Handled by a single transform rule in index.css.
+  useEffect(() => {
+    const root = document.documentElement
+    if (show) root.setAttribute('data-scrolled-past-metrics', 'true')
+    else root.removeAttribute('data-scrolled-past-metrics')
+    return () => root.removeAttribute('data-scrolled-past-metrics')
+  }, [show])
+
   // 70-bar sparkline from the last ~3 months of closes — pure SVG, no library.
   // Sized for the slim rail, deliberately understated.
   const sparklinePath = useMemo(() => {
