@@ -16,15 +16,32 @@ const ETF_NAME_RE = /(ETF|ETN|Trust|Fund|Index|SPDR|iShares|Vanguard|Invesco|Dir
 // NDX, RUT). Not exhaustive but covers the ones users are most likely to look up.
 const EU_SETTLED = new Set(['XSP', 'SPX', 'SPXW', 'NDX', 'RUT', 'VIX'])
 
-function isEuStyleTicker(ticker, profileName) {
+function isEuStyleTicker(ticker) {
   if (!ticker) return false
   if (EU_SETTLED.has(ticker.toUpperCase())) return true
   return false
 }
 
-function isEtfLike(ticker, profileName) {
-  if (!profileName) return false
-  return ETF_NAME_RE.test(profileName)
+// Known broad-based ETFs where Finnhub's /stock/profile2 endpoint returns
+// nothing (no name, no industry) so the regex heuristic can't fire. Hard-
+// coded because these are the ones users are far most likely to look up
+// and it's worth being right.
+const KNOWN_ETF_SYMBOLS = new Set([
+  'SPY', 'QQQ', 'VOO', 'IWM', 'DIA', 'VTI', 'ARKK', 'XLE', 'XLF', 'XLK',
+  'XLV', 'XLI', 'XLU', 'XLY', 'XLP', 'XLB', 'XLC', 'XLRE', 'TLT', 'HYG',
+  'LQD', 'GLD', 'SLV', 'UVXY', 'SQQQ', 'TQQQ', 'SOXL', 'SOXX',
+])
+
+function isEtfLike(ticker, profile) {
+  if (!ticker) return false
+  if (KNOWN_ETF_SYMBOLS.has(ticker.toUpperCase())) return true
+  const name = profile?.name ?? ''
+  if (name && ETF_NAME_RE.test(name)) return true
+  // Finnhub's profile2 endpoint returns an empty payload for most ETFs;
+  // when we have a live quote but no company name AND no industry it's a
+  // strong signal the underlying isn't a common stock.
+  if (profile && !profile.name && !profile.finnhubIndustry) return true
+  return false
 }
 
 function getNextFridays(n = 4) {
@@ -141,7 +158,7 @@ export default function CoveredCallScanner({ ticker, currentPrice, candles, prof
   const costBasis = position.costBasis
 
   const resistance = computeResistance(candles)
-  const isEtf      = isEtfLike(ticker, profile?.name)
+  const isEtf      = isEtfLike(ticker, profile)
   const isEuStyle  = isEuStyleTicker(ticker)
 
   const fridays = getNextFridays(4)
