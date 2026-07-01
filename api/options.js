@@ -30,6 +30,112 @@ function findBestMatch(contracts, targetStrike, targetExpiry) {
   }, null)?.contract ?? null
 }
 
+// ── Full options-chain path ─────────────────────────────────────────────────
+// Used by the OptionsScanner tab. Pulls a wider strike band and both puts
+// and calls, sorts by open interest, and flags contracts where today's
+// volume exceeds a threshold fraction of OI (classic "unusual activity"
+// heuristic used by most options-flow scanners).
+async function fetchOptionsChain({ ticker, price, key, res }) {
+  const fridays  = getNextFridays(6)
+  const today    = fridays[0]
+  const sixWeeks = fridays[5]
+
+  // Broader strike band than the covered-call path — capture both bearish
+  // puts under the price and bullish calls above it.
+  const minStrike = price * 0.70
+  const maxStrike = price * 1.30
+
+  const fetchSide = async (side) => {
+    const url = `https://api.polygon.io/v3/reference/options/contracts` +
+      `?underlying_ticker=${ticker}&contract_type=${side}` +
+      `&expiration_date.gte=${today}&expiration_date.lte=${sixWeeks}` +
+      `&strike_price.gte=${minStrike.toFixed(2)}&strike_price.lte=${maxStrike.toFixed(2)}` +
+      `&limit=250&apiKey=${key}`
+    try {
+      const r = await fetch(url)
+      if (!r.ok) return []
+      const d = await r.json()
+      return d.results ?? []
+    } catch {
+      return []
+    }
+  }
+
+  const [calls, puts] = await Promise.all([fetchSide('call'), fetchSide('put')])
+  const all = [...calls, ...puts]
+
+  if (!all.length) {
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+    return res.json({ chain: [], underlyingPrice: price })
+  }
+
+  // Snapshot each contract in bounded parallelism — Polygon's per-contract
+  // snapshot endpoint returns the interesting fields (OI, volume, IV, greeks,
+  // last quote). Cap at 24 contracts total (12 calls + 12 puts) so we stay
+  // well under Polygon free-tier rate limits.
+  const sampleContracts = [
+    ...calls
+      .sort((a, b) => Math.abs(a.strike_price - price) - Math.abs(b.strike_price - price))
+      .slice(0, 12),
+    ...puts
+      .sort((a, b) => Math.abs(a.strike_price - price) - Math.abs(b.strike_price - price))
+      .slice(0, 12),
+  ]
+
+  const snapshots = await Promise.allSettled(
+    sampleContracts.map(c =>
+      fetch(`https://api.polygon.io/v3/snapshot/options/${ticker}/${encodeURIComponent(c.ticker)}?apiKey=${key}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+    )
+  )
+
+  const chain = sampleContracts.map((c, i) => {
+    const result = snapshots[i]
+    const snap = result.status === 'fulfilled' ? result.value?.results : null
+    const lq   = snap?.last_quote ?? {}
+    const day  = snap?.day ?? {}
+    const gr   = snap?.greeks ?? {}
+
+    let premium = null
+    if (lq.bid != null && lq.ask != null && lq.ask > 0) {
+      premium = +(((lq.bid + lq.ask) / 2)).toFixed(2)
+    } else if (day.close != null) {
+      premium = +day.close.toFixed(2)
+    }
+
+    const openInterest = snap?.open_interest ?? 0
+    const volume       = day.volume ?? 0
+    // Unusual activity: volume > 60% of OI is a common institutional
+    // threshold. High absolute volume (>1000) also flags it in case
+    // OI hasn't updated for a fresh contract.
+    const volOiRatio = openInterest > 0 ? volume / openInterest : 0
+    const unusual = openInterest >= 50 && (volOiRatio >= 0.6 || (volume >= 2000 && volOiRatio >= 0.3))
+
+    return {
+      type:         c.contract_type,       // 'call' | 'put'
+      strike:       c.strike_price,
+      expiry:       c.expiration_date,
+      ticker:       c.ticker,
+      premium,
+      bid:          lq.bid ?? null,
+      ask:          lq.ask ?? null,
+      openInterest,
+      volume,
+      iv:           snap?.implied_volatility ?? gr.implied_volatility ?? null,
+      delta:        gr.delta ?? null,
+      volOiRatio:   +volOiRatio.toFixed(2),
+      unusual,
+    }
+  })
+
+  // Sort by open interest so the most liquid contracts surface first.
+  chain.sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
+
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+  return res.json({ chain, underlyingPrice: price, ticker })
+}
+
 export default async function handler(req, res) {
   if (!rateLimit(req, res)) return
   if (req.method !== 'GET') return res.status(405).end()
@@ -41,7 +147,16 @@ export default async function handler(req, res) {
   if (!price || price <= 0) return res.status(400).json({ error: 'Invalid price' })
 
   const key = process.env.POLYGON_API_KEY
-  if (!key) return res.status(200).json({ contracts: [] })
+  // Both modes gracefully return an empty payload when Polygon isn't
+  // configured — the callers show honest "options data unavailable"
+  // states rather than an error.
+  const mode = req.query.mode === 'chain' ? 'chain' : 'covered-call'
+  if (!key) {
+    if (mode === 'chain') return res.status(200).json({ chain: [], underlyingPrice: price })
+    return res.status(200).json({ contracts: [] })
+  }
+
+  if (mode === 'chain') return fetchOptionsChain({ ticker, price, key, res })
 
   const fridays    = getNextFridays(4)
   const today      = fridays[0] // first expiry works as >=today bound

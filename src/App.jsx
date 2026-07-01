@@ -28,7 +28,7 @@ import { fetchAnalysis } from './services/analyze'
 import { logVerdict, fetchPreviousVerdict } from './services/verdictHistory'
 import { calcRSI, calcMACD, calcBBPosition } from './utils/indicators'
 import { fetchFundamentals } from './services/fundamentals'
-import { getMockOptions, getMockNews } from './mockData'
+import { getMockNews } from './mockData'
 import Nav from './components/Nav'
 import OnboardingBanner from './components/OnboardingBanner'
 import WatchlistSentiment from './components/WatchlistSentiment'
@@ -777,9 +777,9 @@ export default function App() {
               </div>
               <div>
                 {bottomTab === 'news'          && <NewsFeed data={marketData.news} loading={loading.ai} asOf={marketData.fetchedAt} />}
-                {bottomTab === 'insider'       && <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai} />}
-                {bottomTab === 'options'       && <OptionsScanner data={getMockOptions(ticker, marketData.quote?.c)} />}
-                {bottomTab === 'covered-calls' && <CoveredCallScanner currentPrice={marketData.quote?.c} ticker={ticker} />}
+                {bottomTab === 'insider'       && <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai && !fundamentalsData} ticker={ticker} />}
+                {bottomTab === 'options'       && <OptionsScanner ticker={ticker} currentPrice={marketData.quote?.c} />}
+                {bottomTab === 'covered-calls' && <CoveredCallScanner ticker={ticker} currentPrice={marketData.quote?.c} candles={marketData.candles} profile={marketData.profile} />}
               </div>
             </div>
           </ErrorBoundary>

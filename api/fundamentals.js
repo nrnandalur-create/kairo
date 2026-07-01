@@ -126,14 +126,85 @@ export default async function handler(req, res) {
   }
 
   // ── Insider trades (Finnhub, optional) ────────────────────────────────────
+  // Shape: { transactions: [...], sentiment: {...} } — the sentiment block
+  // is computed server-side so the UI never has to loop 90 days of trades
+  // on the client. ETFs and index funds have no reporting insiders, so
+  // `transactions` will be an empty array — the UI shows an empty state.
   let insider = null
   if (insRes.status === 'fulfilled' && insRes.value?.ok) {
     try {
       const d = await insRes.value.json()
-      insider = (d.data ?? [])
-        .filter(t => t.transactionCode === 'P' || t.transactionCode === 'S')
-        .slice(0, 10)
-    } catch {}
+      // Keep only bona-fide buys (P = Purchase) and sells (S = Sale).
+      // Skip grants/awards/exercises/gifts which distort sentiment.
+      const all = (d.data ?? []).filter(
+        t => t.transactionCode === 'P' || t.transactionCode === 'S'
+      )
+      // Newest first — Finnhub returns arbitrary order.
+      all.sort((a, b) => {
+        const da = a.transactionDate || a.filingDate || ''
+        const db = b.transactionDate || b.filingDate || ''
+        return db.localeCompare(da)
+      })
+
+      // 90-day sentiment window
+      const cutoffMs = Date.now() - 90 * 86_400_000
+      let buyShares = 0, sellShares = 0, buyValue = 0, sellValue = 0
+      let buyerCount = 0, sellerCount = 0
+
+      for (const t of all) {
+        const dateStr = t.transactionDate || t.filingDate
+        if (!dateStr) continue
+        const dt = new Date(dateStr).getTime()
+        if (Number.isNaN(dt) || dt < cutoffMs) continue
+
+        const shares = Math.abs(Number(t.change) || 0)
+        const price  = Number(t.transactionPrice) || 0
+        const value  = shares * price
+
+        if (t.transactionCode === 'P') {
+          buyShares += shares
+          buyValue  += value
+          buyerCount++
+        } else if (t.transactionCode === 'S') {
+          sellShares += shares
+          sellValue  += value
+          sellerCount++
+        }
+      }
+
+      const netValue = buyValue - sellValue
+      const totalActivity = buyValue + sellValue
+      const netBias = totalActivity === 0
+        ? 'flat'
+        : netValue > 0 ? 'buyer' : netValue < 0 ? 'seller' : 'flat'
+
+      insider = {
+        transactions: all.slice(0, 25).map(t => ({
+          name:             t.name             ?? null,
+          // Finnhub's position field is inconsistently named across endpoints.
+          // Try both then leave null so the UI can gracefully omit it.
+          title:            t.position ?? t.insiderTitle ?? null,
+          transactionCode:  t.transactionCode,
+          transactionType:  t.transactionCode === 'P' ? 'Buy' : 'Sell',
+          shares:           Math.abs(Number(t.change) || 0),
+          transactionPrice: Number(t.transactionPrice) || null,
+          value:            Math.abs(Number(t.change) || 0) * (Number(t.transactionPrice) || 0),
+          transactionDate:  t.transactionDate || t.filingDate,
+        })),
+        sentiment: {
+          windowDays:  90,
+          netBias,             // 'buyer' | 'seller' | 'flat'
+          netValue,            // signed USD
+          buyValue,
+          sellValue,
+          buyShares,
+          sellShares,
+          buyerCount,
+          sellerCount,
+          totalTransactions: buyerCount + sellerCount,
+        },
+      }
+    } catch { /* keep insider null so UI shows empty state */ }
   }
 
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200')

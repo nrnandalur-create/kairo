@@ -1,23 +1,35 @@
 function fmtShares(n) {
-  if (n == null) return '—'
+  if (n == null || !Number.isFinite(n)) return '—'
   const abs = Math.abs(n)
   if (abs >= 1_000_000) return `${(abs / 1_000_000).toFixed(1)}M`
   if (abs >= 1_000)     return `${Math.round(abs / 1_000)}K`
   return abs.toLocaleString()
 }
 
-function fmtValue(change, price) {
-  if (!change || !price) return null
-  const val = Math.abs(change) * price
-  if (val >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`
-  if (val >= 1_000_000)     return `$${(val / 1_000_000).toFixed(1)}M`
-  if (val >= 1_000)         return `$${Math.round(val / 1_000)}K`
-  return `$${Math.round(val)}`
+function fmtValue(v) {
+  if (!v || !Number.isFinite(v)) return '—'
+  const abs = Math.abs(v)
+  if (abs >= 1_000_000_000) return `$${(abs / 1_000_000_000).toFixed(2)}B`
+  if (abs >= 1_000_000)     return `$${(abs / 1_000_000).toFixed(1)}M`
+  if (abs >= 1_000)         return `$${Math.round(abs / 1_000)}K`
+  return `$${Math.round(abs)}`
+}
+
+function fmtSignedValue(v) {
+  if (!Number.isFinite(v) || v === 0) return '$0'
+  const sign = v > 0 ? '+' : '−'
+  return `${sign}${fmtValue(v).replace('$', '$')}`
+}
+
+function fmtPrice(n) {
+  if (n == null || !Number.isFinite(n)) return '—'
+  return `$${Number(n).toFixed(2)}`
 }
 
 function fmtDate(s) {
   if (!s) return '—'
   const [y, m, d] = s.split('-').map(Number)
+  if (!y || !m || !d) return '—'
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
@@ -28,67 +40,150 @@ function titleCase(str) {
 
 function SkeletonRow() {
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
-      <div className="h-3 flex-1 rounded-full shimmer" />
-      <div className="h-5 w-10 rounded-full shimmer shrink-0" />
-      <div className="h-3 w-10 rounded-full shimmer shrink-0" />
-      <div className="h-3 w-12 rounded-full shimmer shrink-0 hidden sm:block" />
-      <div className="h-3 w-12 rounded-full shimmer shrink-0" />
+    <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
+      <div className="h-3 w-full rounded-full shimmer" />
+      <div className="h-5 w-10 rounded-full shimmer" />
+      <div className="h-3 w-10 rounded-full shimmer" />
+      <div className="h-3 w-12 rounded-full shimmer hidden sm:block" />
+      <div className="h-3 w-12 rounded-full shimmer" />
     </div>
   )
 }
 
-export default function InsiderTrades({ data, loading }) {
-  if (!loading && (!data || data.length === 0)) return null
+function SentimentPill({ sentiment }) {
+  if (!sentiment || sentiment.totalTransactions === 0) return null
 
-  const rows = data?.slice(0, 5) ?? []
+  const isBuyer  = sentiment.netBias === 'buyer'
+  const isSeller = sentiment.netBias === 'seller'
+  const color    = isBuyer ? '#22B585' : isSeller ? '#ef5454' : '#e3a234'
+  const label    = isBuyer ? 'Net Buyer' : isSeller ? 'Net Seller' : 'Balanced'
+  const signed   = fmtSignedValue(sentiment.netValue)
 
   return (
-    <div className="w-full glass-card rounded-2xl p-5 flex flex-col gap-4 animate-enter">
-      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Insider Transactions</span>
+    <div
+      className="flex flex-col gap-2 p-3 rounded-xl border"
+      style={{ borderColor: `${color}33`, backgroundColor: `${color}0f` }}
+    >
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+            {label}
+          </span>
+          <span className="text-[10px] text-[var(--c-text-faint)]">last {sentiment.windowDays}d</span>
+        </div>
+        <span className="text-base font-black tabular-nums" style={{ color }}>
+          {signed}
+        </span>
+      </div>
+      <div className="flex items-center gap-3 text-[10px] text-[var(--c-text-faint)] tabular-nums">
+        <span>
+          <span className="text-[#22B585]">▲</span> {sentiment.buyerCount} buy · {fmtValue(sentiment.buyValue)}
+        </span>
+        <span className="text-[var(--c-text-fainter)]">·</span>
+        <span>
+          <span className="text-[#ef5454]">▼</span> {sentiment.sellerCount} sell · {fmtValue(sentiment.sellValue)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function EmptyState({ ticker }) {
+  return (
+    <div className="border border-[var(--c-border)] bg-[var(--c-input-bg)] rounded-xl p-6 flex flex-col items-center gap-2 text-center">
+      <span className="text-[var(--c-text-fainter)] text-lg leading-none">◇</span>
+      <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
+        No insider transactions
+      </span>
+      <p className="text-[11px] text-[var(--c-text-fainter)] max-w-[280px] leading-relaxed">
+        No SEC Form 4 filings reported for {ticker ?? 'this ticker'} in the last quarter.
+        ETFs, index funds, and some ADRs don't have reporting insiders.
+      </p>
+    </div>
+  )
+}
+
+export default function InsiderTrades({ data, loading, ticker }) {
+  // Accept both the new shape ({ transactions, sentiment }) and the old
+  // legacy array shape so cached responses from the SWR window don't crash.
+  const transactions = Array.isArray(data) ? data : data?.transactions ?? []
+  const sentiment    = Array.isArray(data) ? null : data?.sentiment
+
+  return (
+    <div className="w-full glass-card rounded-2xl p-4 sm:p-5 flex flex-col gap-4 animate-enter">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
+          Insider Transactions
+          {ticker && <span className="text-[var(--c-text-fainter)] font-normal ml-1.5">· {ticker}</span>}
+        </span>
+        {transactions.length > 0 && (
+          <span className="text-[10px] text-[var(--c-text-faint)]">
+            Showing top {Math.min(transactions.length, 10)} of {transactions.length}
+          </span>
+        )}
+      </div>
 
       {loading ? (
         <div className="flex flex-col">
           {[1, 2, 3, 4, 5].map(i => <SkeletonRow key={i} />)}
         </div>
+      ) : transactions.length === 0 ? (
+        <EmptyState ticker={ticker} />
       ) : (
-        <div className="flex flex-col">
-          {/* Column headers */}
-          <div className="flex items-center gap-3 pb-2 mb-0.5 border-b border-[var(--c-border)]">
-            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest flex-1">Insider</span>
-            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-10 text-center shrink-0">Type</span>
-            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-12 text-right shrink-0">Shares</span>
-            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-14 text-right shrink-0 hidden sm:block">Value</span>
-            <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest w-14 text-right shrink-0">Date</span>
-          </div>
+        <>
+          {sentiment && <SentimentPill sentiment={sentiment} />}
 
-          {rows.map((t, i) => {
-            const isBuy  = t.transactionCode === 'P'
-            const value  = fmtValue(t.change, t.transactionPrice)
-            const date   = t.transactionDate || t.filingDate
-            return (
-              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0">
-                <span className="text-xs text-[var(--c-text)] flex-1 min-w-0 truncate">{titleCase(t.name)}</span>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-widest shrink-0 w-10 text-center ${
-                  isBuy
-                    ? 'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25'
-                    : 'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25'
-                }`}>
-                  {isBuy ? 'Buy' : 'Sell'}
-                </span>
-                <span className="text-xs tabular-nums text-[var(--c-text)] w-12 text-right shrink-0">
-                  {fmtShares(t.change)}
-                </span>
-                <span className="text-xs tabular-nums text-[var(--c-text-faint)] w-14 text-right shrink-0 hidden sm:block">
-                  {value ?? '—'}
-                </span>
-                <span className="text-xs tabular-nums text-[var(--c-text-faint)] w-14 text-right shrink-0">
-                  {fmtDate(date)}
-                </span>
+          <div className="overflow-x-auto -mx-4 sm:-mx-5 px-4 sm:px-5">
+            <div className="min-w-[560px]">
+              {/* Column headers */}
+              <div className="grid grid-cols-[minmax(140px,1.4fr)_minmax(90px,1fr)_60px_70px_70px_80px_60px] items-center gap-3 pb-2 mb-0.5 border-b border-[var(--c-border)]">
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest">Insider</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest">Title</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-center">Type</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-right">Shares</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-right">Price</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-right">Value</span>
+                <span className="text-[9px] font-bold text-[var(--c-text-fainter)] uppercase tracking-widest text-right">Date</span>
               </div>
-            )
-          })}
-        </div>
+
+              {transactions.slice(0, 10).map((t, i) => {
+                const isBuy = t.transactionType === 'Buy' || t.transactionCode === 'P'
+                return (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[minmax(140px,1.4fr)_minmax(90px,1fr)_60px_70px_70px_80px_60px] items-center gap-3 py-2.5 border-b border-[var(--c-border)] last:border-0"
+                  >
+                    <span className="text-xs text-[var(--c-text)] truncate" title={titleCase(t.name)}>
+                      {titleCase(t.name)}
+                    </span>
+                    <span className="text-[11px] text-[var(--c-text-faint)] truncate" title={t.title ?? ''}>
+                      {t.title ?? '—'}
+                    </span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-widest text-center ${
+                      isBuy
+                        ? 'bg-[#22B585]/10 text-[#22B585] border-[#22B585]/25'
+                        : 'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25'
+                    }`}>
+                      {isBuy ? 'Buy' : 'Sell'}
+                    </span>
+                    <span className="text-xs tabular-nums text-[var(--c-text)] text-right">
+                      {fmtShares(t.shares ?? Math.abs(t.change))}
+                    </span>
+                    <span className="text-xs tabular-nums text-[var(--c-text-faint)] text-right">
+                      {fmtPrice(t.transactionPrice)}
+                    </span>
+                    <span className="text-xs tabular-nums font-semibold text-[var(--c-text)] text-right">
+                      {fmtValue(t.value ?? (Math.abs(t.change) * t.transactionPrice))}
+                    </span>
+                    <span className="text-xs tabular-nums text-[var(--c-text-faint)] text-right">
+                      {fmtDate(t.transactionDate ?? t.filingDate)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
