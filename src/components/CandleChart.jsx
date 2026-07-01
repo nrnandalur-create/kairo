@@ -179,7 +179,8 @@ export default function CandleChart({ candles, synthetic }) {
           {/* BB toggle */}
           <button
             onClick={() => setShowBands(v => !v)}
-            className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer active:scale-[0.94] ${
+            disabled={!candles?.length}
+            className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer active:scale-[0.94] disabled:opacity-40 disabled:cursor-not-allowed ${
               showBands
                 ? 'bg-[#22B585] text-white border-[#22B585] shadow-[0_0_8px_rgba(29,158,117,0.25)]'
                 : 'bg-[var(--c-input-bg)] text-[var(--c-text-faint)] border-[var(--c-border)] hover:border-[#22B585]/50 hover:text-[#22B585]'
@@ -189,7 +190,25 @@ export default function CandleChart({ candles, synthetic }) {
           </button>
         </div>
       </div>
-      <div ref={containerRef} className="w-full" />
+      {/* If no candles at all (every source failed and synthetic fallback was
+          also blocked), show a specific empty state instead of leaving a
+          zero-height dead zone under the header row. */}
+      {!candles?.length ? (
+        <div className="px-5 pb-5">
+          <div className="border border-[#e3a234]/30 bg-[#e3a234]/8 rounded-xl p-4 flex flex-col gap-2 h-[380px] items-center justify-center text-center">
+            <span className="text-[#e3a234] text-2xl leading-none">⚠</span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#e3a234]">
+              Insufficient candle data
+            </span>
+            <p className="text-[13px] leading-relaxed text-[var(--c-text)]/80 max-w-xs">
+              We couldn't fetch daily OHLC for this ticker from any source right now.
+              Try refreshing in a moment, or search a different symbol.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div ref={containerRef} className="w-full" />
+      )}
     </div>
   )
 }

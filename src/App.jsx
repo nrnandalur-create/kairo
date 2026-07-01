@@ -88,6 +88,15 @@ const LOADING_NONE   = { market: false, ai: false }
 const LOADING_MARKET = { market: true,  ai: false }
 const LOADING_AI     = { market: false, ai: true  }
 
+// Same-ticker result cache. When the user re-searches a symbol they've just
+// viewed we serve directly from this map instead of round-tripping every
+// API again — matches the user's mental model ("I just looked at AAPL,
+// clicking AAPL again should be instant"). Two windows:
+//   MARKET_TTL_MS  — quote/candles/news; short because live price moves
+//   ANALYSIS_TTL_MS — Groq verdict; longer because it's expensive to redo
+const MARKET_TTL_MS   = 30_000    // 30 s
+const ANALYSIS_TTL_MS = 5 * 60_000 // 5 min
+
 export default function App() {
   const [ticker, setTicker]     = useState(null)
   const [loading, setLoading]   = useState(LOADING_NONE)
@@ -98,6 +107,14 @@ export default function App() {
   const [bottomTab, setBottomTab] = useState('news')  // tabbed bottom shelf: news | insider | options | covered-calls
   const [fundamentalsData, setFundamentalsData] = useState(null)
   const [error, setError]       = useState(null)
+
+  // Abort controller for the current handleSearch. Rapid ticker switches
+  // abort the previous one so its resolved fetches don't call setState with
+  // stale data. All three service fetches accept the same signal.
+  const searchAbortRef = useRef(null)
+  // In-memory cache — see MARKET_TTL_MS / ANALYSIS_TTL_MS at module scope.
+  // Structure: { [ticker]: { market, ai, fundamentals, marketAt, aiAt, fundamentalsAt } }
+  const cacheRef = useRef(new Map())
   const { user }       = useAuth()
   const { watchlist: watchlistRows, addTicker, removeTicker, updateNote, setAlert: setWatchlistAlert } = useWatchlist(user?.id)
   const [recentTickers, setRecentTickers] = useState(() => {
@@ -121,6 +138,18 @@ export default function App() {
   const isLoading = loading.market || loading.ai
 
   const handleSearch = async (sym) => {
+    // Abort any in-flight previous search so its late setState calls can't
+    // overwrite the state we're about to set for the new ticker.
+    if (searchAbortRef.current) searchAbortRef.current.abort('ticker:switched')
+    const controller = new AbortController()
+    searchAbortRef.current = controller
+    const { signal } = controller
+
+    // Guard state-setters against stale writes — the AbortController triggers
+    // the underlying fetch to reject with AbortError, but there's still a
+    // microtask window between abort and the promise settling.
+    const isCurrent = () => searchAbortRef.current === controller && !signal.aborted
+
     setTicker(sym)
     setError(null)
     setAiData(null)
@@ -129,10 +158,39 @@ export default function App() {
     setMarketData(null)
     setLoading(LOADING_MARKET)
 
+    // ── Serve fresh cache hits without any network round-trip ─────────────
+    const cached = cacheRef.current.get(sym)
+    const now    = Date.now()
+    if (cached?.market && (now - cached.marketAt) < MARKET_TTL_MS) {
+      setMarketData(cached.market)
+      if (cached.ai && (now - cached.aiAt) < ANALYSIS_TTL_MS) {
+        setAiData(cached.ai)
+        setFundamentalsData(cached.fundamentals ?? null)
+        setLoading(LOADING_NONE)
+        // Recently viewed — still update ordering
+        setRecentTickers(prev => {
+          const next = [sym, ...prev.filter(t => t !== sym)].slice(0, 5)
+          localStorage.setItem('kairo_recent', JSON.stringify(next))
+          return next
+        })
+        return
+      }
+      // Have market cache but no fresh AI — skip the market refetch and
+      // continue straight to the AI + fundamentals block.
+    }
+
     try {
-      const { quote, profile, metrics, candles, synthetic, syntheticReason, news } = await fetchMarket(sym)
+      let marketPayload
+      if (cached?.market && (now - cached.marketAt) < MARKET_TTL_MS) {
+        marketPayload = cached.market
+      } else {
+        marketPayload = await fetchMarket(sym, { signal })
+        if (!isCurrent()) return
+      }
+      const { quote, profile, metrics, candles, synthetic, syntheticReason, news } = marketPayload
 
       if (!quote || quote.c == null) {
+        if (!isCurrent()) return
         setError(`No data found for "${sym}". Check the ticker symbol and try again.`)
         setLoading(LOADING_NONE)
         return
@@ -145,18 +203,39 @@ export default function App() {
         return next
       })
 
-      setMarketData({ quote, profile, metrics, candles, synthetic, syntheticReason, news })
+      setMarketData(marketPayload)
+      // Refresh the cache entry with the market payload we just used.
+      cacheRef.current.set(sym, {
+        ...(cacheRef.current.get(sym) ?? {}),
+        market:   marketPayload,
+        marketAt: Date.now(),
+      })
       setLoading(LOADING_AI)
 
       let analysisResult = null
       setAiError(null)
       await Promise.allSettled([
-        fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic })
-          .then(data => { analysisResult = data; setAiData(data) })
-          .catch(err => { setAiError(err?.message ?? 'Analysis request failed') }),
-        fetchFundamentals(sym)
-          .then(setFundamentalsData)
-          .catch(() => {}),
+        fetchAnalysis({ ticker: sym, quote, profile, metrics, candles, synthetic }, { signal })
+          .then(data => {
+            if (!isCurrent()) return
+            analysisResult = data
+            setAiData(data)
+            const prev = cacheRef.current.get(sym) ?? {}
+            cacheRef.current.set(sym, { ...prev, ai: data, aiAt: Date.now() })
+          })
+          .catch(err => {
+            // Silent on user-initiated aborts; visible on real failures.
+            if (err?.name === 'AbortError' || !isCurrent()) return
+            setAiError(err?.message ?? 'Analysis request failed')
+          }),
+        fetchFundamentals(sym, { signal })
+          .then(data => {
+            if (!isCurrent()) return
+            setFundamentalsData(data)
+            const prev = cacheRef.current.get(sym) ?? {}
+            cacheRef.current.set(sym, { ...prev, fundamentals: data, fundamentalsAt: Date.now() })
+          })
+          .catch(() => { /* fundamentals is best-effort; UI has its own empty states */ }),
       ])
 
       // Log signal to Supabase and trigger email if it changed (fire-and-forget)
@@ -196,8 +275,11 @@ export default function App() {
         setPreviousVerdict(null)
       }
 
-      setLoading(LOADING_NONE)
+      if (isCurrent()) setLoading(LOADING_NONE)
     } catch (err) {
+      // Swallow aborts silently — the user already navigated to a new ticker,
+      // showing a "cancelled" error for their previous search would be confusing.
+      if (err?.name === 'AbortError' || !isCurrent()) return
       const msg = err.message ?? ''
       // The server already sends friendly per-status messages — surface them
       // verbatim unless we recognize a specific class of failure we can phrase
@@ -278,13 +360,24 @@ export default function App() {
 
   // Background refresh — re-fetch market data only (not AI / fundamentals).
   // Interval is configurable via Settings. Skips when the tab is hidden
-  // or the market is closed.
+  // or the market is closed. Captures the ticker at call time and drops
+  // the response if the user has since switched — otherwise a slow refresh
+  // could clobber the new ticker's freshly-fetched quote.
   const refreshMarketOnly = async () => {
-    if (!ticker) return
+    const t = ticker
+    if (!t) return
     try {
-      const { quote, profile, metrics, candles, synthetic, syntheticReason, news } = await fetchMarket(ticker)
-      if (!quote || quote.c == null) return
-      setMarketData({ quote, profile, metrics, candles, synthetic, syntheticReason, news })
+      const data = await fetchMarket(t)
+      if (!data.quote || data.quote.c == null) return
+      // Bail if ticker changed while we were awaiting.
+      if (t !== ticker) return
+      setMarketData(data)
+      // Warm the cache so a re-search of `t` inside the TTL is free.
+      cacheRef.current.set(t, {
+        ...(cacheRef.current.get(t) ?? {}),
+        market:   data,
+        marketAt: Date.now(),
+      })
     } catch {
       // Silent — the existing DataTimestamp will turn amber on its own
       // once data crosses the stale threshold.

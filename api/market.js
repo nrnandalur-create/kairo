@@ -443,7 +443,12 @@ export default async function handler(req, res) {
     finnhubErr = err
   }
 
-  if (finnhubData?.quote?.c != null) {
+  // Finnhub returns { c: 0, d: null, dp: null, ... } for unknown tickers —
+  // NOT an error, just zero-filled placeholders. Without this positive-price
+  // check, "ZZZZ" and other junk symbols slipped through as valid quotes
+  // with a $0.00 hero price + SIMULATED indicators derived from synthetic
+  // candles. Require a positive current price before we accept the payload.
+  if (finnhubData?.quote?.c > 0) {
     return res.json({ ...finnhubData, source: 'finnhub' })
   }
 
