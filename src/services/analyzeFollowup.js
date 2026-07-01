@@ -10,10 +10,12 @@
 // Resolves to the full assembled answer (also passed back) when the stream
 // completes. Throws on transport / server errors.
 export async function fetchAnalyzeFollowupStream({ ticker, context, history, question, onChunk, signal }) {
-  const res = await fetch('/api/analyze-followup', {
+  // Consolidated into /api/analyze under Vercel's Hobby 12-function cap.
+  // The `type: 'followup'` flag switches the handler into streaming mode.
+  const res = await fetch('/api/analyze', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ ticker, context, history, question }),
+    body:    JSON.stringify({ type: 'followup', ticker, context, history, question }),
     signal,
   })
 

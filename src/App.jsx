@@ -62,6 +62,13 @@ const ReplayView      = lazy(() => import('./components/ReplayView'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
+// ── Billing / feature gating ────────────────────────────────────────────────
+import UpgradeOverlay from './components/UpgradeOverlay'
+import ProBadge from './components/ProBadge'
+import { useSubscription } from './hooks/useSubscription'
+import { useSearchQuota } from './hooks/useSearchQuota'
+const PricingPage        = lazy(() => import('./components/PricingPage'))
+const AccountBillingPage = lazy(() => import('./components/AccountBillingPage'))
 
 function BookmarkButton({ saved, onToggle }) {
   return (
@@ -120,6 +127,24 @@ export default function App() {
   // Structure: { [ticker]: { market, ai, fundamentals, marketAt, aiAt, fundamentalsAt } }
   const cacheRef = useRef(new Map())
   const { user }       = useAuth()
+  // Subscription entitlements. `isPro` gates every locked feature; the
+  // permanent developer override lives inside the hook (see file for the
+  // canonical explanation).
+  const { isPro } = useSubscription()
+  const quota     = useSearchQuota({ isPro })
+
+  // Register a verdict reveal exactly once per ticker+day when the
+  // Recommendation actually has data. Keyed by `${date}::${ticker}` so
+  // re-searching the same ticker inside the day doesn't burn another slot.
+  const revealedRef = useRef(new Set())
+  useEffect(() => {
+    if (isPro || !aiData?.verdict || !ticker) return
+    const key = `${quota.date}::${ticker}`
+    if (revealedRef.current.has(key)) return
+    revealedRef.current.add(key)
+    quota.registerVerdictReveal()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiData?.verdict, ticker, isPro, quota.date])
   const { watchlist: watchlistRows, addTicker, removeTicker, updateNote, setAlert: setWatchlistAlert } = useWatchlist(user?.id)
   const [recentTickers, setRecentTickers] = useState(() => {
     try { return JSON.parse(localStorage.getItem('kairo_recent') ?? '[]') }
@@ -142,6 +167,15 @@ export default function App() {
   const isLoading = loading.market || loading.ai
 
   const handleSearch = async (sym) => {
+    // ── Free-tier daily search quota ────────────────────────────────────
+    // Registering the (deduped) symbol first so re-searching an already-
+    // viewed ticker inside the day doesn't count twice against the limit.
+    const reg = quota.registerSearch(sym)
+    if (!reg.ok && !isPro) {
+      setError(`You've hit the free-tier limit of ${quota.limits.search} unique ticker searches today. Upgrade to Kairo Pro for unlimited searches.`)
+      return
+    }
+
     // Abort any in-flight previous search so its late setState calls can't
     // overwrite the state we're about to set for the new ticker.
     if (searchAbortRef.current) searchAbortRef.current.abort('ticker:switched')
@@ -489,6 +523,28 @@ export default function App() {
     : !hasData && !isLoading ? 'home'
     : null
 
+  // ── Billing routes ────────────────────────────────────────────────────────
+  // No react-router in this app — do our own path-based switch. Kept as a
+  // simple early-return so PricingPage / AccountBillingPage render as
+  // full-page views without the ticker chrome. When Stripe redirects back
+  // via /account/billing?checkout=success, useSubscription refreshes and
+  // the page shows Active immediately.
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/'
+  if (pathname.startsWith('/pricing')) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[var(--c-bg)]" />}>
+        <PricingPage />
+      </Suspense>
+    )
+  }
+  if (pathname.startsWith('/account/billing')) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[var(--c-bg)]" />}>
+        <AccountBillingPage />
+      </Suspense>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-text)] flex flex-col lg:pl-[60px] pb-16 lg:pb-9">
 
@@ -577,6 +633,17 @@ export default function App() {
                   <TickerSearch onSearch={handleSearch} loading={isLoading} />
                 </div>
               </>
+            )}
+            {isPro && <ProBadge />}
+            {!isPro && user && (
+              <button
+                type="button"
+                onClick={() => window.location.assign('/pricing')}
+                title="Upgrade to Kairo Pro"
+                className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md bg-[#22B585] hover:bg-[#2BC093] text-white transition-colors cursor-pointer"
+              >
+                Go Pro
+              </button>
             )}
             <UserMenu />
           </div>
@@ -761,22 +828,58 @@ export default function App() {
                     currentPrice={marketData.quote?.c}
                   />
                 )}
-                <Recommendation
-                  data={aiData}
-                  loading={loading.ai}
-                  error={aiError}
-                  asOf={aiData?.fetchedAt}
-                  ticker={ticker}
-                  onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
-                />
-                <AIAnalysis
-                  data={analysisData}
-                  loading={loading.ai}
-                  error={analysisError}
-                  asOf={analysisData?.fetchedAt}
-                  verdict={aiData?.verdict}
-                  confidence={aiData?.confidence}
-                />
+                {/* Free users can reveal ONE AI Recommendation per day.
+                    After that, the panel renders inside an UpgradeOverlay. */}
+                {isPro || quota.canRevealVerdict ? (
+                  <Recommendation
+                    data={aiData}
+                    loading={loading.ai}
+                    error={aiError}
+                    asOf={aiData?.fetchedAt}
+                    ticker={ticker}
+                    onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
+                  />
+                ) : (
+                  <UpgradeOverlay
+                    title="More AI Recommendations"
+                    subtitle={`You've used your ${quota.limits.verdict} free verdict today. Upgrade for unlimited BUY/SELL/HOLD calls with entry + stop reasoning.`}
+                  >
+                    <Recommendation
+                      data={aiData}
+                      loading={loading.ai}
+                      error={aiError}
+                      asOf={aiData?.fetchedAt}
+                      ticker={ticker}
+                      onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
+                    />
+                  </UpgradeOverlay>
+                )}
+                {/* AI Analysis is Pro-gated. Free users see the panel
+                    blurred with an upgrade CTA on top. */}
+                {isPro ? (
+                  <AIAnalysis
+                    data={analysisData}
+                    loading={loading.ai}
+                    error={analysisError}
+                    asOf={analysisData?.fetchedAt}
+                    verdict={aiData?.verdict}
+                    confidence={aiData?.confidence}
+                  />
+                ) : (
+                  <UpgradeOverlay
+                    title="AI Analysis — full technical workup"
+                    subtitle="Get the per-indicator breakdown, agreement/contradiction confluence, and range + fundamentals context. Pro only."
+                  >
+                    <AIAnalysis
+                      data={analysisData}
+                      loading={loading.ai}
+                      error={analysisError}
+                      asOf={analysisData?.fetchedAt}
+                      verdict={aiData?.verdict}
+                      confidence={aiData?.confidence}
+                    />
+                  </UpgradeOverlay>
+                )}
                 {ticker && (
                   <MyPosition
                     ticker={ticker}
@@ -828,10 +931,38 @@ export default function App() {
                 })}
               </div>
               <div>
-                {bottomTab === 'news'          && <NewsFeed data={marketData.news} loading={loading.ai} asOf={marketData.fetchedAt} />}
-                {bottomTab === 'insider'       && <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai && !fundamentalsData} ticker={ticker} />}
-                {bottomTab === 'options'       && <OptionsScanner ticker={ticker} currentPrice={marketData.quote?.c} />}
-                {bottomTab === 'covered-calls' && <CoveredCallScanner ticker={ticker} currentPrice={marketData.quote?.c} candles={marketData.candles} profile={marketData.profile} />}
+                {/* News stays free — the other three tabs are Pro-gated. */}
+                {bottomTab === 'news' && <NewsFeed data={marketData.news} loading={loading.ai} asOf={marketData.fetchedAt} />}
+                {bottomTab === 'insider' && (
+                  isPro
+                    ? <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai && !fundamentalsData} ticker={ticker} />
+                    : <UpgradeOverlay
+                        title="Insider transactions + sentiment"
+                        subtitle="See every Form 4 filing for the ticker, plus a 90-day net-buy vs net-sell dollar sentiment. Pro only."
+                      >
+                        <InsiderTrades data={fundamentalsData?.insider} loading={loading.ai && !fundamentalsData} ticker={ticker} />
+                      </UpgradeOverlay>
+                )}
+                {bottomTab === 'options' && (
+                  isPro
+                    ? <OptionsScanner ticker={ticker} currentPrice={marketData.quote?.c} />
+                    : <UpgradeOverlay
+                        title="Options chain — calls + puts"
+                        subtitle="Live strikes, expiries, open interest, and IV for every ticker. Unusual-activity flags included. Pro only."
+                      >
+                        <OptionsScanner ticker={ticker} currentPrice={marketData.quote?.c} />
+                      </UpgradeOverlay>
+                )}
+                {bottomTab === 'covered-calls' && (
+                  isPro
+                    ? <CoveredCallScanner ticker={ticker} currentPrice={marketData.quote?.c} candles={marketData.candles} profile={marketData.profile} />
+                    : <UpgradeOverlay
+                        title="Covered Call scanner"
+                        subtitle="Model your shares + cost basis against real strikes, breakevens, and resistance levels. Pro only."
+                      >
+                        <CoveredCallScanner ticker={ticker} currentPrice={marketData.quote?.c} candles={marketData.candles} profile={marketData.profile} />
+                      </UpgradeOverlay>
+                )}
               </div>
             </div>
           </ErrorBoundary>
