@@ -245,17 +245,33 @@ async function actionWebhook(req, res, rawBody) {
       }
 
       case 'customer.subscription.deleted': {
+        // Spec: status = 'canceled'. Keep current_period_end intact so
+        // useSubscription's canceled branch keeps granting Pro until that
+        // timestamp passes (matches "reverts to free tier limits after
+        // current_period_end passes"). Grace window from any past_due
+        // spell is cleared — cancellation supersedes it.
         const sub    = event.data.object
         const userId = sub.metadata?.supabase_user_id
         if (!userId) break
+
+        // Preserve current_period_end from the Stripe subscription itself
+        // in case our stored value fell behind. Falls back to what's in the
+        // DB if the Stripe object doesn't carry the field.
+        const periodEnd = sub.current_period_end
+          ? new Date(sub.current_period_end * 1000).toISOString()
+          : undefined // omit → don't overwrite DB value
+
+        const update = {
+          subscription_status:    'canceled',
+          stripe_subscription_id: sub.id,
+          grace_period_end:       null,
+          updated_at:             new Date().toISOString(),
+        }
+        if (periodEnd !== undefined) update.current_period_end = periodEnd
+
         await supabaseAdmin
           .from('user_subscriptions')
-          .update({
-            subscription_status: 'free',
-            current_period_end:  null,
-            grace_period_end:    null,
-            updated_at:          new Date().toISOString(),
-          })
+          .update(update)
           .eq('user_id', userId)
         break
       }
