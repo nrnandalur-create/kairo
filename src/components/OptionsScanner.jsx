@@ -68,27 +68,27 @@ function EmptyState({ ticker, reason }) {
 }
 
 export default function OptionsScanner({ ticker, currentPrice }) {
-  const [chain,   setChain]   = useState(null)
+  const [payload, setPayload] = useState(null)  // { chain, hasLiveData }
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
 
   useEffect(() => {
-    if (!ticker || !currentPrice) { setChain(null); return }
+    if (!ticker || !currentPrice) { setPayload(null); return }
 
     // Reset immediately on ticker/price change so the previous ticker's
     // data can never render for a moment during the fetch.
-    setChain(null)
+    setPayload(null)
     setError(null)
     setLoading(true)
 
     const controller = new AbortController()
     fetch(`/api/options?symbol=${encodeURIComponent(ticker)}&price=${currentPrice}&mode=chain`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`options ${r.status}`)))
-      .then(data => setChain(data.chain ?? []))
+      .then(data => setPayload({ chain: data.chain ?? [], hasLiveData: data.hasLiveData ?? false }))
       .catch(err => {
         if (err?.name === 'AbortError') return
         setError(err?.message ?? 'Failed to load options')
-        setChain([])
+        setPayload({ chain: [], hasLiveData: false })
       })
       .finally(() => setLoading(false))
 
@@ -96,7 +96,8 @@ export default function OptionsScanner({ ticker, currentPrice }) {
   }, [ticker, currentPrice])
 
   if (loading) return <Skeleton />
-  if (!chain)  return null
+  if (!payload) return null
+  const { chain, hasLiveData } = payload
   if (!chain.length) return <EmptyState ticker={ticker} reason={error} />
 
   const unusualCount = chain.filter(c => c.unusual).length
@@ -118,9 +119,20 @@ export default function OptionsScanner({ ticker, currentPrice }) {
           )}
         </div>
         <span className="text-[10px] text-[var(--c-text-faint)]">
-          {callCount} calls · {putCount} puts · sorted by OI
+          {callCount} calls · {putCount} puts{hasLiveData ? ' · sorted by OI' : ''}
         </span>
       </div>
+
+      {!hasLiveData && (
+        <div className="border border-[#e3a234]/25 bg-[#e3a234]/8 rounded-lg p-3 flex gap-2 text-[11px] leading-relaxed text-[var(--c-text)]/85">
+          <span className="text-[#e3a234] shrink-0">ⓘ</span>
+          <span>
+            <strong>Live premium and open-interest data is not available on this Polygon tier.</strong>{' '}
+            Showing listed contract strikes and expiries only — verify pricing, OI, and IV
+            with your broker before trading.
+          </span>
+        </div>
+      )}
 
       <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
         <table className="w-full text-xs min-w-[640px]">
@@ -163,7 +175,10 @@ export default function OptionsScanner({ ticker, currentPrice }) {
       </div>
 
       <p className="text-[10px] text-[var(--c-text-fainter)] leading-relaxed border-t border-[var(--c-border)] pt-3">
-        Live chain via Polygon.io · premiums are bid/ask midpoint · unusual flag = volume ≥ 60% of open interest (or ≥ 2 K contracts at 30%+)
+        {hasLiveData
+          ? <>Live chain via Polygon.io · premiums are bid/ask midpoint · unusual flag = volume ≥ 60% of open interest (or ≥ 2 K contracts at 30%+)</>
+          : <>Contract listings via Polygon.io · premium, open interest, volume, and IV require a paid options data tier</>
+        }
       </p>
     </div>
   )

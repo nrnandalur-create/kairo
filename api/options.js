@@ -100,53 +100,66 @@ async function fetchOptionsChain({ ticker, price, key, res }) {
     )
   )
 
-  const chain = sample
-    .map((c, i) => {
-      const result = snapshots[i]
-      const snap = result.status === 'fulfilled' ? result.value?.results : null
-      const lq  = snap?.last_quote ?? {}
-      const day = snap?.day ?? {}
-      const gr  = snap?.greeks ?? {}
+  // Polygon's free tier returns 200 for the snapshot endpoint but omits
+  // OI / IV / greeks / last_quote — those are behind Options Starter.
+  // Rather than drop every contract when the tier is limited (which shows
+  // an empty state that misleadingly implies AAPL "has no options"), we
+  // return the raw listed contracts anyway with per-field nulls and a
+  // top-level hasLiveData flag the UI turns into an honest banner.
+  const raw = sample.map((c, i) => {
+    const result = snapshots[i]
+    const snap = result.status === 'fulfilled' ? result.value?.results : null
+    const lq  = snap?.last_quote ?? {}
+    const day = snap?.day ?? {}
+    const gr  = snap?.greeks ?? {}
 
-      let premium = null
-      if (lq.bid != null && lq.ask != null && lq.ask > 0) {
-        premium = +(((lq.bid + lq.ask) / 2)).toFixed(2)
-      } else if (day.close != null && day.close > 0) {
-        premium = +day.close.toFixed(2)
-      }
+    let premium = null
+    if (lq.bid != null && lq.ask != null && lq.ask > 0) {
+      premium = +(((lq.bid + lq.ask) / 2)).toFixed(2)
+    } else if (day.close != null && day.close > 0) {
+      premium = +day.close.toFixed(2)
+    }
 
-      const openInterest = snap?.open_interest ?? 0
-      const volume       = day.volume ?? 0
-      const volOiRatio   = openInterest > 0 ? volume / openInterest : 0
-      const unusual = openInterest >= 50 && (
-        volOiRatio >= 0.6 ||
-        (volume >= 2000 && volOiRatio >= 0.3)
-      )
+    const openInterest = snap?.open_interest ?? null
+    const volume       = day.volume ?? null
+    const volOiRatio   = openInterest > 0 && volume != null ? volume / openInterest : 0
+    const unusual = openInterest >= 50 && (
+      volOiRatio >= 0.6 ||
+      (volume >= 2000 && volOiRatio >= 0.3)
+    )
 
-      return {
-        type:         c.contract_type,
-        strike:       c.strike_price,
-        expiry:       c.expiration_date,
-        ticker:       c.ticker,
-        premium,
-        bid:          lq.bid ?? null,
-        ask:          lq.ask ?? null,
-        openInterest,
-        volume,
-        iv:           snap?.implied_volatility ?? gr.implied_volatility ?? null,
-        delta:        gr.delta ?? null,
-        volOiRatio:   +volOiRatio.toFixed(2),
-        unusual,
-      }
-    })
-    // Keep contracts that have SOME activity, else premium data. If OI and
-    // vol are both zero AND premium is null, the contract is effectively
-    // dead — better to hide it than render a row of dashes.
-    .filter(c => c.openInterest > 0 || c.volume > 0 || c.premium != null)
-    .sort((a, b) => (b.openInterest ?? 0) - (a.openInterest ?? 0))
+    return {
+      type:         c.contract_type,
+      strike:       c.strike_price,
+      expiry:       c.expiration_date,
+      ticker:       c.ticker,
+      premium,
+      bid:          lq.bid ?? null,
+      ask:          lq.ask ?? null,
+      openInterest,
+      volume,
+      iv:           snap?.implied_volatility ?? gr.implied_volatility ?? null,
+      delta:        gr.delta ?? null,
+      volOiRatio:   +volOiRatio.toFixed(2),
+      unusual,
+    }
+  })
+
+  const hasLiveData = raw.some(c =>
+    c.openInterest != null || c.volume != null || c.premium != null || c.iv != null
+  )
+
+  // Sort by OI descending when available, else by strike proximity so the
+  // ATM contracts still lead when snapshots are gone.
+  const chain = raw.slice().sort((a, b) => {
+    const aOi = a.openInterest ?? -1
+    const bOi = b.openInterest ?? -1
+    if (aOi !== bOi) return bOi - aOi
+    return Math.abs(a.strike - price) - Math.abs(b.strike - price)
+  })
 
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
-  return res.json({ chain, underlyingPrice: price, ticker })
+  return res.json({ chain, underlyingPrice: price, ticker, hasLiveData })
 }
 
 export default async function handler(req, res) {
