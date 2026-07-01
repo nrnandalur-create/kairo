@@ -22,10 +22,10 @@ function StatusBadge({ label, color }) {
 
 function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) {
   return (
-    <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-2.5 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)]">
-      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">{title}</span>
+    <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-2.5 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)]">
+      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] truncate">{title}</span>
       <div className="flex items-end justify-between gap-2">
-        <span className="text-xl font-black tabular-nums text-[var(--c-text)] leading-none">{value}</span>
+        <span className="text-lg sm:text-xl font-black tabular-nums text-[var(--c-text)] leading-none">{value}</span>
         {badge && <StatusBadge label={badge} color={badgeColor} />}
       </div>
       {sub && <span className="text-[11px] text-[var(--c-text-faint)] leading-tight">{sub}</span>}
@@ -136,9 +136,9 @@ export default function IndicatorsGrid({ candles, loading, asOf, synthetic, synt
   const volBarClr = vol?.ratio >= 1.5 ? '#e3a234' : '#4b6358'
 
   return (
-    <div className="w-full glass-card rounded-2xl p-6 flex flex-col gap-4 animate-enter">
+    <div className="w-full glass-card rounded-2xl p-4 sm:p-6 flex flex-col gap-4 animate-enter">
       <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Technical Indicators</span>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
         {[
           { title: 'RSI (14)',     value: rsiLabel,   sub: null,       badge: rsiBadge,   badgeColor: rsiBColor, bar: rsi,       barColor: rsi >= 70 ? '#ef5454' : rsi <= 30 ? '#22B585' : '#4b6358' },
           { title: 'MACD',        value: macdLabel,  sub: macdSub,    badge: macdBadge,  badgeColor: macdBColor },

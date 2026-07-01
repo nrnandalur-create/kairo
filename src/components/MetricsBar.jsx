@@ -59,7 +59,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
   const macdBadgeColor = macd ? (macd.bullish ? '#22B585' : '#ef5454') : '#4b6358'
 
   return (
-    <div className="w-full glass-card rounded-2xl p-5 sm:p-6 animate-enter flex flex-col gap-4">
+    <div className="w-full glass-card rounded-2xl p-4 sm:p-5 md:p-6 animate-enter flex flex-col gap-4">
       {/* Identity + price row */}
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-6">
         <div className="flex flex-col gap-1">
@@ -88,14 +88,16 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
               </span>
             )}
           </div>
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
             {/* Editorial-hero price: substantially larger than the surrounding
                 cells, set in tabular-nums + tight tracking. The single largest
-                number on the page; everything else reads as supporting data. */}
-            <span className="text-5xl sm:text-6xl font-black text-[var(--c-text-strong)] tabular-nums tracking-[-0.02em] leading-none">
+                number on the page; everything else reads as supporting data.
+                Mobile scales down two steps so a 6-digit price ($1,234.56)
+                still fits at 375px without wrapping the change chip. */}
+            <span className="text-4xl sm:text-5xl md:text-6xl font-black text-[var(--c-text-strong)] tabular-nums tracking-[-0.02em] leading-none">
               {fmtPrice(quote.c)}
             </span>
-            <span className={`text-base font-bold tabular-nums ${chgColor}`}>
+            <span className={`text-sm sm:text-base font-bold tabular-nums ${chgColor}`}>
               {arrow} {chgStr}
             </span>
           </div>

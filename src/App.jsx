@@ -68,7 +68,7 @@ function BookmarkButton({ saved, onToggle }) {
     <button
       onClick={onToggle}
       title={saved ? 'Remove from watchlist' : 'Add to watchlist'}
-      className={`p-2 rounded-lg border transition-all duration-150 cursor-pointer ${
+      className={`flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg border transition-all duration-150 cursor-pointer ${
         saved
           ? 'bg-[#22B585]/10 border-[#22B585]/30 text-[#22B585] hover:bg-[#22B585]/20'
           : 'bg-transparent border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'
@@ -391,31 +391,31 @@ export default function App() {
 
       {/* ── Header ── */}
       <header className="glass sticky top-0 z-20" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 min-w-0">
           <button
             onClick={handleHome}
-            className="flex items-center gap-3 shrink-0 cursor-pointer group"
+            className="flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer group"
             aria-label="Return to homepage"
           >
             <KairoLogo size={32} />
             <div className="flex flex-col leading-none">
-              <span className="font-serif font-bold text-[var(--c-text-strong)] text-lg tracking-tight group-hover:text-[var(--c-text)] transition-colors">kairo</span>
-              <span className="text-[8px] text-[var(--c-text-faint)] uppercase tracking-[0.25em] mt-0.5">Know the moment.</span>
+              <span className="font-serif font-bold text-[var(--c-text-strong)] text-base sm:text-lg tracking-tight group-hover:text-[var(--c-text)] transition-colors">kairo</span>
+              <span className="text-[8px] text-[var(--c-text-faint)] uppercase tracking-[0.25em] mt-0.5 hidden sm:inline">Know the moment.</span>
             </div>
           </button>
 
-          <div className="ml-3">
+          <div className="ml-1 sm:ml-3 shrink-0">
             <MarketStatusPill />
           </div>
 
-          <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto justify-end min-w-0">
             {/* Mobile palette entry — gives phones the same Cmd-K trigger desktop has in the StatusBar */}
             <button
               type="button"
               onClick={() => palette.setOpen(true)}
               aria-label="Open command palette"
               title="Search ticker or jump to section"
-              className="lg:hidden p-2 rounded-lg border border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-colors cursor-pointer"
+              className="lg:hidden flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg border border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-colors cursor-pointer shrink-0"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
@@ -424,18 +424,18 @@ export default function App() {
             </button>
             {hasData && (
               <>
-                <div className="hidden sm:flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2 min-w-0">
                   {ticker && (
-                    <span className="font-mono text-sm font-black text-[var(--c-text-strong)] tracking-[0.04em]">
+                    <span className="font-mono text-sm font-black text-[var(--c-text-strong)] tracking-[0.04em] shrink-0">
                       {ticker}
                     </span>
                   )}
-                  {ticker && marketData.profile?.name && <span className="text-[var(--c-text-fainter)]">·</span>}
+                  {ticker && marketData.profile?.name && <span className="text-[var(--c-text-fainter)] shrink-0">·</span>}
                   {marketData.profile?.name && (
-                    <span className="text-sm text-[var(--c-text)] font-semibold">{marketData.profile.name}</span>
+                    <span className="text-sm text-[var(--c-text)] font-semibold truncate max-w-[160px]">{marketData.profile.name}</span>
                   )}
                   {marketData.profile?.exchange && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)]">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--c-chip-bg)] text-[var(--c-text-faint)] uppercase tracking-widest border border-[var(--c-border-strong)] shrink-0">
                       {marketData.profile.exchange}
                     </span>
                   )}
@@ -444,7 +444,10 @@ export default function App() {
                   saved={watchlistRows.some(w => w.ticker === ticker)}
                   onToggle={() => watchlistRows.some(w => w.ticker === ticker) ? removeTicker(ticker) : addTicker(ticker)}
                 />
-                <TickerSearch onSearch={handleSearch} loading={isLoading} />
+                {/* Inline search — hidden on mobile (palette btn covers it); tablet+desktop see full form. */}
+                <div className="hidden sm:block">
+                  <TickerSearch onSearch={handleSearch} loading={isLoading} />
+                </div>
               </>
             )}
             <UserMenu />
@@ -453,22 +456,22 @@ export default function App() {
       </header>
 
       {/* ── Main ── */}
-      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-3 sm:gap-4">
+      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 flex flex-col gap-3 sm:gap-4">
 
         {/* Landing hero */}
         {!hasData && !isLoading && (
-          <div className="relative flex flex-col items-center text-center gap-6 pt-10 pb-6 animate-fade">
+          <div className="relative flex flex-col items-center text-center gap-5 sm:gap-6 pt-6 sm:pt-10 pb-6 animate-fade">
             <HeroMarketBackdrop />
             {/* Ambient glow behind logo */}
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-48 h-48 rounded-full bg-[#22B585] opacity-[0.06] blur-3xl pointer-events-none" />
+              <div className="absolute w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-[#22B585] opacity-[0.06] blur-3xl pointer-events-none" />
               <KairoLogo size={60} />
             </div>
             <div>
-              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-[var(--c-text-strong)] tracking-tight mb-2">kairo</h1>
-              <p className="text-[var(--c-text-faint)] tracking-[0.3em] uppercase text-xs">Know the moment.</p>
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--c-text-strong)] tracking-tight mb-2">kairo</h1>
+              <p className="text-[var(--c-text-faint)] tracking-[0.3em] uppercase text-[10px] sm:text-xs">Know the moment.</p>
             </div>
-            <p className="text-[var(--c-text-faint)] text-sm max-w-sm leading-relaxed">
+            <p className="text-[var(--c-text-faint)] text-[13px] sm:text-sm max-w-xs sm:max-w-sm leading-relaxed px-4 sm:px-0">
               Real-time market data, interactive charts, technical indicators, and AI-powered analysis — all from a single ticker.
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />

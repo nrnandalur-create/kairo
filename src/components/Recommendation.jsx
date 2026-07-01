@@ -119,7 +119,7 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
 
   return (
     <div
-      className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-2xl p-6 flex flex-col gap-5 animate-enter overflow-hidden`}
+      className={`relative w-full bg-[var(--c-card)] border ${cfg.border} rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5 animate-enter overflow-hidden`}
       // 3px solid verdict-color rule on the left edge — turns the most
       // important card on the page into a real visual anchor without
       // adding any chrome.  The other 3 sides keep the existing subtle
@@ -172,18 +172,19 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
         </div>
       </div>
 
-      {/* Verdict + confidence */}
-      <div className="relative flex items-end gap-6 flex-wrap">
-        <span className="text-7xl font-black leading-none tracking-tight flex items-center gap-3" style={{ color: cfg.color }} role="text" aria-label={`Verdict: ${cfg.label}`}>
-          <span aria-hidden="true" className="text-4xl leading-none">{cfg.glyph}</span>
+      {/* Verdict + confidence — scales down two full steps on mobile so the
+          verdict word + confidence bar both stay on one row at 375px. */}
+      <div className="relative flex items-end gap-4 sm:gap-6 flex-wrap">
+        <span className="text-5xl sm:text-6xl md:text-7xl font-black leading-none tracking-tight flex items-center gap-2 sm:gap-3" style={{ color: cfg.color }} role="text" aria-label={`Verdict: ${cfg.label}`}>
+          <span aria-hidden="true" className="text-3xl sm:text-4xl leading-none">{cfg.glyph}</span>
           {cfg.label}
         </span>
-        <div className="flex flex-col gap-2 mb-1.5">
+        <div className="flex flex-col gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl font-black tabular-nums leading-none" style={{ color: cfg.color }}>{confidence}</span>
-            <span className="text-sm text-[var(--c-text-faint)] font-medium">% confidence</span>
+            <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none" style={{ color: cfg.color }}>{confidence}</span>
+            <span className="text-xs sm:text-sm text-[var(--c-text-faint)] font-medium">% confidence</span>
           </div>
-          <div className="w-36 h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
+          <div className="w-28 sm:w-36 h-1 bg-[var(--c-chip-bg)] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full animate-bar"
               style={{ width: `${confidence}%`, backgroundColor: cfg.bar, transformOrigin: 'left' }}
