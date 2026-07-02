@@ -28,7 +28,10 @@ import { fetchVerdict, fetchDetailedAnalysis } from './services/analyze'
 import { logVerdict, fetchPreviousVerdict } from './services/verdictHistory'
 import { calcRSI, calcMACD, calcBBPosition } from './utils/indicators'
 import { fetchFundamentals } from './services/fundamentals'
-import { getMockNews } from './mockData'
+// Deliberately no mockData imports. Live news comes from Finnhub via
+// marketData.news; every AI panel is a real Groq call. Keeping the imports
+// out means a future dev can't accidentally wire a mock helper into
+// production rendering.
 import Nav from './components/Nav'
 import OnboardingBanner from './components/OnboardingBanner'
 import WatchlistSentiment from './components/WatchlistSentiment'
