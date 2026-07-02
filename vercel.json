@@ -6,6 +6,20 @@
     { "source": "/api/webhooks/stripe", "destination": "/api/stripe?action=webhook" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",     "value": "camera=(), microphone=(), geolocation=(), payment=(self \"https://*.stripe.com\")" },
+        {
+          "key": "Content-Security-Policy-Report-Only",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.stripe.com https://checkout.stripe.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.groq.com https://vitals.vercel-insights.com; frame-src https://*.stripe.com https://checkout.stripe.com https://billing.stripe.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'"
+        }
+      ]
+    }
+  ],
   "crons": [
     { "path": "/api/cron?job=open-brief", "schedule": "30 13 * * 1-5" },
     { "path": "/api/cron?job=close-wrap", "schedule": "30 21 * * 1-5" }
