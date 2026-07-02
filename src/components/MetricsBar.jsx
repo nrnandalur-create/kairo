@@ -1,12 +1,51 @@
 import DataTimestamp from './DataTimestamp'
+import InfoTooltip from './InfoTooltip'
 import PricePositionBadge from './PricePositionBadge'
+import { usePrefs } from '../hooks/usePrefs'
 import { fmtCap, fmtPrice, fmtPct, fmtRatio } from '../utils/format'
 import { calcRSI, calcMACD, calcVWAP } from '../utils/indicators'
 
-function MetricCell({ label, value, color, badge, badgeColor }) {
+// Plain-English tooltip copy for every metric on the ticker page. Kept as a
+// module-scoped map so the same one-liner shows on hover regardless of which
+// panel the metric ends up in (MetricsBar / IndicatorsGrid share vocabulary).
+// One sentence per entry — the goal is instant comprehension, not a
+// textbook chapter. All copy avoids jargon it doesn't itself define.
+const METRIC_TOOLTIPS = {
+  'Market Cap':   "The total value of all a company's shares. A rough sense of company size — big companies are safer, small ones move faster.",
+  'P/E (TTM)':    'Price-to-earnings ratio using trailing twelve months. Rough shorthand for "how expensive" the stock is — lower is cheaper vs. earnings.',
+  'Beta':         "How much the stock swings vs. the S&P 500. A beta above 1.0 moves more than the market; below 1.0 moves less.",
+  '52W Range':    "The lowest and highest price the stock has traded in the last 52 weeks. Useful for seeing where today's price sits within the year.",
+  'Day Range':    "The lowest and highest price the stock has traded so far today. A wider range often means higher volatility.",
+  'Prev Close':   "Yesterday's closing price. Today's price move (▲/▼) is measured from here.",
+  'VWAP (20D)':   'Volume-Weighted Average Price over 20 sessions — the average trade price with bigger-volume days counting more. Traders use it as a "fair value" reference.',
+  'RSI (14)':     "Relative Strength Index over 14 days. Ranges 0-100. Under 30 = oversold (potential bounce), over 70 = overbought (potential pullback).",
+  MACD:           "Moving Average Convergence Divergence. When the MACD line is above its signal line the trend is bullish, below is bearish.",
+  'Div Yield':    "Annual dividend as a percentage of the current stock price. Higher = more cash paid out per dollar you invest.",
+  'EPS Gr. 5Y':   "Earnings per share growth rate over the last five years. Higher = the company's profits are growing faster.",
+  'P/S (TTM)':    "Price-to-sales ratio using trailing twelve months. Similar to P/E but for revenue — useful when a company isn't yet profitable.",
+  // IndicatorsGrid (some duplicate MetricsBar for consistency across surfaces)
+  'SMA 50':       "50-day Simple Moving Average — the average closing price over the last 50 sessions. Prices above the SMA suggest an uptrend.",
+  'SMA 200':      "200-day Simple Moving Average — the long-term trend line. Prices above the SMA 200 are considered bullish by most trend traders.",
+  'BB Position':  "Where the current price sits within its Bollinger Bands (0% = at lower band, 100% = at upper band). Near either edge = statistically stretched.",
+  Volume:         "How many shares traded today compared to the 20-day average. Above 1.5× typically means real conviction behind the move.",
+}
+
+// Advanced metrics — hidden when the user turns on Beginner Mode in
+// Settings. Keeps the essentials visible: Market Cap, P/E, 52W Range,
+// Day Range, Prev Close, RSI, Div Yield. Sec 7.3 spec.
+const BEGINNER_HIDDEN_LABELS = new Set([
+  'Beta', 'VWAP (20D)', 'MACD', 'EPS Gr. 5Y', 'P/S (TTM)',
+])
+
+function MetricCell({ label, value, color, badge, badgeColor, hidden }) {
+  if (hidden) return null
+  const tip = METRIC_TOOLTIPS[label]
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">{label}</span>
+      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
+        {label}
+        {tip && <InfoTooltip label={`About ${label}`}>{tip}</InfoTooltip>}
+      </span>
       <div className="flex items-baseline gap-1.5 flex-wrap">
         <span className={`text-sm font-semibold tabular-nums ${color || 'text-[var(--c-text)]'} truncate`}>{value}</span>
         {badge && (
@@ -33,6 +72,11 @@ function pickPE(m) {
 
 export default function MetricsBar({ ticker, quote, profile, metrics, candles, asOf, synthetic, fundamentalsData }) {
   if (!quote) return null
+
+  // Beginner Mode hides the advanced cells (see BEGINNER_HIDDEN_LABELS).
+  // Read from the same prefs store the Settings toggle writes to.
+  const { beginnerMode } = usePrefs()
+  const hide = (label) => beginnerMode && BEGINNER_HIDDEN_LABELS.has(label)
 
   const up   = quote.dp > 0
   const down = quote.dp < 0
@@ -132,7 +176,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCell label="Market Cap"  value={fmtCap(profile?.marketCapitalization)} />
         <MetricCell label="P/E (TTM)"   value={fmtRatio(pickPE(m), 1)} />
-        <MetricCell label="Beta"        value={fmtRatio(m?.beta)} />
+        <MetricCell label="Beta"        value={fmtRatio(m?.beta)}                         hidden={hide('Beta')} />
         <MetricCell label="52W Range"   value={hi52 && lo52 ? `${fmtPrice(lo52)} – ${fmtPrice(hi52)}` : '—'} />
         <MetricCell label="Day Range"   value={`${fmtPrice(quote.l)} – ${fmtPrice(quote.h)}`} />
         <MetricCell label="Prev Close"  value={fmtPrice(quote.pc)} />
@@ -143,7 +187,7 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
 
       {/* Row 2 — fundamentals + technicals */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <MetricCell label="VWAP (20D)"  value={vwap != null ? fmtPrice(vwap) : '—'} />
+        <MetricCell label="VWAP (20D)"  value={vwap != null ? fmtPrice(vwap) : '—'} hidden={hide('VWAP (20D)')} />
         <MetricCell
           label="RSI (14)"
           value={rsi != null ? fmtRatio(rsi, 1) : '—'}
@@ -155,10 +199,11 @@ export default function MetricsBar({ ticker, quote, profile, metrics, candles, a
           value={macd ? fmtRatio(macd.value, 3) : '—'}
           badge={macdBadge}
           badgeColor={macdBadgeColor}
+          hidden={hide('MACD')}
         />
         <MetricCell label="Div Yield"   value={m?.dividendYieldIndicatedAnnual != null ? fmtPct(m.dividendYieldIndicatedAnnual) : '—'} />
-        <MetricCell label="EPS Gr. 5Y"  value={m?.epsGrowth5Y != null ? fmtPct(m.epsGrowth5Y) : '—'} />
-        <MetricCell label="P/S (TTM)"   value={fmtRatio(m?.psTTM, 2)} />
+        <MetricCell label="EPS Gr. 5Y"  value={m?.epsGrowth5Y != null ? fmtPct(m.epsGrowth5Y) : '—'} hidden={hide('EPS Gr. 5Y')} />
+        <MetricCell label="P/S (TTM)"   value={fmtRatio(m?.psTTM, 2)}                                 hidden={hide('P/S (TTM)')} />
       </div>
 
       {/* Footer — data freshness */}

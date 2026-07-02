@@ -1,5 +1,22 @@
 import { calcRSI, calcMACD, calcSMA, calcBBPosition, calcVolumeSignal } from '../utils/indicators'
 import DataTimestamp from './DataTimestamp'
+import InfoTooltip from './InfoTooltip'
+import { usePrefs } from '../hooks/usePrefs'
+
+// Plain-English one-liner per indicator. Shown as a hover explainer next to
+// each card title. Copy is deliberately jargon-free.
+const INDICATOR_TOOLTIPS = {
+  'RSI (14)':    "Relative Strength Index over 14 days. Ranges 0-100. Under 30 = oversold (potential bounce), over 70 = overbought (potential pullback).",
+  MACD:          "Moving Average Convergence Divergence. When the MACD line is above its signal line the trend is bullish; below is bearish.",
+  'SMA 50':      "50-day Simple Moving Average — the average closing price over 50 sessions. Prices above the SMA suggest an uptrend.",
+  'SMA 200':     "200-day Simple Moving Average — the long-term trend line. Prices above SMA 200 are considered bullish by most trend traders.",
+  'BB Position': "Where the current price sits within its Bollinger Bands (0% = at lower band, 100% = at upper band). Near either edge = statistically stretched.",
+  Volume:        "How many shares traded today compared to the 20-day average. Above 1.5× typically means real conviction behind the move.",
+}
+
+// Advanced indicators hidden when Beginner Mode is on — leaves RSI, SMA 50,
+// and Volume visible (the three most intuitive readings).
+const BEGINNER_HIDDEN_INDICATORS = new Set(['MACD', 'SMA 200', 'BB Position'])
 
 function fmtNum(n, dec = 2) {
   if (n == null || isNaN(n)) return '—'
@@ -21,9 +38,13 @@ function StatusBadge({ label, color }) {
 }
 
 function IndicatorCard({ title, value, sub, badge, badgeColor, bar, barColor }) {
+  const tip = INDICATOR_TOOLTIPS[title]
   return (
     <div className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-2.5 transition-colors duration-200 hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)]">
-      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] truncate">{title}</span>
+      <span className="text-[10px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center min-w-0">
+        <span className="truncate">{title}</span>
+        {tip && <InfoTooltip label={`About ${title}`}>{tip}</InfoTooltip>}
+      </span>
       <div className="flex items-end justify-between gap-2">
         <span className="text-lg sm:text-xl font-black tabular-nums text-[var(--c-text)] leading-none">{value}</span>
         {badge && <StatusBadge label={badge} color={badgeColor} />}
@@ -83,6 +104,7 @@ function SyntheticEmptyState({ reason }) {
 }
 
 export default function IndicatorsGrid({ candles, loading, asOf, synthetic, syntheticReason, currentPrice }) {
+  const { beginnerMode } = usePrefs()
   if (loading) return <Skeleton />
   if (!candles?.length) return null
   if (synthetic) return <SyntheticEmptyState reason={syntheticReason} />
@@ -146,7 +168,10 @@ export default function IndicatorsGrid({ candles, loading, asOf, synthetic, synt
           { title: 'SMA 200',     value: sma200Label,sub: sma200Sub,  badge: sma200Badge,badgeColor: sma200BC },
           { title: 'BB Position', value: bbLabel,    sub: bbSub,      badge: bbBadge,    badgeColor: bbBColor, bar: bbPct, barColor: bbBarColor },
           { title: 'Volume',      value: volLabel,   sub: volSub,     badge: volBadge,   badgeColor: volBColor, bar: volBarPct, barColor: volBarClr },
-        ].map((card, i) => (
+        // Beginner Mode: drop MACD, SMA 200, and BB Position so the grid
+        // stays at RSI + SMA 50 + Volume — the three most intuitive reads
+        // for someone new to technical analysis.
+        ].filter(card => !(beginnerMode && BEGINNER_HIDDEN_INDICATORS.has(card.title))).map((card, i) => (
           <div key={card.title} className={`animate-enter d-${i + 1}`}>
             <IndicatorCard {...card} />
           </div>

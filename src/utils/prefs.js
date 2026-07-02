@@ -26,6 +26,11 @@ export const DEFAULTS = {
   // Translucency multiplier for the glass classes. 1 = default frosted;
   // < 1 → more transparent (clear); > 1 → more opaque (solid-ish).
   glassMult: 1,         // 0.2 – 1.5
+  // Beginner Mode — hides the advanced metric cells and indicator tiles
+  // (Beta, VWAP, MACD, BB Position, EPS Gr. 5Y, P/S, SMA 200) so the
+  // headline surfaces stay approachable for users new to markets. Every
+  // metric that's still visible has a plain-English hover tooltip.
+  beginnerMode: false,
 }
 
 function load() {

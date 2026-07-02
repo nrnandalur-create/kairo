@@ -151,6 +151,36 @@ export default function SettingsModal({ open, onClose }) {
             </div>
           </div>
 
+          {/* Beginner Mode — hides advanced metrics + indicators.
+              Phase 7 spec: an opt-in for "new to markets" users.
+              Every metric still visible has a plain-English tooltip. */}
+          <div className="flex items-start gap-3">
+            <label className="flex-1 flex flex-col gap-0.5 cursor-pointer">
+              <span className="text-[11px] font-semibold text-[var(--c-text)] uppercase tracking-[0.12em]">
+                Beginner Mode
+              </span>
+              <span className="text-[10.5px] text-[var(--c-text-muted)] leading-relaxed">
+                New to investing? Hide advanced metrics (Beta, MACD, BB, EPS Growth). Hover any label for a plain-English explainer.
+              </span>
+            </label>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!cur.beginnerMode}
+              onClick={() => prefs.set('beginnerMode', !cur.beginnerMode)}
+              className={`shrink-0 mt-0.5 relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-150 cursor-pointer ${
+                cur.beginnerMode ? 'bg-[#22B585]' : 'bg-[var(--c-input-bg)] border border-[var(--c-input-border)]'
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-150 ${
+                  cur.beginnerMode ? 'translate-x-4.5' : 'translate-x-0.5'
+                }`}
+                style={{ transform: `translateX(${cur.beginnerMode ? '18px' : '2px'})` }}
+              />
+            </button>
+          </div>
+
           <Choice
             label="Auto-refresh"
             options={REFRESH_OPTIONS}
@@ -182,10 +212,11 @@ export default function SettingsModal({ open, onClose }) {
           </button>
           <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--c-text-fainter)]">
             <span>{
-              cur.refreshMs === DEFAULTS.refreshMs
-                && cur.staleMs   === DEFAULTS.staleMs
-                && cur.theme     === DEFAULTS.theme
-                && cur.glassMult === DEFAULTS.glassMult
+              cur.refreshMs    === DEFAULTS.refreshMs
+                && cur.staleMs      === DEFAULTS.staleMs
+                && cur.theme        === DEFAULTS.theme
+                && cur.glassMult    === DEFAULTS.glassMult
+                && cur.beginnerMode === DEFAULTS.beginnerMode
                 ? 'Default' : 'Custom'
             }</span>
           </div>
