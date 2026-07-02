@@ -57,6 +57,7 @@ import VerdictMemory from './components/VerdictMemory'
 import StickyTickerBar from './components/StickyTickerBar'
 import DailyBriefCard from './components/DailyBriefCard'
 import MorningBrief from './components/MorningBrief'
+import MarketMovers from './components/MarketMovers'
 const PulseView       = lazy(() => import('./components/PulseView'))
 const JournalView     = lazy(() => import('./components/JournalView'))
 const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
@@ -733,6 +734,14 @@ export default function App() {
             keep the close wrap for after-hours users who want the recap. */}
         {!hasData && !isLoading && user && (
           <DailyBriefCard userId={user.id} kind="close" onJumpToTicker={handleSearch} />
+        )}
+
+        {/* Market Movers front door — top gainers + losers, one tap to analyze.
+            handleSearch already runs the free-tier quota check, so browsing
+            movers doesn't bypass the daily search cap. Signed-in users only:
+            anonymous users still see the full brand hero + search. */}
+        {!hasData && !isLoading && user && (
+          <MarketMovers onSelect={handleSearch} />
         )}
 
         {/* Watchlist — visible on landing only, above market pulse */}

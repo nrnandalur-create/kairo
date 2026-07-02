@@ -8,6 +8,41 @@ import { rateLimit } from '../lib/rateLimit.js'
 const INDICES = ['SPY', 'QQQ', 'DIA']
 const MOVERS  = ['AAPL', 'TSLA', 'NVDA', 'AMZN', 'META', 'MSFT', 'GOOGL', 'AMD', 'INTC', 'NFLX']
 
+// Wider universe for the front-door movers scan. Covers mega-cap tech, banks,
+// energy, staples, semis, sector ETFs, and a batch of high-volatility retail
+// favorites so gainers/losers reflect the market the user actually watches.
+// Capped at 32 so 32 parallel Finnhub calls stay well under the 60/min free-
+// tier cap, especially with the 2-minute cache below.
+const MOVERS_UNIVERSE = [
+  // Mega-cap tech
+  'AAPL','MSFT','NVDA','AMZN','META','GOOGL','TSLA','NFLX','AMD','INTC',
+  // Semis + enterprise
+  'AVGO','ORCL','CRM','ADBE','TSM',
+  // Banks / financials
+  'JPM','BAC','GS',
+  // Energy + industrials
+  'XOM','CVX','BA',
+  // Consumer + healthcare
+  'WMT','HD','DIS','KO','JNJ','UNH',
+  // Sector + broad ETFs
+  'SPY','QQQ','IWM','XLE','XLF',
+]
+
+// Names for tiny display labels next to symbols. Not exhaustive — falls back
+// to just the symbol when a ticker isn't in the map.
+const NAME_MAP = {
+  AAPL: 'Apple',    MSFT: 'Microsoft', NVDA: 'NVIDIA',    AMZN: 'Amazon',
+  META: 'Meta',     GOOGL:'Alphabet',   TSLA: 'Tesla',    NFLX: 'Netflix',
+  AMD:  'AMD',      INTC: 'Intel',      AVGO: 'Broadcom', ORCL: 'Oracle',
+  CRM:  'Salesforce',ADBE:'Adobe',      TSM:  'TSMC',
+  JPM:  'JPMorgan', BAC:  'Bank of America', GS: 'Goldman Sachs',
+  XOM:  'Exxon',    CVX:  'Chevron',    BA:   'Boeing',
+  WMT:  'Walmart',  HD:   'Home Depot', DIS:  'Disney',   KO:  'Coca-Cola',
+  JNJ:  'Johnson',  UNH:  'UnitedHealth',
+  SPY:  'S&P 500',  QQQ:  'Nasdaq 100', IWM:  'Russell 2000',
+  XLE:  'Energy Sector', XLF: 'Financials Sector',
+}
+
 const MAX_TICKERS = 12
 
 async function fetchQuote(symbol, apiKey) {
@@ -72,6 +107,29 @@ Write ONE crisp sentence narrating what's happening across this user's watchlist
   }
 }
 
+// ── Movers scan (Market Front Door — gainers + losers) ────────────────────
+// Fires 32 parallel Finnhub quote calls, sorts by changePct, returns the
+// top 5 gainers and top 5 losers. 2-minute edge cache means realistic burst
+// traffic on the landing view lands on one Finnhub sync per user per two
+// minutes, not per open.
+async function handleMovers(req, res) {
+  if (req.method !== 'GET') return res.status(405).end()
+  const apiKey = process.env.FINNHUB_API_KEY
+  if (!apiKey) return res.status(500).json({ error: 'Service unavailable' })
+
+  const results = await Promise.all(MOVERS_UNIVERSE.map(s => fetchQuote(s, apiKey)))
+  const valid   = results
+    .filter(q => q.price != null && q.changePct != null && Number.isFinite(q.changePct))
+    .map(q => ({ ...q, name: NAME_MAP[q.symbol] ?? q.symbol }))
+
+  const sorted  = [...valid].sort((a, b) => b.changePct - a.changePct)
+  const gainers = sorted.filter(q => q.changePct > 0).slice(0, 5)
+  const losers  = sorted.filter(q => q.changePct < 0).slice(-5).reverse()
+
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300')
+  res.json({ gainers, losers, universeSize: valid.length, at: Date.now() })
+}
+
 // ── Default: indices + movers quotes ──────────────────────────────────────
 async function handlePulseQuotes(req, res) {
   if (req.method !== 'GET') return res.status(405).end()
@@ -91,6 +149,7 @@ async function handlePulseQuotes(req, res) {
 export default async function handler(req, res) {
   if (!rateLimit(req, res)) return
   if (req.query?.action === 'narrate') return handleNarrate(req, res)
+  if (req.query?.action === 'movers')  return handleMovers(req, res)
   return handlePulseQuotes(req, res)
 }
 
