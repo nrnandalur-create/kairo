@@ -237,63 +237,245 @@ function SidePanel({ ticker, loading, data, error }) {
 
 // ─── main component ───────────────────────────────────────────────────────────
 
+// Max 4 tickers per Phase 6 spec; min 2 to make a comparison.
+const MAX_SLOTS = 4
+const MIN_SLOTS = 2
+
+function LeaderChip({ label, ticker, color }) {
+  if (!ticker) return null
+  return (
+    <div
+      className="flex items-center gap-2 px-2.5 py-1 rounded-md border"
+      style={{ color, borderColor: `${color}45`, backgroundColor: `${color}12` }}
+    >
+      <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">{label}</span>
+      <span className="text-[11px] font-black tabular-nums">{ticker}</span>
+    </div>
+  )
+}
+
+function ComparisonCard({ compare }) {
+  if (!compare) return null
+  if (compare === 'loading') {
+    return (
+      <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-fade">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22B585] animate-pulse" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
+            Comparing…
+          </span>
+        </div>
+        <div className="h-3 rounded-full shimmer w-11/12" />
+        <div className="h-3 rounded-full shimmer w-3/4" />
+        <div className="h-3 rounded-full shimmer w-2/3" />
+      </div>
+    )
+  }
+  if (compare === 'error') {
+    return (
+      <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex items-start gap-3 animate-fade">
+        <span className="shrink-0 w-7 h-7 rounded-full bg-[var(--c-input-bg)] border border-[var(--c-input-border)] text-[var(--c-text-fainter)] flex items-center justify-center text-xs">i</span>
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.14em]">
+            Comparison
+          </span>
+          <p className="text-[12.5px] text-[var(--c-text)]/80 leading-relaxed">
+            AI comparison temporarily unavailable — the per-ticker panels below still show every metric side by side.
+          </p>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-enter">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.14em] inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]" />
+          Head-to-Head
+        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <LeaderChip label="Momentum" ticker={compare.leaders?.momentum} color="#22B585" />
+          <LeaderChip label="Value"    ticker={compare.leaders?.value}    color="#e3a234" />
+          <LeaderChip label="Quality"  ticker={compare.leaders?.quality}  color="#d1d9d5" />
+        </div>
+      </div>
+      <p className="text-[13.5px] text-[var(--c-text)]/90 leading-relaxed">
+        {compare.commentary}
+      </p>
+    </div>
+  )
+}
+
 export default function CompareView({ open, onClose, initialTickers }) {
-  const [leftTicker,  setLeftTicker]  = useState(initialTickers?.[0] ?? '')
-  const [rightTicker, setRightTicker] = useState(initialTickers?.[1] ?? '')
-  const left  = useSide()
-  const right = useSide()
+  // Slots: array of { input, side }. React hooks disallow variable-count
+  // hook calls, so we always create MAX_SLOTS worth of useSide instances
+  // and only render/use the first `activeCount` of them.
+  const side0 = useSide()
+  const side1 = useSide()
+  const side2 = useSide()
+  const side3 = useSide()
+  const sides = [side0, side1, side2, side3]
+
+  const [inputs, setInputs] = useState(() =>
+    Array.from({ length: MAX_SLOTS }, (_, i) => initialTickers?.[i] ?? '')
+  )
+  const [activeCount, setActiveCount] = useState(() =>
+    Math.max(MIN_SLOTS, Math.min(MAX_SLOTS, (initialTickers ?? []).length || MIN_SLOTS))
+  )
+  const [compare, setCompare] = useState(null) // null | 'loading' | 'error' | { commentary, leaders }
 
   // Auto-load whatever was pre-filled on open (e.g. via "vs SPY" chip).
   useEffect(() => {
     if (!open) return
-    if (initialTickers?.[0]) left.load(initialTickers[0])
-    if (initialTickers?.[1]) right.load(initialTickers[1])
+    for (let i = 0; i < MAX_SLOTS; i++) {
+      const t = initialTickers?.[i]
+      if (t) sides[i].load(t)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialTickers?.[0], initialTickers?.[1]])
+  }, [open, initialTickers?.[0], initialTickers?.[1], initialTickers?.[2], initialTickers?.[3]])
+
+  const setInputAt = (i, val) => {
+    setInputs(prev => prev.map((v, idx) => (idx === i ? val : v)))
+  }
 
   const handleCompare = () => {
-    const l = leftTicker.trim().toUpperCase()
-    const r = rightTicker.trim().toUpperCase()
-    if (l) left.load(l)
-    if (r) right.load(r)
+    setCompare(null)
+    for (let i = 0; i < activeCount; i++) {
+      const t = inputs[i].trim().toUpperCase()
+      if (t) sides[i].load(t)
+    }
   }
 
   const handleKey = (e) => {
     if (e.key === 'Enter') handleCompare()
   }
 
+  const addSlot    = () => setActiveCount(c => Math.min(MAX_SLOTS, c + 1))
+  const removeSlot = (i) => {
+    if (activeCount <= MIN_SLOTS) return
+    // Drop the requested slot: shift subsequent slots' inputs + loaded data
+    // left so the visible list stays contiguous.
+    const newInputs = inputs.slice()
+    newInputs.splice(i, 1)
+    newInputs.push('')
+    setInputs(newInputs)
+    for (let j = i; j < MAX_SLOTS - 1; j++) {
+      const next = sides[j + 1]
+      // We can't mutate the useSide state from outside; instead re-call load
+      // for slots that still have a ticker. Slots that were empty stay empty.
+      if (next.data && newInputs[j]) sides[j].load(newInputs[j])
+    }
+    setActiveCount(c => c - 1)
+    setCompare(null)
+  }
+
+  // Kick off AI comparison once every active slot with a ticker has data.
+  useEffect(() => {
+    const loaded = sides.slice(0, activeCount).filter(s => s.data && !s.loading)
+    if (loaded.length < 2) return
+    // Serialize snapshot for the compare endpoint.
+    const snapshots = loaded.map(s => {
+      const { quote, profile, metrics, rsi, macd, bb, ai } = s.data
+      return {
+        ticker:       (profile?.ticker ?? '').toUpperCase() || undefined,
+        price:        quote?.c,
+        dp:           quote?.dp,
+        rsi,
+        macd:         macd ? { bullish: macd.bullish } : null,
+        bb:           bb ? { pct: bb.pct } : null,
+        pe:           metrics?.metric?.peBasicExclExtraTTM,
+        epsGrowth5Y:  metrics?.metric?.epsGrowth5Y,
+        beta:         metrics?.metric?.beta,
+        marketCap:    profile?.marketCapitalization,
+        verdict:      ai?.verdict,
+      }
+    })
+    // Backfill ticker from the input if the profile didn't carry one.
+    for (let i = 0; i < snapshots.length; i++) {
+      if (!snapshots[i].ticker) snapshots[i].ticker = inputs[i].trim().toUpperCase()
+    }
+    // Deduplicate by ticker (prevents accidental duplicate slot compare).
+    const seen = new Set()
+    const unique = snapshots.filter(s => {
+      if (!s.ticker || seen.has(s.ticker)) return false
+      seen.add(s.ticker); return true
+    })
+    if (unique.length < 2) return
+
+    let cancelled = false
+    setCompare('loading')
+    fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type: 'compare', tickers: unique }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`compare ${r.status}`)))
+      .then(data => { if (!cancelled) setCompare(data) })
+      .catch(() => { if (!cancelled) setCompare('error') })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activeCount,
+    sides[0].data, sides[1].data, sides[2].data, sides[3].data,
+    sides[0].loading, sides[1].loading, sides[2].loading, sides[3].loading,
+  ])
+
   if (!open) return null
 
-  const inputCls = "flex-1 min-w-0 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors uppercase"
+  const inputCls = "w-full min-w-0 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm font-bold text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors uppercase"
+
+  // Column classes for 2/3/4 sides. Mobile stacks; md+ shows the requested
+  // fan-out. Adjusted so 4 sides don't get so narrow that numbers wrap.
+  const gridCls = activeCount === 2 ? 'grid-cols-1 md:grid-cols-2'
+              : activeCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-4'
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--c-bg)] flex flex-col" onClick={e => e.stopPropagation()}>
 
       {/* Header */}
-      <div className="border-b border-[var(--c-border)] px-6 py-4 flex items-center gap-4 shrink-0">
-        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Compare</span>
+      <div className="border-b border-[var(--c-border)] px-6 py-4 flex items-center gap-3 shrink-0 flex-wrap">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">
+          Compare ({activeCount})
+        </span>
 
-        {/* Ticker inputs */}
-        <div className="flex items-center gap-2 flex-1 max-w-lg">
-          <input
-            type="text"
-            value={leftTicker}
-            onChange={e => setLeftTicker(e.target.value.toUpperCase())}
-            onKeyDown={handleKey}
-            placeholder="AAPL"
-            maxLength={5}
-            className={inputCls}
-          />
-          <span className="text-[var(--c-text-fainter)] text-sm font-bold shrink-0">vs</span>
-          <input
-            type="text"
-            value={rightTicker}
-            onChange={e => setRightTicker(e.target.value.toUpperCase())}
-            onKeyDown={handleKey}
-            placeholder="MSFT"
-            maxLength={5}
-            className={inputCls}
-          />
+        {/* Dynamic ticker inputs. Each active slot gets a small remove-X when
+            we're above MIN_SLOTS so users can drop the least-useful side. */}
+        <div className="flex items-center gap-2 flex-1 flex-wrap max-w-[720px]">
+          {Array.from({ length: activeCount }).map((_, i) => (
+            <div key={i} className="flex items-center gap-1 min-w-[110px] flex-1">
+              <input
+                type="text"
+                value={inputs[i]}
+                onChange={e => setInputAt(i, e.target.value.toUpperCase())}
+                onKeyDown={handleKey}
+                placeholder={['AAPL','MSFT','NVDA','AMD'][i]}
+                maxLength={6}
+                className={inputCls}
+              />
+              {activeCount > MIN_SLOTS && (
+                <button
+                  onClick={() => removeSlot(i)}
+                  aria-label={`Remove slot ${i + 1}`}
+                  title="Remove this ticker"
+                  className="shrink-0 text-[var(--c-text-fainter)] hover:text-[#ef5454] transition-colors p-1 cursor-pointer"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+          {activeCount < MAX_SLOTS && (
+            <button
+              onClick={addSlot}
+              title="Add another ticker (up to 4)"
+              className="shrink-0 border border-[var(--c-border)] hover:border-[#22B585]/50 text-[var(--c-text-faint)] hover:text-[#22B585] text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+            >
+              + Add
+            </button>
+          )}
           <button
             onClick={handleCompare}
             className="shrink-0 bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.97] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
@@ -309,33 +491,21 @@ export default function CompareView({ open, onClose, initialTickers }) {
         </button>
       </div>
 
-      {/* Column labels */}
-      {(left.data || right.data || left.loading || right.loading) && (
-        <div className="grid grid-cols-2 gap-4 px-6 pt-4 shrink-0">
-          <div className="text-xs font-black text-[var(--c-text)] uppercase tracking-widest">
-            {leftTicker || '—'}
-          </div>
-          <div className="text-xs font-black text-[var(--c-text)] uppercase tracking-widest">
-            {rightTicker || '—'}
-          </div>
-        </div>
-      )}
+      {/* Scrollable content: AI comparison card at top (when we have 2+
+          loaded), then the per-side panels grid. */}
+      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+        <ComparisonCard compare={compare} />
 
-      {/* Two-column content */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="grid grid-cols-2 gap-4">
-          <SidePanel
-            ticker={leftTicker}
-            loading={left.loading}
-            data={left.data}
-            error={left.error}
-          />
-          <SidePanel
-            ticker={rightTicker}
-            loading={right.loading}
-            data={right.data}
-            error={right.error}
-          />
+        <div className={`grid ${gridCls} gap-4`}>
+          {Array.from({ length: activeCount }).map((_, i) => (
+            <SidePanel
+              key={i}
+              ticker={inputs[i]}
+              loading={sides[i].loading}
+              data={sides[i].data}
+              error={sides[i].error}
+            />
+          ))}
         </div>
       </div>
     </div>

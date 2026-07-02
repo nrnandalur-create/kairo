@@ -325,6 +325,105 @@ const SYSTEM_VERDICT = 'You are an equity strategist known for decisive, punchy 
 
 const SYSTEM_ANALYSIS = 'You are a senior technical analyst writing a specialist\'s report. Return only valid JSON, no markdown fences, no extra text. Your job is INTERPRETATION, not decision-making. Each indicator field discusses ONLY that indicator in isolation, in 1-2 sentences. Then indicatorConfluence explicitly names where indicators agree and where they contradict. rangeContext and fundamentalContext situate the read in a wider frame. Do NOT emit a verdict, entry price, or stop loss — a separate strategist owns those. Cite specific numbers in every field. Total 150-250 words across all string fields.'
 
+// ── Compare handler (cross-ticker commentary) ───────────────────────────────
+// Feeds the CompareView. Takes 2-4 ticker snapshots and returns a short
+// analyst comparison plus "leaders" chips (Momentum / Value / Quality).
+// Kept minimal on purpose — the individual side panels already show the
+// full stack; this pass is just the synthesis prose Phase 6 spec asks for
+// ("NVDA has stronger momentum but AMD is cheaper on P/E").
+async function handleCompare(req, res) {
+  const apiKey = process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY
+  if (!apiKey) return res.status(500).json({ error: 'AI service unavailable' })
+
+  const tickers = Array.isArray(req.body?.tickers) ? req.body.tickers : []
+  if (tickers.length < 2 || tickers.length > 4) {
+    return res.status(400).json({ error: 'Provide 2–4 tickers to compare' })
+  }
+  for (const t of tickers) {
+    if (!validateTicker(t.ticker)) return res.status(400).json({ error: `Invalid ticker: ${t.ticker}` })
+  }
+
+  // Compact one-line-per-ticker context. Deliberately terse — the model gets
+  // fewer tokens to fixate on any single stat so the comparison stays
+  // multi-dimensional.
+  const lines = tickers.map(t => {
+    const rsi   = t.rsi != null ? t.rsi.toFixed(1) : 'N/A'
+    const macd  = t.macd?.bullish == null ? 'N/A' : (t.macd.bullish ? 'bullish' : 'bearish')
+    const bb    = t.bb?.pct != null ? `${t.bb.pct}%` : 'N/A'
+    const pe    = t.pe != null ? t.pe.toFixed(1) : 'N/A'
+    const eps5  = t.epsGrowth5Y != null ? `${t.epsGrowth5Y.toFixed(1)}%` : 'N/A'
+    const beta  = t.beta != null ? t.beta.toFixed(2) : 'N/A'
+    const chg   = t.dp != null ? `${t.dp >= 0 ? '+' : ''}${t.dp.toFixed(2)}%` : 'N/A'
+    const cap   = t.marketCap ? `$${(t.marketCap / 1000).toFixed(1)}B` : 'N/A'
+    return `${t.ticker}: $${t.price?.toFixed(2) ?? '?'} today ${chg} · RSI ${rsi} · MACD ${macd} · BB ${bb} · P/E ${pe} · EPS 5Y ${eps5} · β ${beta} · cap ${cap} · verdict ${t.verdict ?? 'N/A'}`
+  }).join('\n')
+
+  const prompt = `You are comparing ${tickers.length} tickers head-to-head for a Kairo user.
+
+${lines}
+
+Return ONLY this JSON — no markdown fences, no extra keys:
+{
+  "commentary": "<2-3 sentences comparing these tickers. Cite specific numbers. Name winners and losers by ticker. Cover at least: price action, valuation, momentum. Example tone: 'NVDA has stronger momentum with RSI 68 vs AMD at 52, but AMD is cheaper on P/E (24 vs 42).'>",
+  "leaders": {
+    "momentum": "<ticker leading on RSI + MACD confluence>",
+    "value":    "<ticker cheapest on P/E vs EPS growth>",
+    "quality":  "<ticker with best risk-adjusted profile: lower beta, higher confidence verdict, moderate BB position>"
+  }
+}
+
+Rules: cite specific ticker names + numbers. Never hedge. Never use "as an AI". If a metric is N/A for a ticker, skip that dimension rather than guess.`
+
+  const abort = new AbortController()
+  const timeoutId = setTimeout(() => abort.abort('analyze-compare:timeout'), 10000)
+
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model:       'llama-3.3-70b-versatile',
+        messages:    [
+          { role: 'system', content: 'You are a senior analyst producing head-to-head comparisons. Return valid JSON only. Cite specific tickers and numbers. Every field must reference at least one ticker by name.' },
+          { role: 'user',   content: prompt },
+        ],
+        temperature: 0.4,
+      }),
+      signal: abort.signal,
+    })
+    clearTimeout(timeoutId)
+    if (!r.ok) return res.status(502).json({ error: `AI service error (${r.status})` })
+    const json = await r.json()
+    const raw  = json.choices?.[0]?.message?.content ?? ''
+    const start = raw.indexOf('{')
+    const end   = raw.lastIndexOf('}')
+    if (start === -1 || end === -1) return res.status(502).json({ error: 'Malformed AI response' })
+    let parsed
+    try { parsed = JSON.parse(raw.slice(start, end + 1)) }
+    catch { return res.status(502).json({ error: 'Malformed AI response' }) }
+
+    // Normalize leader tickers to uppercase; drop any that isn't in the
+    // input set so the UI's chip logic never highlights a ghost.
+    const validSet = new Set(tickers.map(t => t.ticker.toUpperCase()))
+    const cleanLeader = v => {
+      const u = String(v ?? '').toUpperCase().trim()
+      return validSet.has(u) ? u : null
+    }
+    parsed.leaders = {
+      momentum: cleanLeader(parsed.leaders?.momentum),
+      value:    cleanLeader(parsed.leaders?.value),
+      quality:  cleanLeader(parsed.leaders?.quality),
+    }
+    parsed.commentary = String(parsed.commentary ?? '').trim().slice(0, 500)
+
+    res.json(parsed)
+  } catch (err) {
+    clearTimeout(timeoutId)
+    const isAbort = err?.name === 'AbortError' || /abort|timeout/i.test(String(err?.message ?? ''))
+    res.status(isAbort ? 504 : 502).json({ error: isAbort ? 'Compare request timed out' : 'AI service error' })
+  }
+}
+
 // ── Handler ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (!rateLimit(req, res)) return
@@ -333,6 +432,10 @@ export default async function handler(req, res) {
   // Followup (streaming, AIChat) short-circuits everything below because
   // its body shape is completely different (question + history, no candles).
   if (req.body?.type === 'followup') return handleFollowup(req, res)
+
+  // Compare (multi-ticker, JSON) — same short-circuit reason, needs its own
+  // body validation shape.
+  if (req.body?.type === 'compare')  return handleCompare(req, res)
 
   const apiKey = process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'AI analysis service is unavailable' })
