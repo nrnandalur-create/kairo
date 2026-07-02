@@ -58,6 +58,7 @@ import StickyTickerBar from './components/StickyTickerBar'
 import DailyBriefCard from './components/DailyBriefCard'
 import MorningBrief from './components/MorningBrief'
 import MarketMovers from './components/MarketMovers'
+import RecentSignals from './components/RecentSignals'
 const PulseView       = lazy(() => import('./components/PulseView'))
 const JournalView     = lazy(() => import('./components/JournalView'))
 const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
@@ -734,6 +735,14 @@ export default function App() {
             keep the close wrap for after-hours users who want the recap. */}
         {!hasData && !isLoading && user && (
           <DailyBriefCard userId={user.id} kind="close" onJumpToTicker={handleSearch} />
+        )}
+
+        {/* Recent Signals — proactive alert history for the user. Silent
+            for users with no fires yet. When present, sits right after the
+            close-wrap so it's the FIRST thing a returning user sees under
+            the brief: what did Kairo notice while you were away. */}
+        {!hasData && !isLoading && user && (
+          <RecentSignals onOpenTicker={handleSearch} />
         )}
 
         {/* Market Movers front door — top gainers + losers, one tap to analyze.
