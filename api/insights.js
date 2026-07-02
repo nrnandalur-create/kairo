@@ -1,11 +1,15 @@
 // Consolidated public read-only insights endpoint. Routes by ?kind=:
-//   - ?kind=setups        → today's Setup Feed (was /api/setups)
-//   - ?kind=track-record  → audited Kairo verdict aggregates (was /api/track-record)
+//   - ?kind=setups         → today's Setup Feed (was /api/setups)
+//   - ?kind=track-record   → audited Kairo verdict aggregates (was /api/track-record)
+//   - ?kind=morning-brief  → on-demand personalized Morning Brief for the
+//                            signed-in caller. Returns today's persisted
+//                            brief if one exists, else composes now, persists,
+//                            and returns it.
 //
-// No auth — both surfaces are deliberately public. Reads via service-role
-// Supabase client, returns anonymized aggregates only.
+// setups + track-record are public; morning-brief requires a Supabase JWT.
 
 import { createClient } from '@supabase/supabase-js'
+import { composeBrief, gatherBriefInputs, persistBrief } from '../lib/briefs/composer.js'
 
 const SUPABASE_URL     = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
 const SUPABASE_SVC_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -94,13 +98,70 @@ async function handleTrackRecord(req, res, supabase) {
   })
 }
 
+// ── Morning Brief (on-demand, per user) ───────────────────────────────────
+// Returns today's persisted brief for the caller if one already exists (the
+// cron may have run at 08:30 ET). Otherwise composes a new one via the
+// shared composer + persists it, so the client renders the SAME brief the
+// email delivery would have produced.
+//
+// Free tier: this endpoint ALWAYS returns the full brief. Free-tier gating
+// (top-section-only + upgrade CTA) is enforced client-side so paywall logic
+// stays in one place (useSubscription + UpgradeOverlay), not sprinkled
+// across API handlers.
+async function handleMorningBrief(req, res, supabase) {
+  // Auth — Supabase JWT in the Authorization header, same pattern as
+  // /api/stripe. Anonymous callers get a 401.
+  const auth  = req.headers.authorization ?? ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
+  if (!token) return res.status(401).json({ error: 'Not authenticated' })
+  const { data: userResp, error: authErr } = await supabase.auth.getUser(token)
+  if (authErr || !userResp?.user) return res.status(401).json({ error: 'Not authenticated' })
+  const userId = userResp.user.id
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  // Serve cached row if already persisted for today. Prevents duplicate
+  // Groq calls when the user reloads the app or opens it in multiple tabs.
+  const { data: existing } = await supabase
+    .from('daily_briefs')
+    .select('id, kind, date, content_md, watchlist_change_pct, spy_change_pct, created_at')
+    .eq('user_id', userId)
+    .eq('kind', 'open')
+    .eq('date', today)
+    .maybeSingle()
+  if (existing) {
+    res.setHeader('Cache-Control', 'private, max-age=60')
+    return res.json({ brief: existing, source: 'persisted' })
+  }
+
+  // Compose on-demand.
+  const inputs = await gatherBriefInputs(supabase, userId)
+  const md = await composeBrief(inputs)
+  const { row, error } = await persistBrief(supabase, {
+    userId,
+    kind: 'open',
+    date: today,
+    contentMd: md,
+    watchlistQuotes: inputs.watchlistQuotes,
+    marketContext:   inputs.marketContext,
+  })
+  if (error) return res.status(500).json({ error: error.message })
+
+  res.setHeader('Cache-Control', 'private, max-age=60')
+  return res.json({ brief: row, source: 'generated' })
+}
+
 // ── Dispatcher ────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (!SUPABASE_URL || !SUPABASE_SVC_KEY) return res.status(500).json({ error: 'Service not configured' })
   const supabase = createClient(SUPABASE_URL, SUPABASE_SVC_KEY)
 
   const kind = req.query?.kind
-  if (kind === 'setups')       return handleSetups(req, res, supabase)
-  if (kind === 'track-record') return handleTrackRecord(req, res, supabase)
-  return res.status(400).json({ error: 'Unknown kind; expected `setups` or `track-record`' })
+  if (kind === 'setups')         return handleSetups(req, res, supabase)
+  if (kind === 'track-record')   return handleTrackRecord(req, res, supabase)
+  if (kind === 'morning-brief')  return handleMorningBrief(req, res, supabase)
+  return res.status(400).json({ error: 'Unknown kind; expected `setups`, `track-record`, or `morning-brief`' })
 }
+
+// Groq compose can take up to 10-12s on cold-start.
+export const config = { maxDuration: 30 }

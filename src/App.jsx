@@ -56,6 +56,7 @@ import MyPosition from './components/MyPosition'
 import VerdictMemory from './components/VerdictMemory'
 import StickyTickerBar from './components/StickyTickerBar'
 import DailyBriefCard from './components/DailyBriefCard'
+import MorningBrief from './components/MorningBrief'
 const PulseView       = lazy(() => import('./components/PulseView'))
 const JournalView     = lazy(() => import('./components/JournalView'))
 const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
@@ -656,8 +657,10 @@ export default function App() {
       {/* ── Main ── */}
       <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 flex flex-col gap-3 sm:gap-4">
 
-        {/* Landing hero */}
-        {!hasData && !isLoading && (
+        {/* ── Anonymous hero: full brand landing with search ────────────
+            Only anonymous users see the giant logo + tagline. Signed-in
+            users get the Morning Brief as the front-door hero instead. */}
+        {!hasData && !isLoading && !user && (
           <div className="relative flex flex-col items-center text-center gap-5 sm:gap-6 pt-6 sm:pt-10 pb-6 animate-fade">
             <HeroMarketBackdrop />
             {/* Ambient glow behind logo */}
@@ -674,28 +677,41 @@ export default function App() {
             </p>
             <TickerSearch onSearch={handleSearch} loading={isLoading} />
 
-            {/* Recently viewed chips — or a "Try AAPL" CTA on first visit */}
-            {recentTickers.length > 0 ? (
-              <div className="flex items-center gap-2 flex-wrap justify-center">
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <span className="text-[9px] font-semibold text-[var(--c-text-fainter)] uppercase tracking-[0.15em]">Try</span>
+              {['AAPL', 'NVDA', 'SPY'].map(sym => (
+                <button
+                  key={sym}
+                  onClick={() => handleSearch(sym)}
+                  className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150 cursor-pointer"
+                >
+                  {sym}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Signed-in front door: Morning Brief FIRST, then a compact
+             search strip so the user can jump straight into any ticker. */}
+        {!hasData && !isLoading && user && <MorningBrief />}
+
+        {!hasData && !isLoading && user && (
+          <div className="w-full glass-card rounded-xl p-3 sm:p-4 flex items-center gap-3 flex-wrap animate-enter">
+            <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.14em] shrink-0">
+              Analyze a ticker
+            </span>
+            <div className="flex-1 min-w-[200px]">
+              <TickerSearch onSearch={handleSearch} loading={isLoading} />
+            </div>
+            {recentTickers.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[9px] font-semibold text-[var(--c-text-fainter)] uppercase tracking-[0.15em]">Recent</span>
-                {recentTickers.map(sym => (
+                {recentTickers.slice(0, 4).map(sym => (
                   <button
                     key={sym}
                     onClick={() => handleSearch(sym)}
-                    className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150 cursor-pointer"
-                  >
-                    {sym}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                <span className="text-[9px] font-semibold text-[var(--c-text-fainter)] uppercase tracking-[0.15em]">Try</span>
-                {['AAPL', 'NVDA', 'SPY'].map(sym => (
-                  <button
-                    key={sym}
-                    onClick={() => handleSearch(sym)}
-                    className="text-[11px] font-bold px-2.5 py-1 bg-[var(--c-card)] border border-[var(--c-border)] rounded-lg text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150 cursor-pointer"
+                    className="text-[10.5px] font-bold px-2 py-0.5 bg-[var(--c-input-bg)] border border-[var(--c-border)] rounded-md text-[var(--c-text-faint)] hover:border-[#22B585]/40 hover:text-[#22B585] transition-all duration-150 cursor-pointer"
                   >
                     {sym}
                   </button>
@@ -713,12 +729,10 @@ export default function App() {
           }} />
         )}
 
-        {/* Daily brief cards — visible on landing for signed-in users */}
+        {/* Legacy close-wrap card — Morning Brief covers the open-brief case;
+            keep the close wrap for after-hours users who want the recap. */}
         {!hasData && !isLoading && user && (
-          <>
-            <DailyBriefCard userId={user.id} kind="open"  onJumpToTicker={handleSearch} />
-            <DailyBriefCard userId={user.id} kind="close" onJumpToTicker={handleSearch} />
-          </>
+          <DailyBriefCard userId={user.id} kind="close" onJumpToTicker={handleSearch} />
         )}
 
         {/* Watchlist — visible on landing only, above market pulse */}
