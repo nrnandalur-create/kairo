@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
+import { UnavailableBadge, UnavailableNotice } from './DataUnavailable'
 
 const ERROR_REVEAL_DELAY_MS = 4000
 
@@ -90,7 +91,7 @@ function IndicatorRow({ label, text, accent }) {
   )
 }
 
-export default function AIAnalysis({ data, loading, error, asOf, verdict }) {
+export default function AIAnalysis({ data, loading, error, asOf, verdict, synthetic }) {
   const [revealError, setRevealError] = useState(false)
   useEffect(() => {
     if (data || loading) { setRevealError(false); return }
@@ -104,6 +105,26 @@ export default function AIAnalysis({ data, loading, error, asOf, verdict }) {
     const id = setTimeout(() => setSlowLoad(true), 3000)
     return () => clearTimeout(id)
   }, [loading])
+
+  // No real OHLC → no technical read to interpret. Show the SAME amber notice
+  // the chart, indicators, and recommendation panels use, instead of a grid of
+  // per-field "unavailable" strings with no badge (the old inconsistent state).
+  if (synthetic) {
+    if (loading) return <Skeleton showSlowMessage={slowLoad} />
+    return (
+      <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-fade">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">AI Analysis</span>
+          <UnavailableBadge />
+        </div>
+        <UnavailableNotice title="Analysis unavailable">
+          Per-indicator analysis reads real RSI, MACD, Bollinger Bands, and volume. None of our
+          data sources returned live OHLC for this ticker, so the workup is withheld rather than
+          run on simulated values. Try again shortly.
+        </UnavailableNotice>
+      </div>
+    )
+  }
 
   if (!data) {
     if (loading || !revealError) return <Skeleton showSlowMessage={slowLoad} />

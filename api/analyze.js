@@ -8,6 +8,26 @@ function fmtCap(n) {
   return `$${n.toFixed(0)}M`
 }
 
+// How many of the core technical indicators (RSI, MACD, Bollinger Bands) came
+// back with a real value. Used by the trust guard below to decide whether a
+// verdict is defensible at all.
+function countTechnicals(indicators) {
+  if (!indicators) return 0
+  let n = 0
+  if (indicators.rsi != null) n++
+  if (indicators.macd)        n++
+  if (indicators.bb)          n++
+  return n
+}
+
+// The verdict is only allowed to run when a MEANINGFUL subset of real technical
+// data exists — at least one of RSI / MACD / Bollinger Bands. `noTechnicals`
+// (set by the client when candles are synthetic) is a hard veto regardless.
+function hasCoreTechnicals(indicators, noTechnicals) {
+  if (noTechnicals) return false
+  return countTechnicals(indicators) >= 1
+}
+
 // ── Shared context builder ──────────────────────────────────────────────────
 // Both prompts see the SAME numbers; only interpretation and format differ.
 // Extracted here so the two prompts can't diverge on the underlying data.
@@ -454,6 +474,21 @@ export default async function handler(req, res) {
   // path (which just posts { ticker, quote, ... }) still returns the verdict
   // schema without a client change.
   const type = req.body?.type === 'analysis' ? 'analysis' : 'verdict'
+
+  // ── TRUST GUARD ────────────────────────────────────────────────────────────
+  // A confident BUY/SELL/HOLD with entry + stop must NEVER be generated when we
+  // have no real technical read to stand on. If RSI, MACD, and Bollinger Bands
+  // are all missing (synthetic candles, or too few bars to compute anything),
+  // refuse to produce a verdict — return an explicit `unavailable` payload the
+  // Recommendation panel renders as "insufficient technical data" instead of a
+  // fabricated call. Volume alone is not enough to anchor a directional verdict.
+  if (type === 'verdict' && !hasCoreTechnicals(indicators, noTechnicals)) {
+    return res.json({
+      unavailable: true,
+      reason: 'insufficient technical data',
+      availableTechnicals: countTechnicals(indicators),
+    })
+  }
 
   const ctx = buildContext({ ticker, quote, profile, metrics, indicators, recentCandles, noTechnicals })
   const prompt        = type === 'analysis' ? buildAnalysisPrompt(ctx) : buildVerdictPrompt(ctx)

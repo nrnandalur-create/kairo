@@ -830,6 +830,7 @@ export default function App() {
                   candles={marketData.candles}
                   currentPrice={marketData.quote?.c}
                   asOf={marketData.fetchedAt}
+                  synthetic={marketData.synthetic}
                 />
                 {/* Future-facing pair — analyst targets + next earnings.
                     Both compact; share a row at sm+ so they don't each
@@ -872,6 +873,7 @@ export default function App() {
                     error={aiError}
                     asOf={aiData?.fetchedAt}
                     ticker={ticker}
+                    synthetic={marketData?.synthetic}
                     onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
                   />
                 ) : (
@@ -885,6 +887,7 @@ export default function App() {
                       error={aiError}
                       asOf={aiData?.fetchedAt}
                       ticker={ticker}
+                      synthetic={marketData?.synthetic}
                       onCompare={(tickers) => { setCompareSeed(tickers); setCompareOpen(true) }}
                     />
                   </UpgradeOverlay>
@@ -899,6 +902,7 @@ export default function App() {
                     asOf={analysisData?.fetchedAt}
                     verdict={aiData?.verdict}
                     confidence={aiData?.confidence}
+                    synthetic={marketData?.synthetic}
                   />
                 ) : (
                   <UpgradeOverlay
@@ -912,6 +916,7 @@ export default function App() {
                       asOf={analysisData?.fetchedAt}
                       verdict={aiData?.verdict}
                       confidence={aiData?.confidence}
+                      synthetic={marketData?.synthetic}
                     />
                   </UpgradeOverlay>
                 )}

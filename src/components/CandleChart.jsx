@@ -8,6 +8,7 @@ import {
   CrosshairMode,
 } from 'lightweight-charts'
 import { usePrefs } from '../hooks/usePrefs'
+import { UnavailableBadge, UnavailableNotice } from './DataUnavailable'
 
 // Pull a computed CSS var off <html>. Used so the chart matches whatever
 // theme is active and re-themes when the user flips Settings → Light/Dark.
@@ -46,8 +47,13 @@ export default function CandleChart({ candles, synthetic }) {
   const [tf, setTf] = useState('1M')
   const { theme } = usePrefs()
 
+  // When real OHLC is unavailable we withhold the chart entirely rather than
+  // plotting synthetic bars a user could misread as real price action — the
+  // same trust rule the indicators and AI panels follow.
+  const unavailable = synthetic || !candles?.length
+
   useEffect(() => {
-    if (!containerRef.current || !candles?.length) return
+    if (!containerRef.current || !candles?.length || synthetic) return
 
     const tfDays   = TIMEFRAMES.find(t => t.label === tf)?.days ?? Infinity
     const filtered = tfDays === Infinity ? candles : candles.slice(-tfDays)
@@ -135,7 +141,7 @@ export default function CandleChart({ candles, synthetic }) {
       bandsRef.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles, tf, theme])
+  }, [candles, tf, theme, synthetic])
 
   useEffect(() => {
     if (!bandsRef.current) return
@@ -150,18 +156,13 @@ export default function CandleChart({ candles, synthetic }) {
       <div className="px-4 sm:px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Price Chart</span>
-          {synthetic && (
-            <span
-              title="Real OHLC data is unavailable for this ticker right now. The bars below are a stand-in for visual context only — do not trade off them."
-              className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#e3a234] border border-[#e3a234]/40 bg-[#e3a234]/10 px-2 py-0.5 rounded-full"
-            >
-              <span aria-hidden="true">⚠</span> Simulated data
-            </span>
-          )}
+          {unavailable && <UnavailableBadge />}
         </div>
         {/* Unified control bar — TF pills and BB toggle live in the same
             capsule so they read as one segmented control instead of two
-            differently-sized groups floating next to each other. */}
+            differently-sized groups floating next to each other. Hidden when
+            there's no real chart to control. */}
+        {!unavailable && (
         <div className="flex items-center gap-0.5 bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg p-0.5">
           {TIMEFRAMES.map(({ label }) => (
             <button
@@ -192,22 +193,19 @@ export default function CandleChart({ candles, synthetic }) {
             BB
           </button>
         </div>
+        )}
       </div>
-      {/* If no candles at all (every source failed and synthetic fallback was
-          also blocked), show a specific empty state instead of leaving a
-          zero-height dead zone under the header row. */}
-      {!candles?.length ? (
+      {/* When real OHLC is unavailable — whether no source returned bars at all
+          or only synthetic ones were generated — withhold the chart and show
+          the same amber notice the other panels use. We never plot fabricated
+          candles a user could read as real price action. */}
+      {unavailable ? (
         <div className="px-5 pb-5">
-          <div className="border border-[#e3a234]/30 bg-[#e3a234]/8 rounded-xl p-4 flex flex-col gap-2 h-[380px] items-center justify-center text-center">
-            <span className="text-[#e3a234] text-2xl leading-none">⚠</span>
-            <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#e3a234]">
-              Insufficient candle data
-            </span>
-            <p className="text-[13px] leading-relaxed text-[var(--c-text)]/80 max-w-xs">
-              We couldn't fetch daily OHLC for this ticker from any source right now.
-              Try refreshing in a moment, or search a different symbol.
-            </p>
-          </div>
+          <UnavailableNotice title="Price data unavailable">
+            We couldn't fetch real daily OHLC for this ticker from any source right now, so the
+            chart is withheld rather than drawn from simulated bars. Try refreshing in a moment,
+            or search a different symbol.
+          </UnavailableNotice>
         </div>
       ) : (
         <div ref={containerRef} className="w-full" />

@@ -7,18 +7,18 @@ import { validateTicker } from '../lib/validate.js'
 let _yahoo = null
 async function getYahoo() {
   if (_yahoo) return _yahoo
-  const { default: yahooFinance } = await import('yahoo-finance2')
-  // suppressNotices was removed in yahoo-finance2 v3.x. Without this guard,
-  // a "not a function" throw here knocked Yahoo out of the fallback chain
-  // entirely, causing every request past Polygon's 5/min free-tier limit to
-  // fall to synthetic data. Now: best-effort suppression, but proceed either way.
-  try {
-    if (typeof yahooFinance.suppressNotices === 'function') {
-      yahooFinance.suppressNotices(['ripHistorical', 'yahooSurvey'])
-    }
-  } catch { /* notice suppression is cosmetic */ }
-  _yahoo = yahooFinance
-  return yahooFinance
+  // yahoo-finance2 v3 is a CLASS, not a pre-built singleton. The v2 pattern of
+  // calling methods straight off the default export (`yahooFinance.quote(...)`)
+  // now throws "Call `const yahooFinance = new YahooFinance()` first." — which
+  // knocked Yahoo out of the fallback chain entirely and, with Yahoo being the
+  // top-priority source, dropped every ticker to synthetic data. We must
+  // instantiate it. See the library's v2→v3 UPGRADING guide.
+  const { default: YahooFinance } = await import('yahoo-finance2')
+  // `suppressNotices` moved from an instance method (v2) to a constructor
+  // option (v3). Pass it here so the survey/deprecation notices don't spam
+  // serverless logs on cold start.
+  _yahoo = new YahooFinance({ suppressNotices: ['yahooSurvey', 'ripHistorical'] })
+  return _yahoo
 }
 
 const FINNHUB_BASE = 'https://finnhub.io/api/v1'
@@ -34,18 +34,30 @@ async function fget(label, url) {
 }
 
 async function fetchAVCandles(sym) {
-  const avKey = process.env.ALPHA_VANTAGE_KEY
+  // Trim guards against a trailing newline/space slipping in through the Vercel
+  // env UI — a stray whitespace char makes AV reject the key as invalid, which
+  // previously surfaced as the generic "key error" seen in production.
+  const avKey = process.env.ALPHA_VANTAGE_KEY?.trim()
   if (!avKey) throw new Error('ALPHA_VANTAGE_KEY is not set')
 
   const url = `${AV_BASE}?function=TIME_SERIES_DAILY&symbol=${sym}&outputsize=full&apikey=${avKey}`
-  const res = await fetch(url)
+  const res = await fetch(url, { cache: 'no-store' })
   if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status}`)
 
   const data = await res.json()
 
-  if (data['Error Message']) throw new Error(`Alpha Vantage symbol error`)
-  if (data['Note'])          throw new Error(`Alpha Vantage rate limit`)
-  if (data['Information'])   throw new Error(`Alpha Vantage key error`)
+  if (data['Error Message']) throw new Error(`Alpha Vantage symbol error: ${String(data['Error Message']).slice(0, 100)}`)
+  if (data['Note'])          throw new Error(`Alpha Vantage rate limit (25 req/day free tier)`)
+  // AV returns "Information" both for an invalid/missing key AND when the daily
+  // call cap is hit — the two read very differently to a user, so echo the
+  // actual message instead of always blaming the key.
+  if (data['Information']) {
+    const info = String(data['Information'])
+    const isRateLimit = /rate limit|standard api|premium|25 requests/i.test(info)
+    throw new Error(isRateLimit
+      ? `Alpha Vantage rate limit: ${info.slice(0, 100)}`
+      : `Alpha Vantage key error: ${info.slice(0, 100)}`)
+  }
 
   const series = data['Time Series (Daily)']
   if (!series) throw new Error('Alpha Vantage: missing time series data')
@@ -77,7 +89,14 @@ async function fetchFinnhubCandles(sym) {
   const to   = Math.floor(Date.now() / 1000)
   const from = to - 365 * 24 * 60 * 60   // ~12 months of daily bars
   const url  = `${FINNHUB_BASE}/stock/candle?symbol=${sym}&resolution=D&from=${from}&to=${to}&token=${finnhubKey}`
-  const res  = await fetch(url)
+  const res  = await fetch(url, { cache: 'no-store' })
+  // Finnhub moved /stock/candle behind a paid plan — the free tier now answers
+  // 403 for historical candles (the quote/profile/metric calls this same key
+  // makes elsewhere still work on the free tier). Surface that explicitly so
+  // the aggregated failure reason is honest ("paid tier only") rather than a
+  // bare "HTTP 403", and so the fallback chain moves on cleanly.
+  if (res.status === 403) throw new Error('Finnhub candles: 403 — historical candles require a paid Finnhub plan')
+  if (res.status === 401) throw new Error('Finnhub candles: 401 — invalid API key')
   if (!res.ok) throw new Error(`Finnhub candles HTTP ${res.status}`)
 
   const data = await res.json()
@@ -139,21 +158,40 @@ async function fetchPolygonCandles(sym) {
   if (!key) throw new Error('POLYGON_API_KEY not set')
   const to   = new Date().toISOString().slice(0, 10)
   const from = new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10)
-  const url  = `https://api.polygon.io/v2/aggs/ticker/${sym}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${key}`
-  const res  = await fetch(url)
+  // `sort=desc` so the newest bars come first and `limit` can never truncate
+  // away the recent end of the window — the previous `sort=asc&limit=500`
+  // returned the OLDEST 500 rows, which is how a full year of history could
+  // silently arrive missing its most-recent days and read as "stale".
+  const url  = `https://api.polygon.io/v2/aggs/ticker/${sym}/range/1/day/${from}/${to}?adjusted=true&sort=desc&limit=500&apiKey=${key}`
+  // `cache: 'no-store'` defeats any intermediary/data-cache that would let a
+  // stale response be replayed. Polygon rate-limits the free tier at 5 req/min;
+  // when throttled it answers 429 (handled below) — it must never be served a
+  // cached older body in its place.
+  const res  = await fetch(url, { cache: 'no-store' })
+  if (res.status === 429) throw new Error('Polygon rate limit (5/min free tier)')
   if (!res.ok) throw new Error(`Polygon HTTP ${res.status}`)
   const data = await res.json()
+  // Polygon signals throttling/degraded reads in the body, not just the status:
+  // status "ERROR" (with an `error` string) or "DELAYED". Treat both as a hard
+  // failure so the freshness gate and fallback chain take over rather than
+  // trusting a possibly-stale payload.
+  if (data.status === 'ERROR')   throw new Error(`Polygon error: ${data.error ?? 'unknown'}`)
+  if (data.status === 'DELAYED') throw new Error('Polygon: delayed (non-current) data')
   if (!Array.isArray(data.results) || !data.results.length) {
     throw new Error(`Polygon: no results (${data.status})`)
   }
-  return data.results.map(b => ({
-    time:   Math.floor(b.t / 1000),
-    open:   b.o,
-    high:   b.h,
-    low:    b.l,
-    close:  b.c,
-    volume: b.v,
-  }))
+  // Re-sort ascending for the rest of the pipeline (indicators + freshness
+  // check both assume oldest→newest), since we requested desc above.
+  return data.results
+    .map(b => ({
+      time:   Math.floor(b.t / 1000),
+      open:   b.o,
+      high:   b.h,
+      low:    b.l,
+      close:  b.c,
+      volume: b.v,
+    }))
+    .sort((a, b) => a.time - b.time)
 }
 
 // A source is rejected if its most recent candle is older than this many

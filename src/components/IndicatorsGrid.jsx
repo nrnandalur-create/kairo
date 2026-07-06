@@ -2,6 +2,7 @@ import { calcRSI, calcMACD, calcSMA, calcBBPosition, calcVolumeSignal } from '..
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
 import { usePrefs } from '../hooks/usePrefs'
+import { UnavailableBadge, UnavailableNotice } from './DataUnavailable'
 
 // Plain-English one-liner per indicator. Shown as a hover explainer next to
 // each card title. Copy is deliberately jargon-free.
@@ -81,24 +82,16 @@ function Skeleton() {
 function SyntheticEmptyState({ reason }) {
   return (
     <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-enter">
-      <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Technical Indicators</span>
-      <div className="border border-[#e3a234]/30 bg-[#e3a234]/8 rounded-xl p-4 flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-[#e3a234] text-base leading-none">⚠</span>
-          <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#e3a234]">Real candle data unavailable</span>
-        </div>
-        <p className="text-[13px] leading-relaxed text-[var(--c-text)]/85">
-          RSI, MACD, Bollinger Bands, SMAs, and volume are computed from real OHLC.
-          For this ticker, none of our data sources returned bars right now — so the
-          indicators are hidden rather than computed on simulated values. Try again
-          shortly, or use a different ticker.
-        </p>
-        {reason && (
-          <p className="text-[11px] font-mono text-[var(--c-text-fainter)] leading-relaxed">
-            {reason}
-          </p>
-        )}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em]">Technical Indicators</span>
+        <UnavailableBadge />
       </div>
+      <UnavailableNotice title="Indicators unavailable" reason={reason}>
+        RSI, MACD, Bollinger Bands, SMAs, and volume are computed from real OHLC.
+        For this ticker, none of our data sources returned bars right now — so the
+        indicators are hidden rather than computed on simulated values. Try again
+        shortly, or use a different ticker.
+      </UnavailableNotice>
     </div>
   )
 }

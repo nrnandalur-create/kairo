@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
 import { toast } from '../utils/toast'
+import { UnavailableBadge, UnavailableNotice } from './DataUnavailable'
 
 // How long to keep showing the skeleton after the request has confirmed-failed
 // before swapping in the "unavailable" card. Protects against transient blips
@@ -70,7 +71,31 @@ function Unavailable({ ticker, error }) {
   )
 }
 
-export default function Recommendation({ data, loading, error, asOf, ticker, onCompare }) {
+// Insufficient-technical-data state — the trust-critical case. Rendered when
+// real OHLC is unavailable (synthetic candles) or the server explicitly
+// refused to produce a verdict. We show the SAME amber notice the AI Analysis
+// and Indicators panels use — never a confident BUY/SELL/HOLD on no data.
+function InsufficientData() {
+  return (
+    <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-3 animate-fade">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
+          AI Recommendation
+          <InfoTooltip>
+            A verdict is only generated when real technical indicators (RSI, MACD, Bollinger Bands) are available. Right now they aren't, so no call is shown. Educational only — not financial advice.
+          </InfoTooltip>
+        </span>
+        <UnavailableBadge />
+      </div>
+      <UnavailableNotice title="Recommendation unavailable">
+        Insufficient technical data. A BUY/SELL/HOLD call is withheld until live RSI, MACD,
+        and Bollinger Bands return — we never generate a verdict from simulated or missing data.
+      </UnavailableNotice>
+    </div>
+  )
+}
+
+export default function Recommendation({ data, loading, error, asOf, ticker, onCompare, synthetic }) {
   // Defer revealing the error/unavailable state for ERROR_REVEAL_DELAY_MS so
   // a slow request, a transient blip, or a fast loading→success transition
   // doesn't flicker through the "unavailable" card.
@@ -101,6 +126,16 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
     } catch {
       toast.error('Clipboard not available — copy manually from the address bar')
     }
+  }
+
+  // TRUST GUARD (client-side belt to the server's suspenders): if the candles
+  // are synthetic, or the server explicitly refused to produce a verdict on
+  // insufficient technical data, NEVER show a confident call. This must win
+  // over every other state below — including a stale cached `data.verdict`
+  // that might still be sitting in state from a previous ticker.
+  if (synthetic || data?.unavailable) {
+    if (loading) return <Skeleton showSlowMessage={slowLoad} />
+    return <InsufficientData />
   }
 
   // Three-state render: success > skeleton > confirmed-failure.

@@ -39,8 +39,11 @@ function LevelRow({ price, level, isResistance }) {
   )
 }
 
-export default function SupportResistance({ candles, currentPrice, asOf }) {
-  if (!candles?.length || !currentPrice) return null
+export default function SupportResistance({ candles, currentPrice, asOf, synthetic }) {
+  // Support/resistance are pivot levels read off real price history. On
+  // synthetic candles they'd be pure noise dressed as levels — withhold the
+  // panel entirely, consistent with the chart/indicators/AI panels.
+  if (synthetic || !candles?.length || !currentPrice) return null
 
   const { resistance, support } = calcSR(candles, currentPrice)
 
