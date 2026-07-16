@@ -47,7 +47,7 @@ function MetricCell({ label, value, color, badge, badgeColor, hidden }) {
         {tip && <InfoTooltip label={`About ${label}`}>{tip}</InfoTooltip>}
       </span>
       <div className="flex items-baseline gap-1.5 flex-wrap">
-        <span className={`text-sm font-semibold tabular-nums ${color || 'text-[var(--c-text)]'} truncate`}>{value}</span>
+        <span className={`text-sm font-semibold tabular-nums ${color || 'text-[var(--c-text)]'} break-words min-w-0`}>{value}</span>
         {badge && (
           <span
             className="text-[10px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5 rounded border whitespace-nowrap leading-none"

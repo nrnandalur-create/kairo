@@ -23,6 +23,8 @@ export function UserMenu() {
           fontSize: 13,
           cursor: 'pointer',
           transition: 'border-color 0.15s',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
         }}
         onMouseOver={e => e.currentTarget.style.borderColor = GREEN}
         onMouseOut={e => e.currentTarget.style.borderColor = BORDER}

@@ -81,7 +81,7 @@ function BookmarkButton({ saved, onToggle }) {
     <button
       onClick={onToggle}
       title={saved ? 'Remove from watchlist' : 'Add to watchlist'}
-      className={`flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg border transition-all duration-150 cursor-pointer ${
+      className={`flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 shrink-0 rounded-lg border transition-all duration-150 cursor-pointer ${
         saved
           ? 'bg-[#22B585]/10 border-[#22B585]/30 text-[#22B585] hover:bg-[#22B585]/20'
           : 'bg-transparent border-[var(--c-border)] text-[var(--c-text-faint)] hover:border-[var(--c-border-strong)] hover:text-[var(--c-text)]'

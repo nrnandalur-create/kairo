@@ -10,6 +10,11 @@ const COLOR = {
   closed: { dot: '#ef5454', text: '#ef5454', ring: 'rgba(226,75,74,0.45)'  },
 }
 
+// Short labels for phones — the full "Market Closed" form is ~130px and crowds
+// the header on a 375px screen. Below sm we show the compact form; the full
+// label returns at sm+. Same info, colour dot unchanged.
+const SHORT_LABEL = { open: 'OPEN', pre: 'PRE', after: 'AFT', closed: 'CLOSED' }
+
 export default function MarketStatusPill({ compact = false }) {
   const { state, label } = useMarketStatus()
   const now = useNow(1000)              // live wall clock — 1Hz
@@ -30,8 +35,9 @@ export default function MarketStatusPill({ compact = false }) {
         )}
         <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: c.dot }} />
       </span>
-      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: c.text }}>
-        {label}
+      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: c.text }}>
+        <span className="sm:hidden">{SHORT_LABEL[state] ?? label}</span>
+        <span className="hidden sm:inline">{label}</span>
       </span>
       {showClock && (
         <span className="hidden sm:inline-flex items-center gap-2">
