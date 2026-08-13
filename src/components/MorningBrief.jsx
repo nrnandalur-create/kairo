@@ -2,6 +2,32 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
+import { usePrefs } from '../hooks/usePrefs'
+import { prefs } from '../utils/prefs'
+
+// Minimize / expand control for the brief header. Chevron rotates to point
+// down when collapsed (click to expand) and up when expanded (click to
+// minimize). State lives in prefs so it survives reloads.
+function CollapseToggle({ collapsed, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={!collapsed}
+      aria-label={collapsed ? 'Expand morning brief' : 'Minimize morning brief'}
+      title={collapsed ? 'Expand' : 'Minimize'}
+      className="shrink-0 -my-1 p-1 rounded-md text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-text)]/5 transition-colors duration-150 cursor-pointer"
+    >
+      <svg
+        width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        className={`transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`}
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  )
+}
 
 // Morning Brief hub — the daily-habit anchor for authenticated users.
 //
@@ -103,6 +129,7 @@ function DeltaChip({ wlDelta, spyDelta }) {
 export default function MorningBrief() {
   const { user } = useAuth()
   const { isPro } = useSubscription()
+  const { briefCollapsed } = usePrefs()
   const [brief, setBrief]     = useState(null)
   const [status, setStatus]   = useState('idle') // idle | loading | ready | error
   const [errorMsg, setErrorMsg] = useState(null)
@@ -191,47 +218,59 @@ export default function MorningBrief() {
           <span className="w-1.5 h-1.5 rounded-full bg-[#22B585]" />
           Morning Brief · {dateLabel}
         </span>
-        <DeltaChip wlDelta={brief.watchlist_change_pct} spyDelta={brief.spy_change_pct} />
+        <div className="flex items-center gap-2">
+          <DeltaChip wlDelta={brief.watchlist_change_pct} spyDelta={brief.spy_change_pct} />
+          <CollapseToggle
+            collapsed={briefCollapsed}
+            onToggle={() => prefs.set('briefCollapsed', !briefCollapsed)}
+          />
+        </div>
       </div>
 
-      {/* First section is always visible. Pro users see every section; free
-          users see only the first, with an inline upgrade prompt taking
-          the place of the remaining sections. Keeps the top item genuinely
-          READABLE per the "top item only" spec. */}
-      <div className="flex flex-col gap-1.5">
-        {renderMarkdown(brief.content_md, { limitToFirstSection: !isPro })}
-      </div>
+      {/* Body + CTAs hide when minimized — only the header bar above stays,
+          keeping the brief identifiable and one click from re-expanding. */}
+      {!briefCollapsed && (
+        <>
+          {/* First section is always visible. Pro users see every section; free
+              users see only the first, with an inline upgrade prompt taking
+              the place of the remaining sections. Keeps the top item genuinely
+              READABLE per the "top item only" spec. */}
+          <div className="flex flex-col gap-1.5">
+            {renderMarkdown(brief.content_md, { limitToFirstSection: !isPro })}
+          </div>
 
-      {/* Free tier: inline upgrade CTA in place of the remaining sections. */}
-      {!isPro && totalSections > 1 && (
-        <div className="border border-[#22B585]/25 bg-[#22B585]/[0.06] rounded-lg p-3 flex items-start gap-2 text-[11.5px] leading-relaxed text-[var(--c-text)]/85 flex-wrap sm:flex-nowrap">
-          <span className="text-[#22B585] shrink-0 mt-0.5">✦</span>
-          <span className="flex-1 min-w-0">
-            <strong className="text-[var(--c-text-strong)]">
-              {totalSections - 1} more section{totalSections - 1 === 1 ? '' : 's'} in the full brief
-            </strong>
-            {' '}— watchlist movers, what to watch today, and the day's risk posture.
-          </span>
-          <button
-            type="button"
-            onClick={() => window.location.assign('/pricing')}
-            className="bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.97] text-white font-semibold text-[11.5px] px-3 py-1.5 rounded-lg transition-all duration-150 cursor-pointer whitespace-nowrap shrink-0"
-          >
-            Upgrade to Pro
-          </button>
-        </div>
-      )}
+          {/* Free tier: inline upgrade CTA in place of the remaining sections. */}
+          {!isPro && totalSections > 1 && (
+            <div className="border border-[#22B585]/25 bg-[#22B585]/[0.06] rounded-lg p-3 flex items-start gap-2 text-[11.5px] leading-relaxed text-[var(--c-text)]/85 flex-wrap sm:flex-nowrap">
+              <span className="text-[#22B585] shrink-0 mt-0.5">✦</span>
+              <span className="flex-1 min-w-0">
+                <strong className="text-[var(--c-text-strong)]">
+                  {totalSections - 1} more section{totalSections - 1 === 1 ? '' : 's'} in the full brief
+                </strong>
+                {' '}— watchlist movers, what to watch today, and the day's risk posture.
+              </span>
+              <button
+                type="button"
+                onClick={() => window.location.assign('/pricing')}
+                className="bg-[#22B585] hover:bg-[#2BC093] active:scale-[0.97] text-white font-semibold text-[11.5px] px-3 py-1.5 rounded-lg transition-all duration-150 cursor-pointer whitespace-nowrap shrink-0"
+              >
+                Upgrade to Pro
+              </button>
+            </div>
+          )}
 
-      {/* Nudge for empty-watchlist users regardless of tier — they can't get
-          personalized briefs without at least one ticker tracked. */}
-      {isNoWatchlistFallback && (
-        <div className="border border-[#22B585]/25 bg-[#22B585]/[0.06] rounded-lg p-3 flex items-center gap-2 text-[11.5px] leading-relaxed text-[var(--c-text)]/85">
-          <span className="text-[#22B585] shrink-0">→</span>
-          <span>
-            <strong>Personalize tomorrow's brief.</strong> Add a few tickers to your
-            watchlist and Kairo will cover exactly what you own.
-          </span>
-        </div>
+          {/* Nudge for empty-watchlist users regardless of tier — they can't get
+              personalized briefs without at least one ticker tracked. */}
+          {isNoWatchlistFallback && (
+            <div className="border border-[#22B585]/25 bg-[#22B585]/[0.06] rounded-lg p-3 flex items-center gap-2 text-[11.5px] leading-relaxed text-[var(--c-text)]/85">
+              <span className="text-[#22B585] shrink-0">→</span>
+              <span>
+                <strong>Personalize tomorrow's brief.</strong> Add a few tickers to your
+                watchlist and Kairo will cover exactly what you own.
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
