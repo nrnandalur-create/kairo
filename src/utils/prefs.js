@@ -31,6 +31,10 @@ export const DEFAULTS = {
   // headline surfaces stay approachable for users new to markets. Every
   // metric that's still visible has a plain-English hover tooltip.
   beginnerMode: false,
+  // Morning Brief collapsed to just its header bar. Persisted so a user who
+  // minimizes it on the signed-in front door keeps it that way across reloads;
+  // fully reversible via the same header toggle (no brief content is lost).
+  briefCollapsed: false,
 }
 
 function load() {
