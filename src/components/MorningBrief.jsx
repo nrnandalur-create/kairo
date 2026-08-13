@@ -29,6 +29,29 @@ function CollapseToggle({ collapsed, onToggle }) {
   )
 }
 
+// Close control — dismisses the brief entirely. The signed-in front door
+// then shows the animated market hero in its place (App.jsx watches the
+// same `briefClosed` pref), with a "Show morning brief" link to restore.
+function CloseButton({ onClose }) {
+  return (
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Close morning brief"
+      title="Close"
+      className="shrink-0 -my-1 p-1 rounded-md text-[var(--c-text-faint)] hover:text-[var(--c-text)] hover:bg-[var(--c-text)]/5 transition-colors duration-150 cursor-pointer"
+    >
+      <svg
+        width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  )
+}
+
 // Morning Brief hub — the daily-habit anchor for authenticated users.
 //
 // States, in priority order:
@@ -224,6 +247,7 @@ export default function MorningBrief() {
             collapsed={briefCollapsed}
             onToggle={() => prefs.set('briefCollapsed', !briefCollapsed)}
           />
+          <CloseButton onClose={() => prefs.set('briefClosed', true)} />
         </div>
       </div>
 

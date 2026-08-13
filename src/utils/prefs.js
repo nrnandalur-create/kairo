@@ -35,6 +35,11 @@ export const DEFAULTS = {
   // minimizes it on the signed-in front door keeps it that way across reloads;
   // fully reversible via the same header toggle (no brief content is lost).
   briefCollapsed: false,
+  // Morning Brief closed entirely. When true, the signed-in front door shows
+  // the animated market hero (HeroMarketBackdrop) in the brief's place instead
+  // of leaving that landing unused. Persisted + reversible via a "Show morning
+  // brief" restore link on the hero.
+  briefClosed: false,
 }
 
 function load() {

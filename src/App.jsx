@@ -49,6 +49,7 @@ import Toaster from './components/Toaster'
 import { useCommandPalette } from './hooks/useCommandPalette'
 import { useAutoRefresh } from './hooks/useAutoRefresh'
 import { usePrefs } from './hooks/usePrefs'
+import { prefs } from './utils/prefs'
 import { toast } from './utils/toast'
 import SettingsModal from './components/SettingsModal'
 import AboutModal from './components/AboutModal'
@@ -659,10 +660,11 @@ export default function App() {
       {/* ── Main ── */}
       <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 flex flex-col gap-3 sm:gap-4">
 
-        {/* ── Anonymous hero: full brand landing with search ────────────
-            Only anonymous users see the giant logo + tagline. Signed-in
-            users get the Morning Brief as the front-door hero instead. */}
-        {!hasData && !isLoading && !user && (
+        {/* ── Market hero: full brand landing with the animated backdrop ──
+            Anonymous users always see it. Signed-in users see the Morning
+            Brief here instead — UNLESS they've closed it, in which case the
+            hero takes its place rather than leaving that landing unused. */}
+        {!hasData && !isLoading && (!user || userPrefs.briefClosed) && (
           <div className="relative flex flex-col items-center text-center gap-5 sm:gap-6 pt-6 sm:pt-10 pb-6 animate-fade">
             <HeroMarketBackdrop />
             {/* Ambient glow behind logo */}
@@ -691,14 +693,31 @@ export default function App() {
                 </button>
               ))}
             </div>
+
+            {/* Signed-in users who closed the brief get a way back to it. */}
+            {user && userPrefs.briefClosed && (
+              <button
+                type="button"
+                onClick={() => prefs.set('briefClosed', false)}
+                className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-[var(--c-text-faint)] hover:text-[#22B585] transition-colors duration-150 cursor-pointer"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 14 4 9 9 4" />
+                  <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                </svg>
+                Show morning brief
+              </button>
+            )}
           </div>
         )}
 
         {/* ── Signed-in front door: Morning Brief FIRST, then a compact
-             search strip so the user can jump straight into any ticker. */}
-        {!hasData && !isLoading && user && <MorningBrief />}
+             search strip so the user can jump straight into any ticker.
+             Both hide when the brief is closed — the hero above covers the
+             landing + search in that state. */}
+        {!hasData && !isLoading && user && !userPrefs.briefClosed && <MorningBrief />}
 
-        {!hasData && !isLoading && user && (
+        {!hasData && !isLoading && user && !userPrefs.briefClosed && (
           <div className="w-full glass-card rounded-xl p-3 sm:p-4 flex items-center gap-3 flex-wrap animate-enter">
             <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.14em] shrink-0">
               Analyze a ticker
