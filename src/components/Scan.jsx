@@ -19,12 +19,12 @@ function StockCard({ stock, onSelect }) {
       onClick={() => onSelect(stock.ticker)}
       className="bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--c-border-strong)] hover:bg-[var(--c-hover-bg)] transition-all duration-150 animate-enter"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <span className="text-sm font-bold text-[var(--c-text)]">{stock.ticker}</span>
-          <span className="text-xs text-[var(--c-text-faint)] ml-1.5 truncate">{stock.name}</span>
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <div className="flex items-baseline gap-1.5 min-w-0">
+          <span className="text-sm font-bold text-[var(--c-text)] shrink-0">{stock.ticker}</span>
+          <span className="text-xs text-[var(--c-text-faint)] truncate min-w-0">{stock.name}</span>
         </div>
-        <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest shrink-0 pt-0.5">
+        <span className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest truncate self-start max-w-full">
           {stock.sector}
         </span>
       </div>
