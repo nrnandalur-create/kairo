@@ -62,7 +62,16 @@ export default function Scan({ open, onClose, onAnalyze }) {
   const [meta, setMeta]               = useState({ total: 0, processed: 0, failedCount: 0 })
   const [sector, setSector]           = useState(null)
   const [error, setError]             = useState(null)
+  const [mounted, setMounted]         = useState(false)
   const cancelledRef = useRef(false)
+
+  // Drives the slide-in entrance — starts translated off-screen, flips to
+  // translate-x-0 one frame after mount so the transition actually plays.
+  useEffect(() => {
+    if (!open) { setMounted(false); return }
+    const id = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(id)
+  }, [open])
 
   const loadResults = async () => {
     const [{ data: job }, { data: rows }] = await Promise.all([
@@ -136,8 +145,13 @@ export default function Scan({ open, onClose, onAnalyze }) {
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-full max-w-xl h-full bg-[var(--c-bg)] border-l border-[var(--c-border)] flex flex-col overflow-hidden">
+      <div
+        className={`flex-1 bg-black/70 backdrop-blur-sm transition-opacity duration-200 ease-out ${mounted ? 'opacity-100' : 'opacity-0'}`}
+        onClick={onClose}
+      />
+      <div
+        className={`w-full max-w-xl h-full bg-[var(--c-card)] border-l border-[var(--c-border-strong)] shadow-[-16px_0_48px_-8px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden transition-transform duration-200 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}
+      >
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--c-border)] shrink-0">
