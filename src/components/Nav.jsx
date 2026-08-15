@@ -63,6 +63,15 @@ function CompareIcon() {
   )
 }
 
+function ScanIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M1.5 5V2a.5.5 0 01.5-.5h3M11 1.5h3a.5.5 0 01.5.5v3M14.5 11v3a.5.5 0 01-.5.5h-3M5 14.5H2a.5.5 0 01-.5-.5v-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3.5 10.5L6 6l2 3 2.5-4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
 function SettingsIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -81,6 +90,7 @@ const NAV_ITEMS = [
   { key: 'compare',   label: 'Compare',   Icon: CompareIcon   },
   { key: 'alerts',    label: 'Alerts',    Icon: AlertsIcon    },
   { key: 'news',      label: 'News',      Icon: NewsIcon      },
+  { key: 'scan',      label: 'Scan',      Icon: ScanIcon      },
 ]
 const MOBILE_NAV_ITEMS = NAV_ITEMS.slice(0, 5)
 
@@ -126,7 +136,7 @@ function BottomItem({ item, active, onClick }) {
 
 export default function Nav({
   activeKey,
-  onHome, onScreener, onPortfolio, onAlerts, onNews, onSectors, onCompare, onSettings,
+  onHome, onScreener, onPortfolio, onAlerts, onNews, onSectors, onCompare, onSettings, onScan,
 }) {
   const handlers = {
     home:      onHome,
@@ -137,6 +147,7 @@ export default function Nav({
     sectors:   onSectors,
     compare:   onCompare,
     settings:  onSettings ?? (() => {}),
+    scan:      onScan,
   }
 
   return (

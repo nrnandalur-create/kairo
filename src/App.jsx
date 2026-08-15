@@ -17,6 +17,7 @@ import Watchlist from './components/Watchlist'
 // Heavy modals — code-split, only fetched on first open
 const Screener     = lazy(() => import('./components/Screener'))
 const Portfolio    = lazy(() => import('./components/Portfolio'))
+const Scan         = lazy(() => import('./components/Scan'))
 import PriceAlertForm from './components/PriceAlertForm'
 import { useWatchlist } from './hooks/useWatchlist'
 import { useAlerts } from './hooks/useAlerts'
@@ -160,6 +161,7 @@ export default function App() {
   const alerts         = useAlerts()
   const [onboarded, setOnboarded] = useState(() => !!localStorage.getItem('kairo_onboarded'))
   const [screenerOpen,  setScreenerOpen]  = useState(false)
+  const [scanOpen,      setScanOpen]      = useState(false)
   const [portfolioOpen, setPortfolioOpen] = useState(false)
   const [sectorsOpen,   setSectorsOpen]   = useState(false)
   const [compareOpen,   setCompareOpen]   = useState(false)
@@ -514,6 +516,7 @@ export default function App() {
       case 'paper':     setPaperOpen(true);       break
       case 'replay':    setReplayOpen(true);      break
       case 'screener':  setScreenerOpen(true);  break
+      case 'scan':      setScanOpen(true);       break
       case 'portfolio': setPortfolioOpen(true); break
       case 'sectors':   setSectorsOpen(true);   break
       case 'compare':   setCompareOpen(true);   break
@@ -524,6 +527,7 @@ export default function App() {
   }
 
   const activeNav = screenerOpen  ? 'screener'
+    : scanOpen      ? 'scan'
     : portfolioOpen ? 'portfolio'
     : sectorsOpen   ? 'sectors'
     : compareOpen   ? 'compare'
@@ -578,6 +582,7 @@ export default function App() {
         onCompare={() => setCompareOpen(true)}
         onAlerts={handleAlerts}
         onNews={handleNews}
+        onScan={() => setScanOpen(true)}
       />
 
       {/* ── Header ── */}
@@ -1033,6 +1038,11 @@ export default function App() {
       {screenerOpen && (
         <Suspense fallback={null}>
           <Screener open onClose={() => setScreenerOpen(false)} onAnalyze={handleSearch} />
+        </Suspense>
+      )}
+      {scanOpen && (
+        <Suspense fallback={null}>
+          <Scan open onClose={() => setScanOpen(false)} onAnalyze={handleSearch} />
         </Suspense>
       )}
       {portfolioOpen && (
