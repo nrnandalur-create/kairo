@@ -82,7 +82,7 @@ export default function Scan({ open, onClose, onAnalyze }) {
   const pollUntilDone = async (jobId) => {
     cancelledRef.current = false
     while (!cancelledRef.current) {
-      const r = await fetch('/api/scan?type=tick', {
+      const r = await fetch('/api/screener?type=scan-tick', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobId }),
       })
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? `HTTP ${r.status}`)
@@ -97,7 +97,7 @@ export default function Scan({ open, onClose, onAnalyze }) {
     setStatus('running')
     setError(null)
     try {
-      const r = await fetch('/api/scan?type=start', {
+      const r = await fetch('/api/screener?type=scan-start', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force }),
       })
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? `HTTP ${r.status}`)
