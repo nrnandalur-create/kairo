@@ -282,7 +282,7 @@ async function handleFollowup(req, res) {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         stream: true,
         messages: [
           { role: 'system', content: 'You are an institutional equity analyst answering follow-up questions about a single ticker. Be specific, cite numbers from the prior analysis when possible, never invent data, and keep responses to 2–4 sentences. No markdown fences, no headers, no bullet lists — flowing prose only.' },
@@ -402,7 +402,7 @@ Rules: cite specific ticker names + numbers. Never hedge. Never use "as an AI". 
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model:       'llama-3.3-70b-versatile',
+        model:       'openai/gpt-oss-120b',
         messages:    [
           { role: 'system', content: 'You are a senior analyst producing head-to-head comparisons. Return valid JSON only. Cite specific tickers and numbers. Every field must reference at least one ticker by name.' },
           { role: 'user',   content: prompt },
@@ -508,7 +508,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user',   content: prompt       },

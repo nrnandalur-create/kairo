@@ -89,7 +89,7 @@ Write ONE crisp sentence narrating what's happening across this user's watchlist
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body:    JSON.stringify({
-        model:    'llama-3.3-70b-versatile',
+        model:    'openai/gpt-oss-120b',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.6,
       }),
