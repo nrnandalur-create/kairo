@@ -1,10 +1,12 @@
 // Single cron dispatcher — replaces 7 separate /api/cron/* handlers so the
 // project stays under Vercel's 12-function Hobby limit.
 //
-// Each job module exports default async handler(req, res). This file routes
-// `?job=NAME` to the corresponding module, while preserving the same
-// authentication path the individual files used (x-vercel-cron header for
-// scheduled invocations OR ?secret=CRON_SECRET for manual triggers).
+// Each job module exports default async handler(req, res). This file is the
+// SINGLE authorization boundary for every job: it requires
+// `Authorization: Bearer <CRON_SECRET>` before dispatching. Vercel Cron sends
+// exactly this header automatically when the CRON_SECRET env var is set, so the
+// scheduled jobs keep working with no vercel.json change. The spoofable
+// x-vercel-cron header and the ?secret= query param are NO LONGER trusted.
 //
 // Scheduled jobs in vercel.json:
 //   /api/cron?job=open-brief at 13:30 UTC (08:30 ET) weekdays
@@ -12,9 +14,11 @@
 //
 // All other jobs ('check-alerts', 'smart-signals', 'conviction-followup',
 // 'evaluate-verdicts', 'curate-setups') remain available but only fire on
-// demand via curl or an external scheduler:
-//   curl https://kairo-iota-red.vercel.app/api/cron?job=evaluate-verdicts&secret=$CRON_SECRET
+// demand via an external scheduler that sends the Bearer header:
+//   curl -H "Authorization: Bearer $CRON_SECRET" \
+//        https://kairo-iota-red.vercel.app/api/cron?job=evaluate-verdicts
 
+import { requireCron } from '../lib/auth.js'
 import handleCheckAlerts        from '../lib/jobs/checkAlerts.js'
 import handleOpenBrief          from '../lib/jobs/openBrief.js'
 import handleCloseWrap          from '../lib/jobs/closeWrap.js'
@@ -34,6 +38,9 @@ const JOBS = {
 }
 
 export default async function handler(req, res) {
+  // Authorize EVERY job centrally before doing anything else. Never logs the secret.
+  if (!requireCron(req, res)) return
+
   const job = req.query?.job
   if (!job || !JOBS[job]) {
     return res.status(400).json({

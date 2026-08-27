@@ -1,5 +1,19 @@
 import { rateLimit } from '../lib/rateLimit.js'
 import { validateTicker } from '../lib/validate.js'
+import { requireUser, getSupabaseAdmin } from '../lib/auth.js'
+import { getEntitlement } from '../lib/entitlements.js'
+import { consumeAnalyzeQuota } from '../lib/quota.js'
+
+// Translate an atomic-quota denial into the structured 429 the client expects:
+//   { error: 'quota_exceeded', quota: 'verdict'|'search', limit, remaining }
+function sendQuotaExceeded(res, decision) {
+  return res.status(429).json({
+    error:     'quota_exceeded',
+    quota:     decision.quota,
+    limit:     decision.limit,
+    remaining: decision.remaining,
+  })
+}
 
 function fmtCap(n) {
   if (!n) return 'N/A'
@@ -449,13 +463,35 @@ export default async function handler(req, res) {
   if (!rateLimit(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  // Followup (streaming, AIChat) short-circuits everything below because
-  // its body shape is completely different (question + history, no candles).
-  if (req.body?.type === 'followup') return handleFollowup(req, res)
+  // ── AUTH — server-authoritative. Every AI mode (verdict / analysis /
+  //     followup / compare) requires a valid Supabase JWT. We never read a
+  //     user id from the request body. Anonymous callers get 401 and NO Groq
+  //     call is ever made. ─────────────────────────────────────────────────
+  const admin = getSupabaseAdmin()
+  const user  = await requireUser(req, res, admin)
+  if (!user) return                    // requireUser already wrote 401/500
 
-  // Compare (multi-ticker, JSON) — same short-circuit reason, needs its own
-  // body validation shape.
-  if (req.body?.type === 'compare')  return handleCompare(req, res)
+  // ── ENTITLEMENT — Free vs Pro decided from the DB, not the client. ───────
+  const ent = await getEntitlement(user, admin)
+
+  // ── REQUEST MODE ─────────────────────────────────────────────────────────
+  const rawType = req.body?.type
+  const mode =
+    rawType === 'followup' ? 'followup' :
+    rawType === 'compare'  ? 'compare'  :
+    rawType === 'analysis' ? 'analysis' : 'verdict'
+
+  // Followup + compare carry a different body shape and are handled by their
+  // own functions. For free users they consume one verdict-quota unit BEFORE
+  // any Groq call; Pro bypasses. This closes the bypass where a client could
+  // hit Groq for free via the alternate modes.
+  if (mode === 'followup' || mode === 'compare') {
+    if (!ent.isPro) {
+      const decision = await consumeAnalyzeQuota(admin, user.id, mode, null)
+      if (!decision.allowed) return sendQuotaExceeded(res, decision)
+    }
+    return mode === 'followup' ? handleFollowup(req, res) : handleCompare(req, res)
+  }
 
   const apiKey = process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'AI analysis service is unavailable' })
@@ -470,24 +506,27 @@ export default async function handler(req, res) {
   if (!Array.isArray(recentCandles)) return res.status(400).json({ error: 'Invalid candle data' })
   if (recentCandles.length > 20) return res.status(400).json({ error: 'Too many candles' })
 
-  // Two distinct call modes. Default to 'verdict' so the existing signal-alert
-  // path (which just posts { ticker, quote, ... }) still returns the verdict
-  // schema without a client change.
-  const type = req.body?.type === 'analysis' ? 'analysis' : 'verdict'
+  // 'verdict' (default, also the signal-alert path) or 'analysis'.
+  const type = mode
 
   // ── TRUST GUARD ────────────────────────────────────────────────────────────
   // A confident BUY/SELL/HOLD with entry + stop must NEVER be generated when we
-  // have no real technical read to stand on. If RSI, MACD, and Bollinger Bands
-  // are all missing (synthetic candles, or too few bars to compute anything),
-  // refuse to produce a verdict — return an explicit `unavailable` payload the
-  // Recommendation panel renders as "insufficient technical data" instead of a
-  // fabricated call. Volume alone is not enough to anchor a directional verdict.
+  // have no real technical read to stand on. Runs BEFORE quota consumption so an
+  // "unavailable" verdict never burns the user's 1/day allowance.
   if (type === 'verdict' && !hasCoreTechnicals(indicators, noTechnicals)) {
     return res.json({
       unavailable: true,
       reason: 'insufficient technical data',
       availableTechnicals: countTechnicals(indicators),
     })
+  }
+
+  // ── QUOTA — free tier only, Pro bypasses. Consumed AFTER validation + trust
+  //     guard but BEFORE the Groq call, so a denied request never reaches the
+  //     AI provider. Atomic in Postgres (see consume_analyze_quota). ─────────
+  if (!ent.isPro) {
+    const decision = await consumeAnalyzeQuota(admin, user.id, type, ticker)
+    if (!decision.allowed) return sendQuotaExceeded(res, decision)
   }
 
   const ctx = buildContext({ ticker, quote, profile, metrics, indicators, recentCandles, noTechnicals })

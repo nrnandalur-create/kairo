@@ -18,4 +18,13 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  // Server-side code (Vercel serverless functions + shared lib) and tests run
+  // under Node, not the browser — give them Node globals (process, Buffer, …)
+  // so they don't trip no-undef.
+  {
+    files: ['api/**/*.js', 'lib/**/*.js', 'test/**/*.js', 'supabase/functions/**/*.{js,ts}'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
 ])

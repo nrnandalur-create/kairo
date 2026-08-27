@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchMarket } from '../services/finnhub'
 import { fetchAnalysis } from '../services/analyze'
 import { calcRSI, calcMACD, calcBBPosition } from '../utils/indicators'
+import { authHeaders } from '../lib/authHeader'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -404,11 +405,13 @@ export default function CompareView({ open, onClose, initialTickers }) {
 
     let cancelled = false
     setCompare('loading')
-    fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ type: 'compare', tickers: unique }),
-    })
+    // Server requires a JWT (auth + quota enforced there); forward it.
+    authHeaders({ 'Content-Type': 'application/json' })
+      .then(headers => fetch('/api/analyze', {
+        method: 'POST',
+        headers,
+        body:    JSON.stringify({ type: 'compare', tickers: unique }),
+      }))
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`compare ${r.status}`)))
       .then(data => { if (!cancelled) setCompare(data) })
       .catch(() => { if (!cancelled) setCompare('error') })
