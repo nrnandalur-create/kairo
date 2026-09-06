@@ -153,7 +153,7 @@ export default function AIAnalysis({ data, loading, error, asOf, verdict, synthe
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
           AI Analysis
           <InfoTooltip>
-            Per-indicator breakdown from Groq LLaMA-3.3. This panel INTERPRETS each indicator in isolation — the verdict itself lives in the AI Recommendation panel above. Educational only.
+            Per-indicator breakdown from a large language model served via Groq. This panel INTERPRETS each indicator in isolation — the verdict itself lives in the AI Recommendation panel above. Educational only.
           </InfoTooltip>
         </span>
         <VerdictPill verdict={verdict} />

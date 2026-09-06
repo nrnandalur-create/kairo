@@ -74,7 +74,7 @@ export default function PricingPage({ onClose }) {
       <main className="flex-1 flex flex-col items-center gap-8 py-10 sm:py-14 px-4">
         <div className="flex flex-col items-center gap-2 text-center max-w-2xl">
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[var(--c-text-strong)] tracking-tight">
-            Trade with a real specialist beside you
+            An AI analyst beside every ticker
           </h1>
           <p className="text-[var(--c-text-faint)] text-[13px] sm:text-sm max-w-xl">
             Kairo Pro unlocks the full analyst stack — dual-prompt AI verdicts, per-indicator breakdowns, insider flow, and live options.
