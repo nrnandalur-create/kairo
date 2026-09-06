@@ -172,7 +172,7 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
           AI Recommendation
           <InfoTooltip>
-            Verdict, confidence, entry, and stop derived from a Groq LLaMA-3.3 model conditioned on technical indicators and recent OHLC. Educational only — not financial advice.
+            Verdict, confidence, entry, and stop derived from a large language model (served via Groq) conditioned on technical indicators and recent OHLC. Educational only — not financial advice.
           </InfoTooltip>
         </span>
         <div className="flex items-center gap-1.5">

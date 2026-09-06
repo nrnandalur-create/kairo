@@ -140,6 +140,7 @@ export function AuthModal({ onClose }) {
           style={inputStyle}
           type="email"
           placeholder="Email"
+          aria-label="Email address"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
@@ -148,6 +149,7 @@ export function AuthModal({ onClose }) {
           style={inputStyle}
           type="password"
           placeholder="Password"
+          aria-label="Password"
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
@@ -163,6 +165,13 @@ export function AuthModal({ onClose }) {
         <button type="submit" style={btnStyle} disabled={loading}>
           {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
         </button>
+
+        <p style={{ textAlign: 'center', margin: 0, fontSize: 11.5, lineHeight: 1.5, color: MUTED }}>
+          By continuing, you agree to our{' '}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: GREEN }}>Terms</a>
+          {' '}and{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: GREEN }}>Privacy Policy</a>.
+        </p>
       </form>
 
       <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: MUTED }}>
@@ -195,6 +204,9 @@ function Overlay({ onClose, children }) {
     >
       <div
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Sign in to Kairo"
         className="glass-strong"
         style={{
           borderRadius: 16,

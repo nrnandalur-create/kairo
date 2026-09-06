@@ -67,6 +67,7 @@ const TrackRecordView = lazy(() => import('./components/TrackRecordView'))
 const DiscoverView    = lazy(() => import('./components/DiscoverView'))
 const PaperPitView    = lazy(() => import('./components/PaperPitView'))
 const ReplayView      = lazy(() => import('./components/ReplayView'))
+const LegalPage       = lazy(() => import('./components/LegalPage'))
 import WelcomeTour from './components/WelcomeTour'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -552,6 +553,15 @@ export default function App() {
     return (
       <Suspense fallback={<div className="min-h-screen bg-[var(--c-bg)]" />}>
         <AccountBillingPage />
+      </Suspense>
+    )
+  }
+  // Legal pages — full-page views, same path-switch pattern as pricing/billing.
+  const legalMatch = pathname.match(/^\/(privacy|terms|refund|cookies)\/?$/)
+  if (legalMatch) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[var(--c-bg)]" />}>
+        <LegalPage slug={legalMatch[1]} />
       </Suspense>
     )
   }
@@ -1121,22 +1131,34 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-[var(--c-border)] mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-[var(--c-text-fainter)] flex items-center justify-center gap-2 flex-wrap">
-          <span>Kairo is for informational purposes only and does not constitute financial advice.</span>
-          <span className="text-[var(--c-border-strong)]">·</span>
-          <span>Market data via Finnhub · Alpha Vantage. AI analysis via Groq.</span>
-          <button
-            type="button"
-            onClick={() => setAboutOpen(true)}
-            aria-label="About Kairo"
-            title="Methodology, data sources, disclaimer"
-            className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full border border-[var(--c-border-strong)] text-[var(--c-text-faint)] hover:text-[#22B585] hover:border-[#22B585]/50 transition-colors cursor-pointer"
-          >
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
-              <circle cx="4" cy="1.6" r="0.85" fill="currentColor" />
-              <rect x="3.3" y="3.4" width="1.4" height="3.4" rx="0.55" fill="currentColor" />
-            </svg>
-          </button>
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col items-center gap-2 text-[10px] text-[var(--c-text-faint)]">
+          <div className="flex items-center justify-center gap-2 flex-wrap text-center">
+            <span>Kairo is for informational purposes only and does not constitute financial advice.</span>
+            <span className="text-[var(--c-border-strong)]" aria-hidden="true">·</span>
+            <span>Market data via Finnhub · Alpha Vantage. AI analysis via Groq.</span>
+            <button
+              type="button"
+              onClick={() => setAboutOpen(true)}
+              aria-label="About Kairo — methodology, data sources, disclaimer"
+              title="Methodology, data sources, disclaimer"
+              className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full border border-[var(--c-border-strong)] text-[var(--c-text-faint)] hover:text-[#22B585] hover:border-[#22B585]/50 transition-colors cursor-pointer"
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                <circle cx="4" cy="1.6" r="0.85" fill="currentColor" />
+                <rect x="3.3" y="3.4" width="1.4" height="3.4" rx="0.55" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
+          <nav aria-label="Legal" className="flex items-center justify-center gap-x-3 gap-y-1 flex-wrap">
+            <span>© {new Date().getFullYear()} Kairo</span>
+            <span className="text-[var(--c-border-strong)]" aria-hidden="true">·</span>
+            <a href="/privacy" className="hover:text-[#22B585] transition-colors underline underline-offset-2">Privacy</a>
+            <a href="/terms" className="hover:text-[#22B585] transition-colors underline underline-offset-2">Terms</a>
+            <a href="/refund" className="hover:text-[#22B585] transition-colors underline underline-offset-2">Refunds</a>
+            <a href="/cookies" className="hover:text-[#22B585] transition-colors underline underline-offset-2">Cookies</a>
+            <span className="text-[var(--c-border-strong)]" aria-hidden="true">·</span>
+            <a href="mailto:kairoinvesting@gmail.com" className="hover:text-[#22B585] transition-colors underline underline-offset-2">Contact</a>
+          </nav>
         </div>
       </footer>
 
