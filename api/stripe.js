@@ -11,7 +11,7 @@
 // that raw text as JSON before use.
 
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin, requireUser } from '../lib/auth.js'
 
 // Vercel: raw body access requires disabling the built-in JSON parser.
 export const config = {
@@ -24,8 +24,6 @@ const STRIPE_SECRET     = process.env.STRIPE_SECRET_KEY
 const WEBHOOK_SECRET    = process.env.STRIPE_WEBHOOK_SECRET
 const PRICE_MONTHLY     = process.env.STRIPE_PRICE_MONTHLY
 const PRICE_ANNUAL      = process.env.STRIPE_PRICE_ANNUAL
-const SUPABASE_URL      = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
-const SUPABASE_SVC_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Public URL where the app is deployed. Used for Stripe success/cancel/return
 // URLs. Falls back to the request host when unset so local dev still works.
@@ -42,10 +40,10 @@ const stripe = STRIPE_SECRET
   : null
 
 // Service-role client bypasses RLS — required because the webhook updates
-// arbitrary users. Never expose this key to the browser.
-const supabaseAdmin = SUPABASE_URL && SUPABASE_SVC_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_SVC_KEY, { auth: { persistSession: false } })
-  : null
+// arbitrary users. Shared with every other authenticated route via lib/auth so
+// the service-role key + JWT-validation live in exactly one place. Never
+// exposed to the browser.
+const supabaseAdmin = getSupabaseAdmin()
 
 // ── Raw-body reader ─────────────────────────────────────────────────────────
 async function readRawBody(req) {
@@ -57,21 +55,8 @@ async function readRawBody(req) {
   })
 }
 
-// ── Helper: identify caller via Supabase JWT in Authorization header ────────
-async function requireUser(req, res) {
-  const auth = req.headers.authorization ?? ''
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
-  if (!token || !supabaseAdmin) {
-    res.status(401).json({ error: 'Not authenticated' })
-    return null
-  }
-  const { data, error } = await supabaseAdmin.auth.getUser(token)
-  if (error || !data?.user) {
-    res.status(401).json({ error: 'Not authenticated' })
-    return null
-  }
-  return data.user
-}
+// Caller identity comes from the shared lib/auth.requireUser (imported above) —
+// the same Supabase-JWT guard every authenticated route uses.
 
 // ── Ensure the user has a subscription row (defaults to 'free') ─────────────
 async function ensureSubscriptionRow(user) {

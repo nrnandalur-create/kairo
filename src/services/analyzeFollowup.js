@@ -1,3 +1,5 @@
+import { authHeaders, describeApiError } from '../lib/authHeader'
+
 // Follow-up Q&A on a previously-analyzed ticker. Streams the model's
 // response token-by-token so the UI can render as words arrive.
 //
@@ -12,21 +14,20 @@
 export async function fetchAnalyzeFollowupStream({ ticker, context, history, question, onChunk, signal }) {
   // Consolidated into /api/analyze under Vercel's Hobby 12-function cap.
   // The `type: 'followup'` flag switches the handler into streaming mode.
+  // Server requires a valid JWT (auth + quota enforced there); forward it.
+  const headers = await authHeaders({ 'Content-Type': 'application/json' })
   const res = await fetch('/api/analyze', {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body:    JSON.stringify({ type: 'followup', ticker, context, history, question }),
     signal,
   })
 
   // Non-streaming JSON error (4xx / 5xx before any tokens were written).
   if (!res.ok) {
-    let message = `Follow-up failed (${res.status})`
-    try {
-      const json = await res.json()
-      if (json?.error) message = json.error
-    } catch { /* not JSON */ }
-    throw new Error(message)
+    let body = {}
+    try { body = await res.json() } catch { /* not JSON */ }
+    throw new Error(describeApiError(res.status, body))
   }
 
   if (!res.body) {

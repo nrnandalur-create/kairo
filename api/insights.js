@@ -10,6 +10,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { composeBrief, gatherBriefInputs, persistBrief } from '../lib/briefs/composer.js'
+import { requireUser } from '../lib/auth.js'
 
 const SUPABASE_URL     = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
 const SUPABASE_SVC_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -109,14 +110,11 @@ async function handleTrackRecord(req, res, supabase) {
 // stays in one place (useSubscription + UpgradeOverlay), not sprinkled
 // across API handlers.
 async function handleMorningBrief(req, res, supabase) {
-  // Auth — Supabase JWT in the Authorization header, same pattern as
-  // /api/stripe. Anonymous callers get a 401.
-  const auth  = req.headers.authorization ?? ''
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
-  if (!token) return res.status(401).json({ error: 'Not authenticated' })
-  const { data: userResp, error: authErr } = await supabase.auth.getUser(token)
-  if (authErr || !userResp?.user) return res.status(401).json({ error: 'Not authenticated' })
-  const userId = userResp.user.id
+  // Auth — shared Supabase-JWT guard (same trust boundary as every other
+  // authenticated route). Anonymous callers get a 401 and no brief is composed.
+  const user = await requireUser(req, res)
+  if (!user) return
+  const userId = user.id
 
   const today = new Date().toISOString().slice(0, 10)
 

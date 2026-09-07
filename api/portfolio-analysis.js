@@ -1,4 +1,6 @@
 import { rateLimit } from '../lib/rateLimit.js'
+import { requireUser, getSupabaseAdmin } from '../lib/auth.js'
+import { getEntitlement } from '../lib/entitlements.js'
 
 // Sector maps for exposure detection. Broad and pragmatic — anything not in
 // a map falls into 'Other'. Kept as data (not fancy taxonomy) so extending
@@ -156,6 +158,16 @@ Return ONLY this JSON structure — no markdown, no code fences, no extra keys:
 export default async function handler(req, res) {
   if (!rateLimit(req, res)) return
   if (req.method !== 'POST') return res.status(405).end()
+
+  // ── AUTH + PRO GATE ──────────────────────────────────────────────────────
+  // The Portfolio AI Health Report is a Pro-only feature (the UI already gates
+  // it). Enforce that server-side: a valid JWT AND active entitlement, decided
+  // from the DB — never from the client's isPro flag. No Groq call otherwise.
+  const admin = getSupabaseAdmin()
+  const user  = await requireUser(req, res, admin)
+  if (!user) return
+  const ent = await getEntitlement(user, admin)
+  if (!ent.isPro) return res.status(403).json({ error: 'pro_required', feature: 'portfolio-analysis' })
 
   const apiKey = process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'AI service unavailable' })

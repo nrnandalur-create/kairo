@@ -1,4 +1,5 @@
 import { calcBBPosition, calcRSI, calcMACD } from '../utils/indicators'
+import { authHeaders, describeApiError } from '../lib/authHeader'
 
 // Cap the client-side wait for the Groq round-trip. The server already
 // aborts its own upstream fetch at 8s and returns a 504, so 15s here gives
@@ -73,16 +74,23 @@ function composeSignals(outerSignal) {
 async function postToAnalyze(body, outerSignal) {
   const { signal, cleanup, isOuterAborted } = composeSignals(outerSignal)
   try {
+    // Server is authoritative for auth + entitlement + quota; forward the JWT.
+    const headers = await authHeaders({ 'Content-Type': 'application/json' })
     const response = await fetch('/api/analyze', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body:    JSON.stringify(body),
       signal,
     })
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
-      throw new Error(err.error ?? `Analysis failed (${response.status})`)
+      // Map 401 / 403 / 429 (quota_exceeded) to a friendly message; the server
+      // decision always wins over any optimistic client-side quota state.
+      const e = new Error(describeApiError(response.status, err))
+      e.code   = err?.error ?? null
+      e.status = response.status
+      throw e
     }
 
     const data = await response.json()

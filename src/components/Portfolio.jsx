@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from '../utils/toast'
 import { useSubscription } from '../hooks/useSubscription'
+import { authHeaders, describeApiError } from '../lib/authHeader'
 
 // Per-row form validation. Empty rows are tolerated (so the user can scaffold).
 // Once either field has content, both must be present and valid. Cost is
@@ -249,18 +250,23 @@ export default function Portfolio({ open, onClose, onAnalyze, userId }) {
         todayChangePct: result.weightedChangePct,
       }
 
+      // Pro-only + auth enforced server-side; forward the JWT.
+      const headers = await authHeaders({ 'Content-Type': 'application/json' })
       const res = await fetch('/api/portfolio-analysis', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body:    JSON.stringify(body),
       })
 
-      if (!res.ok) throw new Error(res.status)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(describeApiError(res.status, body))
+      }
       const data = await res.json()
       setAiReport(data)
-    } catch {
+    } catch (err) {
       setAiReport(null)
-      setAiError('AI analysis failed. Please try again.')
+      setAiError(err?.message ?? 'AI analysis failed. Please try again.')
     }
   }
 
