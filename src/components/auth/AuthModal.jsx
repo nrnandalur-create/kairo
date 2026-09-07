@@ -20,10 +20,20 @@ export function AuthModal({ onClose }) {
   const [error, setError]     = useState(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [agreed, setAgreed]   = useState(false)
+
+  // Account creation requires explicit agreement to the Terms + Privacy Policy
+  // (clickwrap). Existing users signing in already agreed at signup, so the
+  // gate only applies in signup mode.
+  const consentRequired = mode === 'signup' && !agreed
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+    if (consentRequired) {
+      setError('Please agree to the Terms and Privacy Policy to continue.')
+      return
+    }
     setLoading(true)
 
     const fn = mode === 'signin' ? signIn : signUp
@@ -91,12 +101,36 @@ export function AuthModal({ onClose }) {
         </div>
       </div>
 
+      {/* Clickwrap consent — required to create an account (governs both the
+          Google and email paths below). */}
+      {mode === 'signup' && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 16 }}>
+          <input
+            id="agree-terms"
+            type="checkbox"
+            checked={agreed}
+            onChange={e => setAgreed(e.target.checked)}
+            style={{ marginTop: 2, width: 15, height: 15, accentColor: GREEN, cursor: 'pointer', flexShrink: 0 }}
+          />
+          <label htmlFor="agree-terms" style={{ fontSize: 12.5, lineHeight: 1.5, color: MUTED, cursor: 'pointer' }}>
+            I agree to Kairo&apos;s{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: GREEN }}>Terms</a>
+            {' '}and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: GREEN }}>Privacy Policy</a>.
+          </label>
+        </div>
+      )}
+
       {/* Google OAuth */}
       <button
         type="button"
-        disabled={loading}
+        disabled={loading || consentRequired}
         onClick={async () => {
           setError(null)
+          if (consentRequired) {
+            setError('Please agree to the Terms and Privacy Policy to continue.')
+            return
+          }
           setLoading(true)
           const { error } = await signInWithGoogle()
           // Note: when the OAuth flow succeeds, the browser is navigated away
@@ -118,6 +152,8 @@ export function AuthModal({ onClose }) {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
+          opacity: (loading || consentRequired) ? 0.6 : 1,
+          cursor: (loading || consentRequired) ? 'not-allowed' : 'pointer',
         }}
       >
         <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true">
@@ -162,16 +198,22 @@ export function AuthModal({ onClose }) {
           </div>
         )}
 
-        <button type="submit" style={btnStyle} disabled={loading}>
+        <button
+          type="submit"
+          style={{ ...btnStyle, opacity: (loading || consentRequired) ? 0.6 : 1, cursor: (loading || consentRequired) ? 'not-allowed' : 'pointer' }}
+          disabled={loading || consentRequired}
+        >
           {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
         </button>
 
-        <p style={{ textAlign: 'center', margin: 0, fontSize: 11.5, lineHeight: 1.5, color: MUTED }}>
-          By continuing, you agree to our{' '}
-          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: GREEN }}>Terms</a>
-          {' '}and{' '}
-          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: GREEN }}>Privacy Policy</a>.
-        </p>
+        {mode === 'signin' && (
+          <p style={{ textAlign: 'center', margin: 0, fontSize: 11.5, lineHeight: 1.5, color: MUTED }}>
+            By continuing, you agree to our{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: GREEN }}>Terms</a>
+            {' '}and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: GREEN }}>Privacy Policy</a>.
+          </p>
+        )}
       </form>
 
       <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: MUTED }}>
