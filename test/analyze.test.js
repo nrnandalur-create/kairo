@@ -23,8 +23,6 @@ const validVerdictBody = (extra = {}) => ({
   ...extra,
 })
 
-const groqOk = (content) => ({ ok: true, json: async () => ({ choices: [{ message: { content } }] }) })
-
 beforeEach(() => {
   vi.clearAllMocks()
   global.fetch = vi.fn()
@@ -60,27 +58,30 @@ describe('/api/analyze — auth + entitlement + quota ordering', () => {
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
-  it('free user under quota -> verdict consumed and the AI provider is called', async () => {
+  it('free user under quota -> quota consumed; deterministic engine returns a verdict (NO LLM call)', async () => {
     requireUser.mockResolvedValue({ id: 'u1', email: 'x@y.com' })
     getEntitlement.mockResolvedValue({ isPro: false })
     consumeAnalyzeQuota.mockResolvedValue({ allowed: true, quota: 'verdict', limit: 1, remaining: 0 })
-    global.fetch.mockResolvedValue(groqOk('{"verdict":"BUY","confidence":80,"riskLevel":"LOW","entryPrice":150,"stopLoss":140,"summary":"ok"}'))
     const res = makeRes()
     await handler(makeReq({ body: validVerdictBody() }), res)
     expect(consumeAnalyzeQuota).toHaveBeenCalledWith(expect.anything(), 'u1', 'verdict', 'AAPL')
-    expect(global.fetch).toHaveBeenCalledTimes(1)
-    expect(res.body.verdict).toBe('BUY')
+    // The verdict is now produced by the deterministic engine — no Groq call.
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(['BUY', 'HOLD', 'SELL']).toContain(res.body.verdict)
+    expect(res.body).toHaveProperty('verdictCode')
+    expect(res.body.consistency.ok).toBe(true)
   })
 
-  it('Pro user bypasses quota entirely and reaches the AI provider', async () => {
+  it('Pro user bypasses quota; still returns a coherent, self-consistent verdict', async () => {
     requireUser.mockResolvedValue({ id: 'u1', email: 'pro@y.com' })
     getEntitlement.mockResolvedValue({ isPro: true })
-    global.fetch.mockResolvedValue(groqOk('{"verdict":"SELL","confidence":75,"riskLevel":"HIGH","entryPrice":150,"stopLoss":160,"summary":"ok"}'))
     const res = makeRes()
     await handler(makeReq({ body: validVerdictBody() }), res)
     expect(consumeAnalyzeQuota).not.toHaveBeenCalled()
-    expect(global.fetch).toHaveBeenCalledTimes(1)
-    expect(res.body.verdict).toBe('SELL')
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(res.body).toHaveProperty('healthScore')
+    expect(res.body).toHaveProperty('confidence')
+    expect(res.body.consistency.ok).toBe(true)
   })
 
   it('compare mode is auth-gated too (401 before any provider call)', async () => {

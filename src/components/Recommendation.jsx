@@ -24,6 +24,26 @@ const RISK = {
   HIGH:   'bg-[#ef5454]/10 text-[#ef5454] border-[#ef5454]/25',
 }
 
+// Risk (5 levels) is a SEPARATE axis from direction (spec §2).
+const RISK_LEVEL = {
+  LOW:      RISK.LOW,
+  MODERATE: RISK.MEDIUM,
+  ELEVATED: 'bg-[#e3a234]/12 text-[#e3a234] border-[#e3a234]/30',
+  HIGH:     RISK.HIGH,
+  EXTREME:  'bg-[#ef5454]/15 text-[#ef5454] border-[#ef5454]/40',
+}
+// Verdict colour/glyph come from DIRECTION, never from risk.
+const DIR_STYLE = {
+  bullish: { color: '#22B585', glyph: '▲' },
+  neutral: { color: '#e3a234', glyph: '─' },
+  bearish: { color: '#ef5454', glyph: '▼' },
+}
+
+// Debug flag: ?debug=1 in the URL or a Vite dev build exposes the engine's
+// internal scores so a recommendation is fully explainable (spec §12).
+const DEBUG = (typeof window !== 'undefined' && /[?&]debug=1\b/.test(window.location.search))
+  || (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV)
+
 function SkeletonLine({ w = 'full' }) {
   return <div className={`h-3 rounded-full shimmer w-${w}`} />
 }
@@ -147,10 +167,14 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
     return <Unavailable ticker={ticker} error={error} />
   }
 
-  const rec        = data.verdict
-  const cfg        = CONFIG[rec] ?? CONFIG.HOLD
-  const confidence = typeof data.confidence === 'number' ? Math.min(100, Math.max(0, data.confidence)) : 0
-  const riskClass  = RISK[data.riskLevel] ?? RISK.MEDIUM
+  const direction    = data.direction ?? (data.verdict === 'BUY' ? 'bullish' : data.verdict === 'SELL' ? 'bearish' : 'neutral')
+  const dcfg         = DIR_STYLE[direction] ?? DIR_STYLE.neutral
+  const cfg          = { ...(CONFIG[data.verdict] ?? CONFIG.HOLD), color: dcfg.color, glyph: dcfg.glyph, bar: dcfg.color }
+  const verdictLabel = data.verdictLabel ?? cfg.label
+  const confidence   = typeof data.confidence === 'number' ? Math.min(100, Math.max(0, data.confidence)) : 0
+  const riskLevel    = data.risk?.level ?? data.riskLevel ?? 'MEDIUM'
+  const riskText     = data.risk?.label ?? `${riskLevel} Risk`
+  const riskClass    = RISK_LEVEL[riskLevel] ?? RISK.MEDIUM
 
   return (
     <div
@@ -172,7 +196,7 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
           AI Recommendation
           <InfoTooltip>
-            Verdict, confidence, entry, and stop derived from a large language model (served via Groq) conditioned on technical indicators and recent OHLC. Educational only — not financial advice.
+            Verdict, confidence, risk, and health are computed by Kairo's decision engine — it combines the technical indicators into one weighted read, so no single indicator decides the call. Educational only — not financial advice.
           </InfoTooltip>
         </span>
         <div className="flex items-center gap-1.5">
@@ -202,7 +226,7 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
             </button>
           )}
           <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${riskClass}`}>
-            {data.riskLevel ?? 'MEDIUM'} Risk
+            {riskText}
           </span>
         </div>
       </div>
@@ -210,9 +234,9 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
       {/* Verdict + confidence — scales down two full steps on mobile so the
           verdict word + confidence bar both stay on one row at 375px. */}
       <div className="relative flex items-end gap-4 sm:gap-6 flex-wrap">
-        <span className="text-5xl sm:text-6xl md:text-7xl font-black leading-none tracking-tight flex items-center gap-2 sm:gap-3" style={{ color: cfg.color }} role="text" aria-label={`Verdict: ${cfg.label}`}>
-          <span aria-hidden="true" className="text-3xl sm:text-4xl leading-none">{cfg.glyph}</span>
-          {cfg.label}
+        <span className="text-4xl sm:text-5xl md:text-6xl font-black leading-none tracking-tight flex items-center gap-2 sm:gap-3" style={{ color: cfg.color }} role="text" aria-label={`Verdict: ${verdictLabel}`}>
+          <span aria-hidden="true" className="text-2xl sm:text-3xl leading-none">{cfg.glyph}</span>
+          {verdictLabel}
         </span>
         <div className="flex flex-col gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
           <div className="flex items-baseline gap-1.5">
@@ -239,33 +263,83 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
       {/* Entry / Stop grid — each column now includes the verdict model's
           one-sentence reasoning under the number, so the user sees WHY the
           level was chosen, not just what the level is. */}
-      {(data.entryPrice || data.stopLoss) && (
-        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[var(--c-border)]">
-          {data.entryPrice && (
-            <div className="flex flex-col gap-1">
-              <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Entry</p>
-              <p className="text-base font-bold text-[var(--c-text)] tabular-nums">${Number(data.entryPrice).toFixed(2)}</p>
-              {data.entryReason && (
-                <p className="text-[11px] text-[var(--c-text-faint)] leading-snug">{data.entryReason}</p>
-              )}
-            </div>
-          )}
-          {data.stopLoss && (
-            <div className="flex flex-col gap-1">
-              <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.12em] font-semibold">Stop Loss</p>
-              <p className="text-base font-bold tabular-nums" style={{ color: '#ef5454' }}>${Number(data.stopLoss).toFixed(2)}</p>
-              {data.stopReason && (
-                <p className="text-[11px] text-[var(--c-text-faint)] leading-snug">{data.stopReason}</p>
-              )}
-            </div>
-          )}
+      {/* PRIMARY RISK */}
+      {data.narrative?.primaryRisk && (
+        <div className="flex flex-col gap-1 pt-1 border-t border-[var(--c-border)]">
+          <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.14em] font-semibold">Primary Risk</p>
+          <p className="text-[13px] text-[var(--c-text)]/85 leading-relaxed">{data.narrative.primaryRisk}</p>
         </div>
+      )}
+
+      {/* WHAT WOULD CHANGE THE THESIS */}
+      {data.narrative?.whatWouldChange && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-lg border border-[#22B585]/25 bg-[#22B585]/[0.05] p-3 flex flex-col gap-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#22B585]">More bullish if</p>
+            <p className="text-[12.5px] text-[var(--c-text)]/85 leading-relaxed">{data.narrative.whatWouldChange.moreBullishIf}</p>
+          </div>
+          <div className="rounded-lg border border-[#ef5454]/25 bg-[#ef5454]/[0.05] p-3 flex flex-col gap-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#ef5454]">More bearish if</p>
+            <p className="text-[12.5px] text-[var(--c-text)]/85 leading-relaxed">{data.narrative.whatWouldChange.moreBearishIf}</p>
+          </div>
+        </div>
+      )}
+
+      {/* EVIDENCE — each indicator framed as evidence, never as its own verdict */}
+      {Array.isArray(data.signals) && data.signals.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)] hover:text-[var(--c-text)]">
+            <span className="transition-transform group-open:rotate-90">▸</span>
+            Evidence ({data.signals.length} signals)
+          </summary>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {data.signals.map((s) => (
+              <li key={s.key} className="flex items-start gap-2 text-[12px] leading-relaxed">
+                <span
+                  className="shrink-0 mt-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                  style={{
+                    color: s.direction === 'bullish' ? '#22B585' : s.direction === 'bearish' ? '#ef5454' : '#e3a234',
+                    background: (s.direction === 'bullish' ? 'rgba(34,181,133,0.12)' : s.direction === 'bearish' ? 'rgba(239,84,84,0.12)' : 'rgba(227,162,52,0.12)'),
+                  }}
+                >
+                  {s.label}
+                </span>
+                <span className="text-[var(--c-text)]/80">{s.explanation}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {/* SUGGESTED NEXT STEPS */}
+      {Array.isArray(data.nextSteps) && data.nextSteps.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[10px] text-[var(--c-text-faint)] uppercase tracking-[0.14em] font-semibold">Suggested Next Steps</p>
+          <ul className="flex flex-col gap-1.5">
+            {data.nextSteps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-[12.5px] text-[var(--c-text)] leading-relaxed">
+                <span className="text-[#22B585] mt-0.5 shrink-0" aria-hidden="true">→</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* DEBUG — engine internals (dev or ?debug=1), spec §12 */}
+      {DEBUG && data.debug && (
+        <details className="mt-1 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)] p-3">
+          <summary className="cursor-pointer text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
+            Engine debug — scores {data.scores?.bullish}↑ / {data.scores?.bearish}↓ · net {data.scores?.net}
+          </summary>
+          <pre className="mt-2 text-[10px] leading-relaxed text-[var(--c-text-faint)] overflow-x-auto whitespace-pre-wrap">{JSON.stringify(data.debug, null, 2)}</pre>
+        </details>
       )}
 
       {/* Footer — data freshness */}
       {asOf && (
         <div className="relative flex items-center justify-end pt-3 -mb-1 border-t border-[var(--c-border)]/60">
-          <DataTimestamp asOf={asOf} source="Groq" />
+          <DataTimestamp asOf={asOf} source="Kairo engine" />
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import InfoTooltip from './InfoTooltip'
 import { fetchLatestConviction, saveConviction } from '../services/convictionLog'
 import { toast } from '../utils/toast'
+import { buildPositionContext } from '../utils/positionContext'
 
 // Per-ticker position state is stored locally so users see their numbers
 // the next time they pull up the same ticker on this device. Mirrors the
@@ -45,155 +46,32 @@ const fmtPct = (n) => {
   return `${n > 0 ? '+' : ''}${n.toFixed(2)}%`
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Derive a personalized verdict from the existing AI verdict + the user's
-// unrealized gain on this position. The base AI signal (BUY / HOLD / SELL)
-// is augmented by where the user is relative to break-even — a "BUY" stock
-// can still be "take profits" for someone up 35%, and a "SELL" stock can
-// still be "hold to cut loss" for someone deep underwater.
-function derivePersonalRec({ aiVerdict, gainPct, riskLevel }) {
-  const v = (aiVerdict ?? 'HOLD').toUpperCase()
-  const g = gainPct ?? 0
-  const r = (riskLevel ?? 'MEDIUM').toUpperCase()
-
-  if (v === 'BUY') {
-    if (g > 30) return { label: 'Take Partial Profits', tone: 'amber', glyph: '◐' }
-    if (g > 10) return { label: 'Hold & Let It Run',    tone: 'green', glyph: '▲' }
-    if (g < -10) return { label: 'Average Down Carefully', tone: 'amber', glyph: '↓' }
-    return { label: 'Buy More', tone: 'green', glyph: '+' }
+// ── Direction / risk → colour + glyph. Direction and risk are SEPARATE axes
+//    (spec §2): the verdict colour comes from direction, the risk chip from the
+//    risk level. They never derive from one another.
+const DIRECTION_STYLE = {
+  bullish: { color: '#22B585', glyph: '▲', tone: 'green'   },
+  neutral: { color: '#e3a234', glyph: '─', tone: 'amber'   },
+  bearish: { color: '#ef5454', glyph: '▼', tone: 'red'     },
+}
+function riskTone(level) {
+  switch (level) {
+    case 'LOW':      return 'green'
+    case 'MODERATE': return 'amber'
+    case 'ELEVATED': return 'amber'
+    default:         return 'red' // HIGH / EXTREME
   }
-  if (v === 'SELL') {
-    if (g > 5)  return { label: 'Take Profits Now', tone: 'red', glyph: '▼' }
-    if (g < -15) return { label: 'Cut Losses',     tone: 'red', glyph: '▼' }
-    return { label: 'Reduce Exposure', tone: 'red', glyph: '▼' }
-  }
-  // HOLD / unknown
-  if (g > 20) return { label: 'Consider Taking Profits', tone: 'amber', glyph: '◐' }
-  if (g < -15) return { label: 'Hold & Watch Closely', tone: 'amber', glyph: '◐' }
-  if (r === 'HIGH') return { label: 'Hold & Reduce Risk', tone: 'amber', glyph: '◐' }
-  return { label: 'Hold', tone: 'neutral', glyph: '─' }
 }
 
-// 0-100 composite score. Anchored at 50 for a typical position; shifts
-// positively for confluence (BUY + winning trade + low risk) and negatively
-// for divergence (SELL + losing trade + high risk).
-function deriveHealthScore({ aiVerdict, aiConfidence, riskLevel, gainPct }) {
-  let score = 50
-  const v = (aiVerdict ?? 'HOLD').toUpperCase()
-  const conf = Number.isFinite(aiConfidence) ? aiConfidence : 60
-
-  if (v === 'BUY')  score += conf * 0.30      // up to +30
-  if (v === 'SELL') score -= conf * 0.30      // down to -30
-
-  // Gain shift: linearly within ±20% range, capped at ±15 points.
-  const g = Math.max(-20, Math.min(20, gainPct ?? 0))
-  score += (g / 20) * 15
-
-  // Risk adjustment.
-  const r = (riskLevel ?? 'MEDIUM').toUpperCase()
-  if (r === 'LOW')  score += 5
-  if (r === 'HIGH') score -= 12
-
-  return Math.round(Math.max(0, Math.min(100, score)))
-}
-
-function riskLabel({ aiRisk, gainPct, healthScore }) {
-  // Combine the AI's own risk read with how the position is performing.
-  // A deeply-underwater position elevates risk; a strongly-winning one with
-  // confluence dampens it.
-  const r = (aiRisk ?? 'MEDIUM').toUpperCase()
-  if (healthScore >= 85)  return { label: 'Very Low Risk', tone: 'green' }
-  if (healthScore >= 70)  return { label: 'Low Risk',      tone: 'green' }
-  if (healthScore >= 45)  return { label: r === 'HIGH' ? 'Elevated Risk' : 'Moderate Risk', tone: 'amber' }
-  if (healthScore >= 25)  return { label: 'High Risk',     tone: 'red' }
-  return { label: 'Very High Risk', tone: 'red' }
-}
-
-// 2-4 sentence "why" derived from inputs. Uses the AI's own one-line summary
-// when it exists; otherwise synthesizes from verdict + gain.
-function buildRationale({ aiVerdict, aiSummary, aiConfidence, gainPct, gainDollars, personalLabel, ticker }) {
-  const v = (aiVerdict ?? 'HOLD').toUpperCase()
-  const conf = Number.isFinite(aiConfidence) ? aiConfidence : null
-
-  const positionLine = gainPct == null
-    ? null
-    : `Your ${ticker} position is currently ${gainPct >= 0 ? 'up' : 'down'} ${Math.abs(gainPct).toFixed(1)}% (${fmtMoney(gainDollars, { sign: true })}).`
-
-  const aiLine = aiSummary
-    ? `The current Kairo verdict is ${v}${conf != null ? ` at ${conf}% confidence` : ''} — ${aiSummary}`
-    : `The current Kairo verdict is ${v}${conf != null ? ` at ${conf}% confidence` : ''}.`
-
-  const advisoryLine = (() => {
-    switch (personalLabel) {
-      case 'Take Partial Profits':
-      case 'Consider Taking Profits':
-        return 'Locking in some of the gain while the technical setup is still constructive reduces drawdown risk without abandoning the thesis.'
-      case 'Hold & Let It Run':
-        return 'Momentum and confidence both point in your direction; trimming early often forfeits the largest part of a winning trade.'
-      case 'Buy More':
-        return 'Adding on weakness is consistent with the bullish read, but size additions so a single drawdown doesn\'t define the position.'
-      case 'Average Down Carefully':
-        return 'Cost-average on confirmed support — never on hope alone.'
-      case 'Hold & Watch Closely':
-      case 'Hold & Reduce Risk':
-        return 'The setup is mixed; a smaller tactical stop or trim can preserve optionality without giving up the position entirely.'
-      case 'Take Profits Now':
-      case 'Cut Losses':
-      case 'Reduce Exposure':
-        return 'The downside read is strong enough that preserving capital outweighs the chance of being wrong on the exit.'
-      case 'Hold':
-      default:
-        return 'No urgent edge to act either way; revisit when the technical picture or your cost basis changes meaningfully.'
-    }
-  })()
-
-  return [positionLine, aiLine, advisoryLine].filter(Boolean).join(' ')
-}
-
-function buildNextSteps({ aiVerdict, gainPct, riskLevel, personalLabel, ticker }) {
-  const v = (aiVerdict ?? 'HOLD').toUpperCase()
-  const r = (riskLevel ?? 'MEDIUM').toUpperCase()
-  const steps = []
-
-  if (personalLabel.includes('Take Partial') || personalLabel.includes('Profits')) {
-    steps.push(`Consider trimming 25-50% of ${ticker} into strength to lock in the unrealized gain.`)
-    steps.push('Move your mental stop up so the remaining position can\'t turn a winner into a loser.')
-  } else if (personalLabel === 'Hold & Let It Run' || personalLabel === 'Hold') {
-    steps.push(`Continue holding ${ticker} while the trend remains intact.`)
-    steps.push('Monitor RSI and volume for early signs of momentum weakening.')
-  } else if (personalLabel === 'Buy More') {
-    steps.push('Wait for a pullback toward support before adding, rather than chasing strength.')
-    steps.push('Size the add so a single drawdown doesn\'t double your effective basis.')
-  } else if (personalLabel === 'Average Down Carefully') {
-    steps.push('Avoid catching the falling knife — wait for a confirmed reclaim of a prior support level.')
-    steps.push('Cap the add at 25-50% of the original position size.')
-  } else if (personalLabel.includes('Watch')) {
-    steps.push('Set a clear technical level that, if broken, would change your stance.')
-    steps.push('Avoid adding until the indicators reach a confluence again.')
-  } else if (personalLabel.includes('Cut') || personalLabel.includes('Reduce') || personalLabel === 'Take Profits Now') {
-    steps.push(`Reduce ${ticker} into any near-term bounce rather than panic-selling on weakness.`)
-    steps.push('Redeploy proceeds into watchlist names with a stronger technical setup.')
-  }
-
-  if (r === 'HIGH') steps.push('Position size is more important than entry — keep this name a smaller share of the portfolio.')
-  if (gainPct != null && gainPct < -20) steps.push('Decide in advance the stop that would force you out — emotion is the biggest risk in a deeply red trade.')
-
-  return steps.slice(0, 4)
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Health Score gauge — pure SVG, animates the dasharray on score change.
+// ── Health Score gauge — pure SVG, animates the dasharray on score change.
 function HealthRing({ score }) {
   const radius = 38
   const circ = 2 * Math.PI * radius
   const pct = Math.max(0, Math.min(100, score)) / 100
   const dash = circ * pct
-  const color = score >= 75 ? '#22B585'
-              : score >= 60 ? '#22B585'
-              : score >= 40 ? '#e3a234'
-              : '#ef5454'
+  const color = score >= 60 ? '#22B585' : score >= 40 ? '#e3a234' : '#ef5454'
   return (
-    <svg width="104" height="104" viewBox="0 0 100 100" aria-label={`Position health ${score} of 100`} role="img">
+    <svg width="104" height="104" viewBox="0 0 100 100" aria-label={`Position setup health ${score} of 100`} role="img">
       <circle cx="50" cy="50" r={radius} fill="none" stroke="var(--c-chip-bg)" strokeWidth="6"/>
       <circle
         cx="50" cy="50" r={radius} fill="none"
@@ -209,8 +87,6 @@ function HealthRing({ score }) {
   )
 }
 
-// Compact "insight" chip. Tones map to the same brand-tinted families used
-// elsewhere (green / amber / red / neutral).
 function InsightChip({ label, value, tone = 'neutral' }) {
   const toneClass = tone === 'green'  ? 'text-[#22B585] border-[#22B585]/30 bg-[#22B585]/10'
                   : tone === 'amber'  ? 'text-[#e3a234] border-[#e3a234]/30 bg-[#e3a234]/10'
@@ -241,13 +117,10 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
   const [costBasis, setCostBasis] = useState('')   // raw value the user typed
   const [shares,    setShares]    = useState('')
   const [costMode,  setCostMode]  = useState('avg')  // 'avg' = per-share | 'total' = total $
-  // Conviction Log state — checked on ticker change (was there a prior thesis?)
-  // and re-evaluated whenever calcs becomes valid (offer the capture prompt).
   const [conviction,  setConviction]  = useState(null)
   const [thesisDraft, setThesisDraft] = useState('')
   const [showCapture, setShowCapture] = useState(false)
 
-  // Reload saved values whenever the active ticker changes.
   useEffect(() => {
     const v = loadPosition(ticker)
     setCostBasis(v.costBasis)
@@ -256,23 +129,17 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
     setShowCapture(false)
     setThesisDraft('')
     setConviction(null)
-    // Look up any existing conviction for this ticker so we don't re-prompt.
     if (userId && ticker) {
       fetchLatestConviction({ userId, ticker }).then(setConviction)
     }
   }, [ticker, userId])
 
-  // Persist on change. Debounce-light via a 300ms timer so we don't write
-  // localStorage on every keystroke.
   useEffect(() => {
     if (!ticker) return
     const t = setTimeout(() => savePosition(ticker, { costBasis, shares, costMode }), 300)
     return () => clearTimeout(t)
   }, [ticker, costBasis, shares, costMode])
 
-  // Switch between 'avg' and 'total' modes. If both fields are populated we
-  // auto-convert the cost field so the user's effective basis doesn't change
-  // when they flip the toggle (10 shares × $500 → $5000 total ↔ $500 / share).
   const switchCostMode = (next) => {
     if (next === costMode) return
     const v  = parseFloat(costBasis)
@@ -284,9 +151,6 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
     setCostMode(next)
   }
 
-  // The single canonical "per-share cost" derived from whatever the user typed.
-  // Avg mode  → use input directly.
-  // Total mode → divide by shares (requires shares to be populated to be meaningful).
   const perShareCost = useMemo(() => {
     const v  = parseFloat(costBasis)
     const sh = parseFloat(shares)
@@ -298,8 +162,6 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
     return v
   }, [costBasis, shares, costMode])
 
-  // Live-derived numbers — all downstream math runs off perShareCost so the
-  // toggle is invisible to every calculation below this point.
   const calcs = useMemo(() => {
     const sh = parseFloat(shares)
     const px = currentPrice
@@ -318,50 +180,29 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
     return { valid: true, totalCost, value, gainDollars, gainPct, perShare, breakeven, distFromBE }
   }, [perShareCost, shares, currentPrice])
 
-  const aiVerdict    = aiData?.recommendation
-  const aiConfidence = aiData?.confidence
-  const aiRisk       = aiData?.riskLevel
-  const aiSummary    = aiData?.summary
+  // The MARKET decision comes straight from the unified engine (aiData). Position
+  // data never changes it — it only adds risk-management context + next steps.
+  const hasDecision = !!aiData?.verdictLabel && !aiData?.unavailable
+  const direction   = aiData?.direction ?? 'neutral'
+  const dirStyle    = DIRECTION_STYLE[direction] ?? DIRECTION_STYLE.neutral
 
-  const personalRec = useMemo(() => derivePersonalRec({
-    aiVerdict, gainPct: calcs.valid ? calcs.gainPct : 0, riskLevel: aiRisk,
-  }), [aiVerdict, aiRisk, calcs.valid, calcs.gainPct])
-
-  const healthScore = useMemo(() => deriveHealthScore({
-    aiVerdict, aiConfidence, riskLevel: aiRisk,
-    gainPct: calcs.valid ? calcs.gainPct : 0,
-  }), [aiVerdict, aiConfidence, aiRisk, calcs.valid, calcs.gainPct])
-
-  const risk = useMemo(() => riskLabel({ aiRisk, gainPct: calcs.valid ? calcs.gainPct : 0, healthScore }),
-    [aiRisk, calcs.valid, calcs.gainPct, healthScore])
-
-  const rationale = useMemo(() => buildRationale({
-    aiVerdict, aiSummary, aiConfidence,
-    gainPct: calcs.valid ? calcs.gainPct : null,
-    gainDollars: calcs.valid ? calcs.gainDollars : null,
-    personalLabel: personalRec.label,
-    ticker,
-  }), [aiVerdict, aiSummary, aiConfidence, calcs.valid, calcs.gainPct, calcs.gainDollars, personalRec.label, ticker])
-
-  const nextSteps = useMemo(() => buildNextSteps({
-    aiVerdict, riskLevel: aiRisk,
-    gainPct: calcs.valid ? calcs.gainPct : null,
-    personalLabel: personalRec.label, ticker,
-  }), [aiVerdict, aiRisk, calcs.valid, calcs.gainPct, personalRec.label, ticker])
+  const posCtx = useMemo(() => {
+    if (!hasDecision) return null
+    const position = calcs.valid
+      ? { gainPct: calcs.gainPct, gainDollars: calcs.gainDollars, breakeven: calcs.breakeven, price: currentPrice }
+      : null
+    return buildPositionContext({ decision: aiData, position })
+  }, [hasDecision, aiData, calcs, currentPrice])
 
   if (!ticker) return null
 
-  // Inputs are always rendered; everything below shows only once they're filled.
   const summaryTone = !calcs.valid ? 'neutral' : calcs.gainDollars > 0 ? 'green' : calcs.gainDollars < 0 ? 'red' : 'neutral'
   const summaryText = !calcs.valid
     ? 'Enter your cost basis and shares to see your personalized analysis.'
     : `You're ${calcs.gainDollars >= 0 ? 'up' : 'down'} ${fmtMoney(calcs.gainDollars).replace('-', '')} (${fmtPct(calcs.gainPct)}) on this position.`
   const summaryColor = summaryTone === 'green' ? '#22B585' : summaryTone === 'red' ? '#ef5454' : 'var(--c-text)'
 
-  const verdictColor = personalRec.tone === 'green' ? '#22B585'
-                     : personalRec.tone === 'amber' ? '#e3a234'
-                     : personalRec.tone === 'red'   ? '#ef5454'
-                     : 'var(--c-text)'
+  const steps = posCtx?.steps ?? []
 
   return (
     <div className="w-full glass-card rounded-xl p-4 sm:p-5 flex flex-col gap-5 animate-enter">
@@ -370,16 +211,16 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
           My Position
           <InfoTooltip>
-            Enter what you actually paid and how many shares you hold to get a recommendation that reflects your cost basis and current P/L — not just the stock's overall AI verdict. Saved locally per ticker on this device.
+            Enter what you paid and how many shares you hold. The market verdict comes from Kairo's decision engine and does not change based on your P/L — your cost basis only shapes the risk-management context and next steps. Saved locally per ticker on this device.
           </InfoTooltip>
         </span>
-        {calcs.valid && (
+        {hasDecision && aiData.risk && (
           <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-widest ${
-            risk.tone === 'green' ? 'text-[#22B585] border-[#22B585]/30 bg-[#22B585]/10' :
-            risk.tone === 'amber' ? 'text-[#e3a234] border-[#e3a234]/30 bg-[#e3a234]/10' :
-                                    'text-[#ef5454] border-[#ef5454]/30 bg-[#ef5454]/10'
+            riskTone(aiData.risk.level) === 'green' ? 'text-[#22B585] border-[#22B585]/30 bg-[#22B585]/10' :
+            riskTone(aiData.risk.level) === 'amber' ? 'text-[#e3a234] border-[#e3a234]/30 bg-[#e3a234]/10' :
+                                                      'text-[#ef5454] border-[#ef5454]/30 bg-[#ef5454]/10'
           }`}>
-            {risk.label}
+            {aiData.risk.label}
           </span>
         )}
       </div>
@@ -387,7 +228,6 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
       {/* Inputs */}
       <div className="flex items-end gap-3 flex-wrap">
         <div className="flex flex-col gap-1.5">
-          {/* Label row holds the mode toggle so it's visible inline with the input. */}
           <div className="flex items-center gap-2">
             <label className="text-[9px] font-bold text-[var(--c-text-faint)] uppercase tracking-widest" htmlFor={`mp-cb-${ticker}`}>
               {costMode === 'total' ? 'Total Paid' : 'Avg Cost / Share'}
@@ -430,7 +270,6 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
             inputMode="decimal"
             className={`${costMode === 'total' ? 'w-36' : 'w-32'} bg-[var(--c-input-bg)] border border-[var(--c-input-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] placeholder-[var(--c-input-placeholder)] outline-none focus:border-[#22B585] transition-colors tabular-nums`}
           />
-          {/* Derived value shown below so the user knows what mode resolves to. */}
           {perShareCost != null && costMode === 'total' && (
             <span className="text-[10px] font-mono text-[var(--c-text-fainter)] tabular-nums">
               = ${perShareCost.toFixed(2)} / share
@@ -472,9 +311,7 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
         {summaryText}
       </p>
 
-      {/* Conviction Log — capture prompt when a position just got filled.
-          Renders only for signed-in users with no prior thesis on this
-          ticker. Soft + dismissible. */}
+      {/* Conviction Log — capture prompt when a position just got filled. */}
       {calcs.valid && userId && conviction === null && !showCapture && (
         <button
           type="button"
@@ -501,8 +338,8 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
               onClick={async () => {
                 const saved = await saveConviction({
                   userId, ticker, thesis: thesisDraft,
-                  capturedVerdict:    aiVerdict,
-                  capturedConfidence: aiConfidence,
+                  capturedVerdict:    aiData?.verdict,
+                  capturedConfidence: aiData?.confidence,
                   capturedPrice:      currentPrice,
                 })
                 if (saved) {
@@ -547,63 +384,61 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
             <Metric label="Distance to B/E" value={fmtMoney(calcs.distFromBE, { sign: true })}  tone={calcs.distFromBE >= 0 ? 'green' : 'red'} />
           </div>
 
-          {/* Quick insights chip row */}
-          <div className="flex flex-wrap gap-2">
-            <InsightChip
-              label="Trend"
-              value={aiVerdict === 'BUY' ? 'Bullish' : aiVerdict === 'SELL' ? 'Bearish' : 'Neutral'}
-              tone={aiVerdict === 'BUY' ? 'green' : aiVerdict === 'SELL' ? 'red' : 'neutral'}
-            />
-            <InsightChip
-              label="Momentum"
-              value={(aiConfidence ?? 0) >= 70 ? 'Strong' : (aiConfidence ?? 0) >= 50 ? 'Moderate' : 'Weak'}
-              tone={(aiConfidence ?? 0) >= 70 ? 'green' : (aiConfidence ?? 0) >= 50 ? 'amber' : 'red'}
-            />
-            <InsightChip
-              label="Profit Status"
-              value={calcs.gainDollars >= 0 ? `Gain ${fmtPct(calcs.gainPct)}` : `Loss ${fmtPct(calcs.gainPct)}`}
-              tone={calcs.gainDollars >= 0 ? 'green' : 'red'}
-            />
-            <InsightChip
-              label="AI Confidence"
-              value={aiConfidence != null ? `${aiConfidence}/100` : '—'}
-              tone={(aiConfidence ?? 0) >= 70 ? 'green' : (aiConfidence ?? 0) >= 50 ? 'amber' : 'neutral'}
-            />
-            <InsightChip
-              label="Risk Level"
-              value={risk.label.replace(' Risk', '')}
-              tone={risk.tone}
-            />
-          </div>
+          {/* Insight chips — each reads its OWN axis (no cross-mirroring). */}
+          {hasDecision && (
+            <div className="flex flex-wrap gap-2">
+              <InsightChip label="Direction" value={direction[0].toUpperCase() + direction.slice(1)} tone={dirStyle.tone} />
+              <InsightChip label="Confidence" value={aiData.confidence != null ? `${aiData.confidence}%` : '—'} tone={aiData.confidence >= 70 ? 'green' : aiData.confidence >= 55 ? 'amber' : 'neutral'} />
+              <InsightChip label="Setup Health" value={`${aiData.healthScore}/100`} tone={aiData.healthScore >= 60 ? 'green' : aiData.healthScore >= 40 ? 'amber' : 'red'} />
+              <InsightChip label="Risk" value={aiData.risk?.label?.replace(' Risk', '') ?? '—'} tone={riskTone(aiData.risk?.level)} />
+              <InsightChip label="Profit Status" value={calcs.gainDollars >= 0 ? `Gain ${fmtPct(calcs.gainPct)}` : `Loss ${fmtPct(calcs.gainPct)}`} tone={calcs.gainDollars >= 0 ? 'green' : 'red'} />
+            </div>
+          )}
 
-          {/* Personalized recommendation card */}
-          <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-card)] p-5 flex flex-col gap-4">
-            <div className="flex items-start gap-5 flex-wrap">
-              <HealthRing score={healthScore} />
-              <div className="flex-1 min-w-[200px] flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--c-text-faint)]">Personalized Recommendation</span>
-                <div className="flex items-baseline gap-3 flex-wrap">
-                  <span
-                    className="text-3xl font-black tracking-tight leading-none"
-                    style={{ color: verdictColor }}
-                    role="text"
-                    aria-label={`Personalized recommendation: ${personalRec.label}`}
-                  >
-                    <span aria-hidden="true" className="mr-2 text-2xl">{personalRec.glyph}</span>
-                    {personalRec.label}
-                  </span>
+          {/* Verdict card — the market verdict (engine), then position context. */}
+          {hasDecision && (
+            <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-card)] p-5 flex flex-col gap-4">
+              <div className="flex items-start gap-5 flex-wrap">
+                <HealthRing score={aiData.healthScore} />
+                <div className="flex-1 min-w-[200px] flex flex-col gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--c-text-faint)]">Kairo Verdict</span>
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <span
+                      className="text-3xl font-black tracking-tight leading-none"
+                      style={{ color: dirStyle.color }}
+                      role="text"
+                      aria-label={`Verdict: ${aiData.verdictLabel}, ${aiData.confidence}% confidence`}
+                    >
+                      <span aria-hidden="true" className="mr-2 text-2xl">{dirStyle.glyph}</span>
+                      {aiData.verdictLabel}
+                    </span>
+                    <span className="text-[13px] font-bold tabular-nums" style={{ color: dirStyle.color }}>
+                      {aiData.confidence}% confidence
+                    </span>
+                  </div>
+                  {aiData.narrative?.why && (
+                    <p className="text-[13px] leading-relaxed text-[var(--c-text)]/85">{aiData.narrative.why}</p>
+                  )}
+                  {posCtx?.contextText && (
+                    <p className="text-[12.5px] leading-relaxed text-[var(--c-text-faint)] border-t border-[var(--c-border)] pt-2">
+                      <span className="font-bold uppercase tracking-[0.14em] text-[10px] text-[var(--c-text-fainter)] mr-1.5">Your position:</span>
+                      {posCtx.contextText}
+                    </p>
+                  )}
+                  {posCtx?.positionRisk && (
+                    <p className="text-[12px] leading-relaxed text-[#e3a234]/90">{posCtx.positionRisk}</p>
+                  )}
                 </div>
-                <p className="text-[13px] leading-relaxed text-[var(--c-text)]/85">{rationale}</p>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Suggested next steps */}
-          {nextSteps.length > 0 && (
+          {/* Suggested next steps — follow the verdict + position (max 3). */}
+          {steps.length > 0 && (
             <div className="flex flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--c-text-faint)]">Suggested Next Steps</span>
               <ul className="flex flex-col gap-1.5">
-                {nextSteps.map((step, i) => (
+                {steps.map((step, i) => (
                   <li key={i} className="flex items-start gap-2 text-[13px] text-[var(--c-text)] leading-relaxed">
                     <span className="text-[#22B585] mt-1 leading-none shrink-0" aria-hidden="true">→</span>
                     <span>{step}</span>

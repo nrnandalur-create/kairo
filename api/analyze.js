@@ -3,6 +3,7 @@ import { validateTicker } from '../lib/validate.js'
 import { requireUser, getSupabaseAdmin } from '../lib/auth.js'
 import { getEntitlement } from '../lib/entitlements.js'
 import { consumeAnalyzeQuota } from '../lib/quota.js'
+import { buildDecision } from '../lib/decisionEngine.js'
 
 // Translate an atomic-quota denial into the structured 429 the client expects:
 //   { error: 'quota_exceeded', quota: 'verdict'|'search', limit, remaining }
@@ -116,45 +117,6 @@ function buildContext({ ticker, quote, profile, metrics, indicators, recentCandl
   }
 }
 
-// ── VERDICT prompt (feeds the Recommendation panel) ─────────────────────────
-// Optimised for a decisive, sub-60-word summary — doctor's-diagnosis tone.
-// The model is explicitly told NOT to enumerate indicators — that's the
-// detailed panel's job — and to name ONE decisive driver.
-function buildVerdictPrompt(ctx) {
-  const techNote = ctx.noTechnicals
-    ? '\n\n⚠️ NO RELIABLE TECHNICAL DATA. Do NOT cite RSI, MACD, Bollinger Bands. Base your verdict on quote + fundamentals + 52-week range only. Cap confidence at 60.\n'
-    : ''
-
-  return `You are an equity strategist delivering a punchy verdict. Return ONLY a valid JSON object.${techNote}
-
-TICKER: ${ctx.ticker}
-COMPANY: ${ctx.companyName}
-PRICE: $${ctx.quote.c} (${ctx.quote.dp > 0 ? '+' : ''}${Number(ctx.quote.dp).toFixed(2)}% today, 5d: ${ctx.priceChange5d}%)
-RSI (14): ${ctx.rsiLine}
-MACD: ${ctx.macdLine}
-BB: ${ctx.bbLine}
-52W: ${ctx.rangeCtx}
-
-STYLE RULES — enforced strictly:
-- summary MUST be UNDER 60 words total.
-- Name ONE decisive driver (the single most important factor). Do not list two or three factors.
-- Do NOT enumerate every indicator — leave that to the detailed analyst.
-- Punchy, declarative sentences. No hedging language ("might", "could potentially"). State the call.
-- entryReason and stopReason: ONE sentence each, ≤ 20 words, cite a specific price level.
-
-Return ONLY this JSON with no markdown fences:
-{
-  "verdict": "BUY" | "SELL" | "HOLD",
-  "confidence": <integer 0-100 — never exactly 60>,
-  "entryPrice": <number>,
-  "stopLoss": <number>,
-  "riskLevel": "LOW" | "MEDIUM" | "HIGH",
-  "summary": "<UNDER 60 words. One decisive driver + verdict rationale. Punchy tone.>",
-  "entryReason": "<ONE sentence. Why enter here specifically. Cite a level.>",
-  "stopReason": "<ONE sentence. Why this stop protects the thesis. Cite a level.>"
-}`
-}
-
 // ── DETAILED ANALYSIS prompt (feeds the AIAnalysis panel) ───────────────────
 // Optimised for a specialist's technical workup — per-indicator readings
 // + confluence + range/fundamental context. Explicitly told NOT to give a
@@ -211,31 +173,6 @@ Return ONLY this JSON with no markdown fences:
   "rangeContext":        "<1-2 sentences on 52W range position and its risk/reward implication.>",
   "fundamentalContext":  "<1 sentence on P/E, EPS growth, or market-cap tier. Or empty string if all N/A.>"
 }`
-}
-
-// ── Normalisation ───────────────────────────────────────────────────────────
-function normaliseVerdict(analysis) {
-  if (typeof analysis.verdict === 'string') {
-    const v = analysis.verdict.toLowerCase()
-    analysis.verdict =
-      v === 'bullish' || v === 'buy'  ? 'BUY'  :
-      v === 'bearish' || v === 'sell' ? 'SELL' :
-      v === 'neutral' || v === 'hold' ? 'HOLD' :
-      analysis.verdict.toUpperCase()
-  }
-  if (!['BUY', 'SELL', 'HOLD'].includes(analysis.verdict)) analysis.verdict = 'HOLD'
-
-  if (typeof analysis.riskLevel === 'string') {
-    const r = analysis.riskLevel.toLowerCase()
-    analysis.riskLevel =
-      r === 'low'    ? 'LOW'    :
-      r === 'medium' ? 'MEDIUM' :
-      r === 'high'   ? 'HIGH'   :
-      analysis.riskLevel.toUpperCase()
-  }
-  if (!['LOW', 'MEDIUM', 'HIGH'].includes(analysis.riskLevel)) analysis.riskLevel = 'MEDIUM'
-
-  return analysis
 }
 
 // ── Follow-up prompt (streaming, feeds AIChat) ──────────────────────────────
@@ -355,7 +292,6 @@ async function handleFollowup(req, res) {
 }
 
 // ── System prompts (distinct personas per call) ─────────────────────────────
-const SYSTEM_VERDICT = 'You are an equity strategist known for decisive, punchy calls. Return only valid JSON, no markdown fences, no extra text. Your job is a DIAGNOSIS: one sentence saying what to do, one sentence saying why. If RSI ≥ 65 lean SELL. If RSI ≤ 40 lean BUY. If MACD above signal lean BUY. If price at upper Bollinger Band lean SELL. Weight confidence by indicator confluence (70-90 when RSI, MACD, and BB agree). Never return exactly 60 for confidence. Never hedge. Never enumerate every indicator — the detailed analyst does that. Cite specific numbers in every field.'
 
 const SYSTEM_ANALYSIS = 'You are a senior technical analyst writing a specialist\'s report. Return only valid JSON, no markdown fences, no extra text. Your job is INTERPRETATION, not decision-making. Each indicator field discusses ONLY that indicator in isolation, in 1-2 sentences. Then indicatorConfluence explicitly names where indicators agree and where they contradict. rangeContext and fundamentalContext situate the read in a wider frame. Do NOT emit a verdict, entry price, or stop loss — a separate strategist owns those. Cite specific numbers in every field. Total 150-250 words across all string fields.'
 
@@ -493,8 +429,9 @@ export default async function handler(req, res) {
     return mode === 'followup' ? handleFollowup(req, res) : handleCompare(req, res)
   }
 
+  // Groq key is only needed for the detailed-analysis (LLM) path now; the
+  // verdict comes from the deterministic engine below.
   const apiKey = process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'AI analysis service is unavailable' })
 
   // Validate ticker
   const ticker = validateTicker(req.body?.ticker)
@@ -525,13 +462,51 @@ export default async function handler(req, res) {
   //     guard but BEFORE the Groq call, so a denied request never reaches the
   //     AI provider. Atomic in Postgres (see consume_analyze_quota). ─────────
   if (!ent.isPro) {
-    const decision = await consumeAnalyzeQuota(admin, user.id, type, ticker)
-    if (!decision.allowed) return sendQuotaExceeded(res, decision)
+    const quota = await consumeAnalyzeQuota(admin, user.id, type, ticker)
+    if (!quota.allowed) return sendQuotaExceeded(res, quota)
   }
 
+  // ── UNIFIED DECISION ENGINE (verdict) ──────────────────────────────────────
+  // The verdict is produced deterministically from combined evidence — no LLM
+  // decides direction, so the output can never contradict itself. See
+  // lib/decisionEngine.js. The detailed per-indicator ANALYSIS panel below is
+  // still an LLM call (isolated interpretation, no verdict).
+  if (type === 'verdict') {
+    const decision = buildDecision({
+      ticker,
+      price:         quote.c,
+      rsi:           indicators?.rsi ?? null,
+      macd:          indicators?.macd ?? null,
+      bb:            indicators?.bb ?? null,
+      sma50:         req.body?.sma50 ?? null,
+      sma200:        req.body?.sma200 ?? null,
+      volume:        req.body?.volume ?? null,
+      priceChange5d: quote?.priceChange5d ?? null,
+      hi52:          metrics?.metric?.['52WeekHigh'] ?? null,
+      lo52:          metrics?.metric?.['52WeekLow'] ?? null,
+      support:       req.body?.sr?.support ?? [],
+      resistance:    req.body?.sr?.resistance ?? [],
+      noTechnicals,
+    })
+    if (decision.unavailable) return res.json(decision)
+    // Keep verdict/riskLevel as the 3-state values existing consumers
+    // (verdict_history, track-record, signal-alert, AIChat) expect, while
+    // exposing the richer engine output alongside.
+    const { legacyVerdict, legacyRisk, ...rest } = decision
+    return res.json({
+      ...rest,
+      verdict:     legacyVerdict,    // BUY | HOLD | SELL  (compat)
+      verdictCode: decision.verdict, // STRONG_BUY … STRONG_SELL
+      riskLevel:   legacyRisk,       // LOW | MEDIUM | HIGH (compat)
+    })
+  }
+
+  // ── DETAILED ANALYSIS (LLM, per-indicator evidence only — no verdict) ──────
+  if (!apiKey) return res.status(500).json({ error: 'AI analysis service is unavailable' })
+
   const ctx = buildContext({ ticker, quote, profile, metrics, indicators, recentCandles, noTechnicals })
-  const prompt        = type === 'analysis' ? buildAnalysisPrompt(ctx) : buildVerdictPrompt(ctx)
-  const systemPrompt  = type === 'analysis' ? SYSTEM_ANALYSIS         : SYSTEM_VERDICT
+  const prompt        = buildAnalysisPrompt(ctx)
+  const systemPrompt  = SYSTEM_ANALYSIS
 
   // AbortController gates the Groq fetch at 8 seconds so we return a clean
   // 504 with a useful body before Vercel's serverless function timeout (10s
@@ -576,9 +551,6 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'AI returned malformed response' })
     }
 
-    // Only the verdict response has enum fields to normalise; analysis is
-    // free-text throughout.
-    if (type === 'verdict') parsed = normaliseVerdict(parsed)
 
     res.json(parsed)
   } catch (err) {
