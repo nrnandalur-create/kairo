@@ -1,4 +1,5 @@
 import { calcRSI, calcMACD, calcSMA, calcBBPosition, calcVolumeSignal } from '../utils/indicators'
+import { describeBollinger } from '../../lib/decisionEngine'
 import DataTimestamp from './DataTimestamp'
 import InfoTooltip from './InfoTooltip'
 import { usePrefs } from '../hooks/usePrefs'
@@ -132,14 +133,25 @@ export default function IndicatorsGrid({ candles, loading, asOf, synthetic, synt
   const sma200Badge = sma200Diff == null ? null : sma200Diff >= 0 ? 'Above' : 'Below'
   const sma200BC    = sma200Diff == null ? 'muted' : sma200Diff >= 0 ? 'green' : 'red'
 
-  // Bollinger Band position
-  const bb    = calcBBPosition(candles, 20, currentPrice)
-  const bbPct = bb?.pct ?? null
-  const bbLabel  = bbPct != null ? `${bbPct}%` : '—'
-  const bbSub    = bb ? `$${fmtNum(bb.lower)} – $${fmtNum(bb.upper)}` : null
-  const bbBadge  = bbPct == null ? null : bbPct >= 80 ? 'Near Top' : bbPct <= 20 ? 'Near Bottom' : 'Mid Band'
-  const bbBColor = bbPct == null ? 'muted' : bbPct >= 80 ? 'red' : bbPct <= 20 ? 'green' : 'muted'
-  const bbBarColor = bbPct >= 80 ? '#ef5454' : bbPct <= 20 ? '#22B585' : '#e3a234'
+  // Bollinger Band position. Never render ">100% of band" (spec §7): when price
+  // is beyond a band we show the real % distance above/below it; inside the
+  // bands we show a clamped 0-100 position.
+  const bb     = calcBBPosition(candles, 20, currentPrice)
+  const bbDesc = bb ? describeBollinger(bb, currentPrice ?? bb.price) : null
+  const bbPctClamped = bb?.pct != null ? Math.max(0, Math.min(100, bb.pct)) : null
+  const bbLabel  = !bb ? '—'
+    : bbDesc.zone === 'above_upper' ? `+${bbDesc.pctFromEdge}%`
+    : bbDesc.zone === 'below_lower' ? `−${bbDesc.pctFromEdge}%`
+    : `${bbPctClamped}%`
+  const bbSub    = !bb ? null
+    : bbDesc.zone === 'above_upper' ? 'above upper band'
+    : bbDesc.zone === 'below_lower' ? 'below lower band'
+    : `$${fmtNum(bb.lower)} – $${fmtNum(bb.upper)}`
+  const bbOver  = bbDesc && (bbDesc.zone === 'above_upper' || bbDesc.zone === 'near_upper')
+  const bbUnder = bbDesc && (bbDesc.zone === 'below_lower' || bbDesc.zone === 'near_lower')
+  const bbBadge  = !bb ? null : bbOver ? 'Overextended' : bbUnder ? 'Oversold' : 'In Band'
+  const bbBColor = !bb ? 'muted' : bbOver ? 'red' : bbUnder ? 'green' : 'muted'
+  const bbBarColor = bbOver ? '#ef5454' : bbUnder ? '#22B585' : '#e3a234'
 
   // Volume
   const vol = calcVolumeSignal(candles)
@@ -159,7 +171,7 @@ export default function IndicatorsGrid({ candles, loading, asOf, synthetic, synt
           { title: 'MACD',        value: macdLabel,  sub: macdSub,    badge: macdBadge,  badgeColor: macdBColor },
           { title: 'SMA 50',      value: sma50Label, sub: sma50Sub,   badge: sma50Badge, badgeColor: sma50BC },
           { title: 'SMA 200',     value: sma200Label,sub: sma200Sub,  badge: sma200Badge,badgeColor: sma200BC },
-          { title: 'BB Position', value: bbLabel,    sub: bbSub,      badge: bbBadge,    badgeColor: bbBColor, bar: bbPct, barColor: bbBarColor },
+          { title: 'BB Position', value: bbLabel,    sub: bbSub,      badge: bbBadge,    badgeColor: bbBColor, bar: bbPctClamped, barColor: bbBarColor },
           { title: 'Volume',      value: volLabel,   sub: volSub,     badge: volBadge,   badgeColor: volBColor, bar: volBarPct, barColor: volBarClr },
         // Beginner Mode: drop MACD, SMA 200, and BB Position so the grid
         // stays at RSI + SMA 50 + Volume — the three most intuitive reads

@@ -1,4 +1,4 @@
-import { calcBBPosition, calcRSI, calcMACD } from '../utils/indicators'
+import { calcBBPosition, calcRSI, calcMACD, calcSMA, calcVolumeSignal, calcSR } from '../utils/indicators'
 import { authHeaders, describeApiError } from '../lib/authHeader'
 
 // Cap the client-side wait for the Groq round-trip. The server already
@@ -23,6 +23,14 @@ function buildRequestBody({ ticker, quote, profile, metrics, candles, synthetic 
   const rsi           = useReal ? calcRSI(candles, 14, quote?.c)        : null
   const macd          = useReal ? calcMACD(candles, quote?.c)           : null
   const recentCandles = useReal ? candles.slice(-10)      : []
+  // Extra evidence the unified decision engine combines server-side: trend
+  // structure (SMA50/200), participation (volume), and real S/R levels for the
+  // "what would change the thesis" section. Computed here because the client
+  // already holds the full candle history.
+  const sma50         = useReal ? calcSMA(candles, 50,  quote?.c) : null
+  const sma200        = useReal ? calcSMA(candles, 200, quote?.c) : null
+  const volume        = useReal ? calcVolumeSignal(candles)       : null
+  const sr            = useReal ? calcSR(candles, quote?.c)       : null
   const priceChange5d = useReal && candles.length >= 5
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)
     : 'N/A'
@@ -46,6 +54,11 @@ function buildRequestBody({ ticker, quote, profile, metrics, candles, synthetic 
       },
     },
     indicators: useReal ? { bb, rsi, macd } : null,
+    // Engine-only evidence (ignored by the analysis LLM path).
+    sma50,
+    sma200,
+    volume: volume ? { ratio: volume.ratio, above: volume.above } : null,
+    sr,
     recentCandles,
     // Flag so the API can prepend a no-technicals instruction to the prompt.
     noTechnicals: !useReal,
