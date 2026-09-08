@@ -149,12 +149,95 @@ describe('unavailable data is never a fabricated verdict', () => {
   })
 })
 
+describe('WHY is explainable — references top contributors + confidence (§1)', () => {
+  const d = buildDecision({
+    ...base, price: 112, sma50: 105, sma200: 98,
+    macd: { value: 0.9, signal: 0.3, bullish: true },
+    rsi: 71, bb: { upper: 110, lower: 100, pct: 120, price: 112 },
+    volume: { ratio: 1.6, above: true }, priceChange5d: 6,
+  })
+  it('names the confidence number in the WHY', () => {
+    expect(d.narrative.why).toContain(`${d.confidence}% confidence`)
+  })
+  it('mentions the strongest bullish AND the offsetting bearish evidence', () => {
+    // Bullish trend/MACD + bearish Bollinger overextension should both surface.
+    expect(d.narrative.why.toLowerCase()).toMatch(/macd|trend|momentum/)
+    expect(d.narrative.why.toLowerCase()).toMatch(/bollinger|overbought|overextension/)
+  })
+})
+
+describe('confidence tracks agreement (§2)', () => {
+  it('strong one-sided agreement earns high confidence (80+)', () => {
+    const d = buildDecision({
+      ...base, price: 120, sma50: 110, sma200: 100,
+      macd: { value: 1.4, signal: 0.3, bullish: true },
+      rsi: 60, bb: { upper: 124, lower: 112, pct: 66, price: 120 },
+      volume: { ratio: 1.8, above: true }, priceChange5d: 7,
+    })
+    expect(d.direction).toBe('bullish')
+    expect(d.confidence).toBeGreaterThanOrEqual(80)
+  })
+  it('a conflicted setup cannot earn 80%+ confidence', () => {
+    const d = buildDecision({
+      ...base, price: 106, sma50: 104, sma200: 104,
+      macd: { value: 0.5, signal: 0.2, bullish: true }, // bullish
+      rsi: 74, bb: { upper: 104, lower: 96, pct: 130, price: 106 }, // bearish overextension
+      priceChange5d: 2,
+    })
+    expect(d.confidence).toBeLessThan(80)
+  })
+})
+
+describe('technical levels carry a source (§3, §4)', () => {
+  const d = buildDecision({
+    ...base, price: 100,
+    sma50: 96, sma200: 90,
+    macd: { value: 0.6, signal: 0.2, bullish: true },
+    support: [{ price: 96.0, type: 'support', source: '50-day SMA' }],
+    resistance: [{ price: 108.0, type: 'resistance', source: 'a recent swing high' }],
+  })
+  it('what-would-change conditions are arrays tied to signals/levels', () => {
+    expect(Array.isArray(d.narrative.whatWouldChange.moreBearishIf)).toBe(true)
+    const joined = d.narrative.whatWouldChange.moreBearishIf.join(' ')
+    expect(joined).toMatch(/50-day SMA near \$96\.00/)      // uses the labeled source + price
+    expect(joined.toLowerCase()).toMatch(/macd|trend/)      // monitorable signal conditions
+  })
+  it('never emits a bare unexplained price with no source', () => {
+    for (const c of [...d.narrative.whatWouldChange.moreBullishIf, ...d.narrative.whatWouldChange.moreBearishIf]) {
+      if (/\$\d/.test(c)) expect(c.toLowerCase()).toMatch(/sma|swing|support|resistance|level|band/)
+    }
+  })
+})
+
+describe('extreme Bollinger reading meaningfully raises risk (§6)', () => {
+  it('11% above the upper band produces more risk than a marginal break', () => {
+    const mild = buildDecision({ ...base, price: 100.5, bb: { upper: 100, lower: 92, pct: 105, price: 100.5 } })
+    const extreme = buildDecision({ ...base, price: 111, bb: { upper: 100, lower: 92, pct: 240, price: 111 } })
+    expect(extreme.risk.score).toBeGreaterThan(mild.risk.score)
+    expect(extreme.risk.reasons.join(' ')).toMatch(/significant short-term overextension/)
+  })
+})
+
+describe('debug breakdown answers "why this verdict at this confidence" (§7/§8)', () => {
+  it('exposes signed per-signal points + direction/risk/agreement/confidence/verdict', () => {
+    const d = buildDecision({ ...base, sma50: 104, macd: { value: 0.6, signal: 0.2, bullish: true }, priceChange5d: 4 })
+    expect(Array.isArray(d.debug.bullishEvidence)).toBe(true)
+    expect(d.debug.bullishEvidence.every(e => e.points >= 0)).toBe(true)
+    expect(d.debug.bearishEvidence.every(e => e.points <= 0)).toBe(true)
+    expect(d.debug).toHaveProperty('netDirectionScore')
+    expect(d.debug).toHaveProperty('riskScore')
+    expect(d.debug).toHaveProperty('agreementScore')
+    expect(d.debug.confidence).toBe(d.confidence)
+    expect(d.debug.verdict).toBe(d.verdict)
+  })
+})
+
 describe('debug output is exposed (spec §12)', () => {
   it('includes per-signal contributions, scores, weights, confidence breakdown', () => {
     const d = buildDecision(base)
     expect(d.debug.contributions.length).toBeGreaterThan(0)
     expect(d.debug.weights).toBeTruthy()
     expect(d.debug.scores).toHaveProperty('net')
-    expect(d.debug.confidence).toHaveProperty('agreement')
+    expect(d.debug.confidenceInputs).toHaveProperty('agreement')
   })
 })

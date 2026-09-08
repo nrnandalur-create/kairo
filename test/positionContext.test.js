@@ -4,12 +4,12 @@ import { buildPositionContext } from '../src/utils/positionContext.js'
 const bullishDecision = {
   verdict: 'BUY', verdictLabel: 'Buy', direction: 'bullish',
   risk: { level: 'MODERATE' }, healthScore: 72,
-  narrative: { whatWouldChange: { moreBullishIf: 'Price reclaims $110.', moreBearishIf: 'Price loses $95.' } },
+  narrative: { whatWouldChange: { moreBullishIf: ['Price reclaims $110'], moreBearishIf: ['Price loses $95'] } },
 }
 const bearishDecision = {
   verdict: 'SELL', verdictLabel: 'Sell', direction: 'bearish',
   risk: { level: 'ELEVATED' }, healthScore: 28,
-  narrative: { whatWouldChange: { moreBullishIf: 'Price reclaims $110.', moreBearishIf: 'Price loses $95.' } },
+  narrative: { whatWouldChange: { moreBullishIf: ['Price reclaims $110'], moreBearishIf: ['Price loses $95'] } },
 }
 
 const joined = (ctx) => [ctx.contextText, ctx.positionRisk, ...(ctx.steps || [])].filter(Boolean).join(' ').toLowerCase()
