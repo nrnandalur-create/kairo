@@ -271,16 +271,24 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
         </div>
       )}
 
-      {/* WHAT WOULD CHANGE THE THESIS */}
+      {/* WHAT WOULD CHANGE THE THESIS — monitorable, signal/level-tied conditions */}
       {data.narrative?.whatWouldChange && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-lg border border-[#22B585]/25 bg-[#22B585]/[0.05] p-3 flex flex-col gap-1">
+          <div className="rounded-lg border border-[#22B585]/25 bg-[#22B585]/[0.05] p-3 flex flex-col gap-1.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#22B585]">More bullish if</p>
-            <p className="text-[12.5px] text-[var(--c-text)]/85 leading-relaxed">{data.narrative.whatWouldChange.moreBullishIf}</p>
+            <ul className="flex flex-col gap-1">
+              {(Array.isArray(data.narrative.whatWouldChange.moreBullishIf) ? data.narrative.whatWouldChange.moreBullishIf : [data.narrative.whatWouldChange.moreBullishIf]).map((c, i) => (
+                <li key={i} className="text-[12px] text-[var(--c-text)]/85 leading-relaxed flex gap-1.5"><span className="text-[#22B585]" aria-hidden="true">•</span><span>{c}</span></li>
+              ))}
+            </ul>
           </div>
-          <div className="rounded-lg border border-[#ef5454]/25 bg-[#ef5454]/[0.05] p-3 flex flex-col gap-1">
+          <div className="rounded-lg border border-[#ef5454]/25 bg-[#ef5454]/[0.05] p-3 flex flex-col gap-1.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#ef5454]">More bearish if</p>
-            <p className="text-[12.5px] text-[var(--c-text)]/85 leading-relaxed">{data.narrative.whatWouldChange.moreBearishIf}</p>
+            <ul className="flex flex-col gap-1">
+              {(Array.isArray(data.narrative.whatWouldChange.moreBearishIf) ? data.narrative.whatWouldChange.moreBearishIf : [data.narrative.whatWouldChange.moreBearishIf]).map((c, i) => (
+                <li key={i} className="text-[12px] text-[var(--c-text)]/85 leading-relaxed flex gap-1.5"><span className="text-[#ef5454]" aria-hidden="true">•</span><span>{c}</span></li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
@@ -326,13 +334,34 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
         </div>
       )}
 
-      {/* DEBUG — engine internals (dev or ?debug=1), spec §12 */}
+      {/* DEBUG — engine internals (dev or ?debug=1). Answers "why this verdict
+          at this confidence?" via signed per-signal points (spec §7/§8). */}
       {DEBUG && data.debug && (
         <details className="mt-1 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)] p-3">
           <summary className="cursor-pointer text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
-            Engine debug — scores {data.scores?.bullish}↑ / {data.scores?.bearish}↓ · net {data.scores?.net}
+            Engine debug — net {data.debug.netDirectionScore} · agree {data.debug.agreementScore} · {data.debug.verdict} @ {data.debug.confidence}%
           </summary>
-          <pre className="mt-2 text-[10px] leading-relaxed text-[var(--c-text-faint)] overflow-x-auto whitespace-pre-wrap">{JSON.stringify(data.debug, null, 2)}</pre>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-mono">
+            <div>
+              <p className="text-[#22B585] font-bold mb-1">Bullish evidence</p>
+              {(data.debug.bullishEvidence ?? []).map((e, i) => (
+                <div key={i} className="flex justify-between text-[var(--c-text-faint)]"><span>{e.signal}</span><span className="text-[#22B585]">+{e.points}</span></div>
+              ))}
+              <p className="text-[#ef5454] font-bold mt-2 mb-1">Bearish evidence</p>
+              {(data.debug.bearishEvidence ?? []).map((e, i) => (
+                <div key={i} className="flex justify-between text-[var(--c-text-faint)]"><span>{e.signal}</span><span className="text-[#ef5454]">{e.points}</span></div>
+              ))}
+            </div>
+            <div className="text-[var(--c-text-faint)] flex flex-col gap-0.5">
+              <div className="flex justify-between"><span>Bullish score</span><span>{data.scores?.bullish}</span></div>
+              <div className="flex justify-between"><span>Bearish score</span><span>{data.scores?.bearish}</span></div>
+              <div className="flex justify-between"><span>Net direction</span><span>{data.debug.netDirectionScore}</span></div>
+              <div className="flex justify-between"><span>Risk score</span><span>{data.debug.riskScore}</span></div>
+              <div className="flex justify-between"><span>Agreement</span><span>{data.debug.agreementScore}</span></div>
+              <div className="flex justify-between"><span>Confidence</span><span>{data.debug.confidence}%</span></div>
+              <div className="flex justify-between font-bold text-[var(--c-text)]"><span>Verdict</span><span>{data.debug.verdict}</span></div>
+            </div>
+          </div>
         </details>
       )}
 

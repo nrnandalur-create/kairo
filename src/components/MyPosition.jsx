@@ -417,16 +417,21 @@ export default function MyPosition({ ticker, aiData, currentPrice, userId }) {
                     </span>
                   </div>
                   {aiData.narrative?.why && (
-                    <p className="text-[13px] leading-relaxed text-[var(--c-text)]/85">{aiData.narrative.why}</p>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-bold uppercase tracking-[0.14em] text-[9px] text-[var(--c-text-fainter)]">Stock Outlook</span>
+                      <p className="text-[13px] leading-relaxed text-[var(--c-text)]/85">{aiData.narrative.why}</p>
+                    </div>
                   )}
-                  {posCtx?.contextText && (
-                    <p className="text-[12.5px] leading-relaxed text-[var(--c-text-faint)] border-t border-[var(--c-border)] pt-2">
-                      <span className="font-bold uppercase tracking-[0.14em] text-[10px] text-[var(--c-text-fainter)] mr-1.5">Your position:</span>
-                      {posCtx.contextText}
-                    </p>
-                  )}
-                  {posCtx?.positionRisk && (
-                    <p className="text-[12px] leading-relaxed text-[#e3a234]/90">{posCtx.positionRisk}</p>
+                  {(posCtx?.contextText || posCtx?.positionRisk) && (
+                    <div className="flex flex-col gap-1 border-t border-[var(--c-border)] pt-2">
+                      <span className="font-bold uppercase tracking-[0.14em] text-[9px] text-[var(--c-text-fainter)]">Position Risk</span>
+                      {posCtx?.contextText && (
+                        <p className="text-[12.5px] leading-relaxed text-[var(--c-text-faint)]">{posCtx.contextText}</p>
+                      )}
+                      {posCtx?.positionRisk && (
+                        <p className="text-[12px] leading-relaxed text-[#e3a234]/90">{posCtx.positionRisk}</p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

@@ -77,11 +77,13 @@ export function buildPositionContext({ decision, position } = {}) {
     steps.push(`Signals are mixed; holding while watching your break-even${position?.breakeven != null ? ` (${money(position.breakeven)})` : ''} and a defined invalidation level preserves optionality.`)
   }
 
-  // Add the strongest market "what would change" as a watch item.
-  if (decision.narrative?.whatWouldChange) {
+  // Add the top market "what would change" condition as a watch item.
+  const wtc = decision.narrative?.whatWouldChange
+  const watchCond = dir === 'bearish' ? wtc?.moreBullishIf?.[0] : wtc?.moreBearishIf?.[0]
+  if (watchCond) {
     steps.push(dir === 'bearish'
-      ? `Watch for what turns the read more bullish: ${lower(decision.narrative.whatWouldChange.moreBullishIf)}`
-      : `Watch for what turns the read more bearish: ${lower(decision.narrative.whatWouldChange.moreBearishIf)}`)
+      ? `Watch for what turns the read more bullish: ${lower(watchCond)}.`
+      : `Watch for what turns the read more bearish: ${lower(watchCond)}.`)
   }
 
   return {
