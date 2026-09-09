@@ -194,9 +194,9 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
       {/* Header */}
       <div className="relative flex items-center justify-between flex-wrap gap-2">
         <span className="text-[11px] font-semibold text-[var(--c-text-faint)] uppercase tracking-[0.12em] inline-flex items-center">
-          AI Recommendation
+          {data.scope === 'overall' ? 'Kairo Verdict' : 'Technical Rating'}
           <InfoTooltip>
-            Verdict, confidence, risk, and health are computed by Kairo's decision engine — it combines the technical indicators into one weighted read, so no single indicator decides the call. Educational only — not financial advice.
+            Verdict, confidence, risk, and setup health are computed by Kairo's multi-factor decision engine — it scores each category of evidence (trend, momentum, structure, volume, volatility{data.scope === 'overall' ? ', fundamentals' : ''}) and combines them, so no single indicator decides the call. {data.scope === 'overall' ? 'This is an overall read incorporating available fundamentals.' : 'This is a TECHNICAL rating — it does not incorporate fundamentals or news.'} Confidence reflects how well the available evidence supports the rating, not a probability that price rises. Educational only — not financial advice.
           </InfoTooltip>
         </span>
         <div className="flex items-center gap-1.5">
@@ -339,11 +339,15 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
       {DEBUG && data.debug && (
         <details className="mt-1 rounded-lg border border-[var(--c-border)] bg-[var(--c-input-bg)] p-3">
           <summary className="cursor-pointer text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--c-text-faint)]">
-            Engine debug — net {data.debug.netDirectionScore} · agree {data.debug.agreementScore} · {data.debug.verdict} @ {data.debug.confidence}%
+            Engine debug — net {data.debug.netDirectionScore} · agree {data.debug.confidence?.signalAgreement} · {data.debug.verdict?.rating} @ {data.debug.confidence?.score}%
           </summary>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-mono">
             <div>
-              <p className="text-[#22B585] font-bold mb-1">Bullish evidence</p>
+              <p className="text-[var(--c-text)] font-bold mb-1">Category scores</p>
+              {Object.entries(data.debug.categories ?? {}).map(([cat, sc]) => (
+                <div key={cat} className="flex justify-between text-[var(--c-text-faint)]"><span>{cat}</span><span style={{ color: sc == null ? 'var(--c-text-fainter)' : sc > 0 ? '#22B585' : sc < 0 ? '#ef5454' : 'inherit' }}>{sc == null ? 'n/a' : sc}</span></div>
+              ))}
+              <p className="text-[#22B585] font-bold mt-2 mb-1">Bullish evidence</p>
               {(data.debug.bullishEvidence ?? []).map((e, i) => (
                 <div key={i} className="flex justify-between text-[var(--c-text-faint)]"><span>{e.signal}</span><span className="text-[#22B585]">+{e.points}</span></div>
               ))}
@@ -353,13 +357,16 @@ export default function Recommendation({ data, loading, error, asOf, ticker, onC
               ))}
             </div>
             <div className="text-[var(--c-text-faint)] flex flex-col gap-0.5">
-              <div className="flex justify-between"><span>Bullish score</span><span>{data.scores?.bullish}</span></div>
-              <div className="flex justify-between"><span>Bearish score</span><span>{data.scores?.bearish}</span></div>
               <div className="flex justify-between"><span>Net direction</span><span>{data.debug.netDirectionScore}</span></div>
+              <div className="flex justify-between"><span>Bullish / Bearish</span><span>{data.scores?.bullish} / {data.scores?.bearish}</span></div>
               <div className="flex justify-between"><span>Risk score</span><span>{data.debug.riskScore}</span></div>
-              <div className="flex justify-between"><span>Agreement</span><span>{data.debug.agreementScore}</span></div>
-              <div className="flex justify-between"><span>Confidence</span><span>{data.debug.confidence}%</span></div>
-              <div className="flex justify-between font-bold text-[var(--c-text)]"><span>Verdict</span><span>{data.debug.verdict}</span></div>
+              <div className="flex justify-between"><span>Setup health</span><span>{data.debug.setupHealth}</span></div>
+              <div className="flex justify-between"><span>Agreement</span><span>{data.debug.confidence?.signalAgreement}</span></div>
+              <div className="flex justify-between"><span>Data completeness</span><span>{data.debug.confidence?.dataCompleteness}</span></div>
+              <div className="flex justify-between"><span>Conflict / uncertainty</span><span>−{data.debug.confidence?.conflictPenalty} / −{data.debug.confidence?.uncertaintyPenalty}</span></div>
+              <div className="flex justify-between"><span>Regime</span><span>{data.debug.data?.regime}</span></div>
+              <div className="flex justify-between"><span>Confidence</span><span>{data.debug.confidence?.score}%</span></div>
+              <div className="flex justify-between font-bold text-[var(--c-text)]"><span>Verdict</span><span>{data.debug.verdict?.rating} ({data.debug.verdict?.scope})</span></div>
             </div>
           </div>
         </details>

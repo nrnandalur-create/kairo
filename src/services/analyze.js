@@ -1,4 +1,4 @@
-import { calcBBPosition, calcRSI, calcMACD, calcSMA, calcVolumeSignal, calcSR } from '../utils/indicators'
+import { calcBBPosition, calcRSI, calcMACD, calcSMA, calcVolumeSignal, calcSR, calcATR } from '../utils/indicators'
 import { authHeaders, describeApiError } from '../lib/authHeader'
 
 // Build labeled support/resistance levels from real calculations (moving
@@ -52,6 +52,9 @@ function buildRequestBody({ ticker, quote, profile, metrics, candles, synthetic 
   // engine can say "a close below the 50-day SMA near $148.51", never an
   // unexplained number (spec §3). Sources come from real calculations only.
   const sr            = useReal ? buildLevels({ price: quote?.c, sr: calcSR(candles, quote?.c), sma20, sma50 }) : null
+  const atr           = useReal ? calcATR(candles, 14) : null
+  const atrPct        = atr != null && quote?.c ? +((atr / quote.c) * 100).toFixed(2) : null
+  const historyLen    = useReal ? candles.length : 0
   const priceChange5d = useReal && candles.length >= 5
     ? (((candles.at(-1).close - candles.at(-5).close) / candles.at(-5).close) * 100).toFixed(2)
     : 'N/A'
@@ -76,8 +79,12 @@ function buildRequestBody({ ticker, quote, profile, metrics, candles, synthetic 
     },
     indicators: useReal ? { bb, rsi, macd } : null,
     // Engine-only evidence (ignored by the analysis LLM path).
+    sma20,
     sma50,
     sma200,
+    atrPct,
+    historyLen,
+    asOf: Date.now(),
     volume: volume ? { ratio: volume.ratio, above: volume.above } : null,
     sr,
     recentCandles,
