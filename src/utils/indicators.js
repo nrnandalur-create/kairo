@@ -97,6 +97,21 @@ export function calcVolumeSignal(candles, period = 20) {
   return { ratio: +(lastV / avgVol).toFixed(2), above: lastV > avgVol, lastV, avgVol }
 }
 
+// ── ATR (Average True Range, Wilder) ─────────────────────────────────────────
+// Volatility measure in price units. Callers divide by price for ATR%. Returns
+// null when there isn't enough history (excluded from the model, not zeroed).
+export function calcATR(candles, period = 14) {
+  if (!candles || candles.length < period + 1) return null
+  const tr = []
+  for (let i = 1; i < candles.length; i++) {
+    const h = candles[i].high, l = candles[i].low, pc = candles[i - 1].close
+    tr.push(Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc)))
+  }
+  let atr = tr.slice(0, period).reduce((a, b) => a + b, 0) / period
+  for (let i = period; i < tr.length; i++) atr = (atr * (period - 1) + tr[i]) / period
+  return atr > 0 ? +atr.toFixed(4) : null
+}
+
 // ── VWAP (volume-weighted average price) ─────────────────────────────────────
 // Classic intraday formula approximated on the daily series:
 //   VWAP = Σ (typical_price * volume) / Σ volume

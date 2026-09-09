@@ -19,7 +19,7 @@ const validVerdictBody = (extra = {}) => ({
   ticker: 'AAPL',
   quote: { c: 150, dp: 1.2 },
   recentCandles: [{ time: 1, close: 150, volume: 1_000_000 }],
-  indicators: { rsi: 55, macd: { bullish: true, value: 1, signal: 0.5 }, bb: { pct: 50, lower: 1, upper: 2 } },
+  indicators: { rsi: 55, macd: { bullish: true, value: 1, signal: 0.5 }, bb: { lower: 144, upper: 156, price: 150 } },
   ...extra,
 })
 
